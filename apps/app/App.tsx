@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { SafeAreaView, StatusBar as RNStatusBar, Platform, Text } from 'react-native';
+import { Linking, SafeAreaView, StatusBar as RNStatusBar, Platform, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { CHAIR_CAPS, createSession, PRESETS, reduceSession, type DebateFormat, type Session, type SessionAction } from '@debate/core';
+import { CHAIR_CAPS, createSession, parseJoin, PRESETS, reduceSession, type DebateFormat, type Session, type SessionAction } from '@debate/core';
 import type { JoinRequest } from './src/net/useClient';
 import { useHosting } from './src/net/useHosting';
 import { BellEditor } from './src/screens/BellEditor';
@@ -30,7 +30,7 @@ type Screen =
   | { name: 'timer' }
   | { name: 'lobby' }
   | { name: 'review' }
-  | { name: 'join' }
+  | { name: 'join'; initialCode?: string }
   | { name: 'client'; req: JoinRequest };
 
 export default function App() {
@@ -43,6 +43,16 @@ export default function App() {
 
   useEffect(() => {
     void loadIdentity().then(setIdentity);
+  }, []);
+
+  // The join QR is a debate:// link, so the phone's own camera app can open it here.
+  useEffect(() => {
+    const open = (url: string | null | undefined) => {
+      if (url && parseJoin(url)) setScreen({ name: 'join', initialCode: url });
+    };
+    void Linking.getInitialURL().then(open);
+    const sub = Linking.addEventListener('url', (e) => open(e.url));
+    return () => sub.remove();
   }, []);
 
   // Persist every change so a crash or closed app never loses a round.
@@ -116,7 +126,9 @@ export default function App() {
   } else if (screen.name === 'join' && identity) {
     body = (
       <JoinScreen
+        key={screen.initialCode ?? 'manual'}
         identity={identity}
+        initialCode={screen.initialCode}
         onBack={() => setScreen({ name: 'home' })}
         onJoin={(req) => {
           setIdentity(req.identity);

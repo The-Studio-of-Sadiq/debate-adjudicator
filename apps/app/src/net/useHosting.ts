@@ -9,6 +9,7 @@ import {
   type Session,
   type SessionAction,
 } from '@debate/core';
+import { saveClip } from '../files';
 import { ringBell } from '../hooks';
 import { transport } from './transport';
 import type { ListeningServer } from './types';
@@ -49,6 +50,7 @@ export function useHosting(session: Session | null, dispatch: (a: SessionAction)
       dispatch,
       onMembers: setMembers,
       onRing: (p) => ringBell(p),
+      saveClip,
     });
     try {
       const server = await transport.listen(DEFAULT_PORT, (s) => host.attach(s));

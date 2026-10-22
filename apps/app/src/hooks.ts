@@ -8,6 +8,7 @@ import {
   useAudioRecorder,
   type AudioPlayer,
 } from 'expo-audio';
+import { persistRecording } from './files';
 import { bellsBetween, RINGS, type BellPattern, type ClipRef, type SpeechTemplate } from '@debate/core';
 
 /** Re-renders every `intervalMs` while `active`, returning `clock()` (Date.now by default). */
@@ -60,10 +61,13 @@ export function useBells(template: SpeechTemplate, elapsedSec: number, enabled: 
   }, [template, elapsedSec, enabled]);
 }
 
-/** Records one clip per speech on this device. */
-export function useSpeechRecorder(deviceId: string) {
+/**
+ * Records clips on this device: whole speeches on the chair's device, a
+ * debater's own interruptions on theirs. `clock` stamps clips in host time.
+ */
+export function useSpeechRecorder(deviceId: string, clock: () => number = Date.now) {
   const recorder = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, directory: 'document' } as typeof RecordingPresets.HIGH_QUALITY);
-  const startedAt = useRef<number | null>(null);
+  const startedAt = useRef<{ host: number; local: number } | null>(null);
   const [recording, setRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,7 +85,7 @@ export function useSpeechRecorder(deviceId: string) {
       }
       await recorder.prepareToRecordAsync();
       recorder.record();
-      startedAt.current = Date.now();
+      startedAt.current = { host: clock(), local: Date.now() };
       setRecording(true);
       setError(null);
       return true;
@@ -103,12 +107,19 @@ export function useSpeechRecorder(deviceId: string) {
       return null;
     }
     if (!recorder.uri) return null;
+    let uri: string;
+    try {
+      uri = await persistRecording(recorder.uri);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      uri = recorder.uri;
+    }
     return {
-      id: `${began.toString(36)}-${deviceId}`,
+      id: `${began.host.toString(36)}-${deviceId}`,
       deviceId,
-      uri: recorder.uri,
-      startedAt: began,
-      durationMs: Date.now() - began,
+      uri,
+      startedAt: began.host,
+      durationMs: Date.now() - began.local,
     };
   }
 

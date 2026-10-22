@@ -2,6 +2,19 @@
 // main process (see net.js) because the renderer is sandboxed.
 const { contextBridge, ipcRenderer } = require('electron');
 
+// Key-value storage on disk. localStorage batches writes and loses recent
+// changes if the app is killed mid-round; these are written immediately.
+contextBridge.exposeInMainWorld('debateStore', {
+  get: (key) => ipcRenderer.invoke('store:get', key),
+  set: (key, value) => ipcRenderer.invoke('store:set', key, value),
+  remove: (key) => ipcRenderer.invoke('store:remove', key),
+});
+
+contextBridge.exposeInMainWorld('debateFiles', {
+  // Writes a clip to disk and returns an app:// URL that plays it.
+  saveClip: (fileName, base64) => ipcRenderer.invoke('files:saveClip', fileName, base64),
+});
+
 contextBridge.exposeInMainWorld('debateNet', {
   listen: (port) => ipcRenderer.invoke('net:listen', port),
   unlisten: () => ipcRenderer.invoke('net:unlisten'),

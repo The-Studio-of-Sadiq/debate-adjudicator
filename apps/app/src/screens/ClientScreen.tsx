@@ -1,5 +1,8 @@
+import { useCallback, useEffect } from 'react';
 import { ScrollView, Text } from 'react-native';
-import { capabilitiesFor } from '@debate/core';
+import { AudioModule } from 'expo-audio';
+import { capabilitiesFor, type ClipRef } from '@debate/core';
+import { extensionOf, readAsBase64 } from '../files';
 import { useClient, type JoinRequest } from '../net/useClient';
 import { colors } from '../theme';
 import { Btn, Card, Row, styles } from '../ui';
@@ -19,6 +22,27 @@ export function ClientScreen({ req, onLeave }: { req: JoinRequest; onLeave: () =
   const c = useClient(req);
   const session = c.client?.session;
   const member = c.client?.member;
+  const client = c.client;
+  const deviceId = req.identity.deviceId;
+
+  // Ask for the mic as soon as someone is seated, not in the middle of their POI.
+  const isDebater = member?.role === 'debater';
+  useEffect(() => {
+    if (isDebater) void AudioModule.requestRecordingPermissionsAsync();
+  }, [isDebater]);
+
+  const sendClip = useCallback(
+    async (clip: ClipRef, target: { speechIndex: number; interruptionId: string }) => {
+      if (!client) throw new Error('Not connected');
+      const base64 = await readAsBase64(clip.uri);
+      await client.uploadClip(
+        `${target.interruptionId}-${deviceId}`,
+        { ...target, startedAt: clip.startedAt, durationMs: clip.durationMs, ext: extensionOf(clip.uri) },
+        base64,
+      );
+    },
+    [client, deviceId],
+  );
 
   if (!session || !member || (c.status !== 'joined' && c.status !== 'reconnecting')) {
     const room = c.client?.hostName || req.info.name || req.info.hosts[0];
@@ -46,7 +70,9 @@ export function ClientScreen({ req, onLeave }: { req: JoinRequest; onLeave: () =
       dispatch={(a) => c.client?.request(a)}
       onRing={(p) => c.client?.ring(p)}
       record={false}
-      deviceId={req.identity.deviceId}
+      deviceId={deviceId}
+      mySeat={member.role === 'debater' ? member.seat : undefined}
+      onInterruptionClip={sendClip}
       exitLabel="Leave"
       onExit={onLeave}
       banner={

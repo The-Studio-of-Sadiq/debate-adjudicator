@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useKeepAwake } from 'expo-keep-awake';
 import {
@@ -8,12 +8,14 @@ import {
   elapsedMs,
   formatClock,
   INTERRUPTION_NAMES,
+  liveInterruptionFor,
   POI_EXPIRE_SEC,
   POI_MAX_SEC,
   speechPhase,
   timerStatus,
   type BellPattern,
   type Capabilities,
+  type ClipRef,
   type Interruption,
   type InterruptionKind,
   type Session,
@@ -41,6 +43,10 @@ export function TimerScreen(props: {
   onRing: (pattern: BellPattern) => void;
   /** Extra header content, e.g. the invite button or connection status. */
   banner?: ReactNode;
+  /** This device's seat. With `onInterruptionClip`, its mic records that seat's live POI/POO/POP. */
+  mySeat?: string;
+  /** Deliver a recorded interruption clip (to the chair). Rejects with a reason on failure. */
+  onInterruptionClip?: (clip: ClipRef, target: { speechIndex: number; interruptionId: string }) => Promise<void>;
 }) {
   useKeepAwake();
   const { session, dispatch, caps } = props;
@@ -54,10 +60,45 @@ export function TimerScreen(props: {
   const phase = speechPhase(template, elapsedSec);
   const [autoRecord, setAutoRecord] = useState(true);
   const [picking, setPicking] = useState<InterruptionKind | null>(null);
-  const recorder = useSpeechRecorder(props.deviceId);
+  const recorder = useSpeechRecorder(props.deviceId, clock);
 
   // Every device rings its own scheduled bells from the shared, synced clock.
   useBells(template, elapsedSec, status === 'running');
+
+  // A debater's device records them while their POI has the floor, or while
+  // their POO/POP is being heard, then sends the clip to the chair.
+  const myLive = props.mySeat ? liveInterruptionFor(session, props.mySeat) : null;
+  const liveKey = myLive ? `${myLive.speechIndex}:${myLive.interruption.id}` : null;
+  const recordingFor = useRef<{ speechIndex: number; id: string; kind: InterruptionKind } | null>(null);
+  const [clipStatus, setClipStatus] = useState<{ text: string; ok?: boolean } | null>(null);
+  const deliverClip = props.onInterruptionClip;
+  useEffect(() => {
+    if (!deliverClip) return;
+    const current = recordingFor.current;
+    if (myLive && !current) {
+      recordingFor.current = { speechIndex: myLive.speechIndex, id: myLive.interruption.id, kind: myLive.interruption.kind };
+      setClipStatus({ text: `Recording your ${myLive.interruption.kind}…` });
+      void recorder.start();
+    } else if (!myLive && current) {
+      recordingFor.current = null;
+      void (async () => {
+        const clip = await recorder.stop();
+        if (!clip) {
+          setClipStatus({ text: `Your ${current.kind} wasn't recorded`, ok: false });
+          return;
+        }
+        setClipStatus({ text: `Sending your ${current.kind} audio to the chair…` });
+        try {
+          await deliverClip(clip, { speechIndex: current.speechIndex, interruptionId: current.id });
+          setClipStatus({ text: `${current.kind} audio sent to the chair ✓`, ok: true });
+        } catch (e) {
+          setClipStatus({ text: `Couldn't send ${current.kind} audio: ${e instanceof Error ? e.message : String(e)}`, ok: false });
+        }
+      })();
+    }
+    // Only react when the live interruption itself changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveKey, deliverClip]);
 
   // The chair's device drops POIs the speaker ignored and closes POIs that run too long.
   useEffect(() => {
@@ -160,6 +201,9 @@ export function TimerScreen(props: {
           {remaining >= 0 ? `${formatClock(remaining)} left` : `${formatClock(-remaining)} over`}
         </Text>
         {recorder.recording && <Text style={{ color: '#fff' }}>● Recording</Text>}
+        {clipStatus && (
+          <Text style={{ color: clipStatus.ok === false ? '#ffd0d0' : '#fff', fontWeight: '600' }}>{clipStatus.text}</Text>
+        )}
         {recorder.error && <Text style={{ color: '#ffd0d0' }}>Recorder: {recorder.error}</Text>}
       </View>
 
@@ -263,6 +307,7 @@ export function TimerScreen(props: {
             .map((i) => (
               <Text key={i.id} style={styles.muted}>
                 {formatClock(i.raisedAtSec)} · {i.kind} from {i.raisedBy} · {describeOutcome(i)}
+                {speech.clips.some((c) => c.interruptionId === i.id) ? ' · 🎙 audio' : ''}
               </Text>
             ))}
         </Card>

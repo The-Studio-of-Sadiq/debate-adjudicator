@@ -1,7 +1,19 @@
 import type { SessionAction } from '../session';
 import type { BellPattern, Session } from '../types';
 import { ClockSync } from './clock';
-import { encodeMsg, isMsg, LineDecoder, PROTOCOL_VERSION, type ClientMsg, type Hello, type HostMsg, type Member, type SocketLike } from './protocol';
+import {
+  CLIP_CHUNK_CHARS,
+  encodeMsg,
+  isMsg,
+  LineDecoder,
+  PROTOCOL_VERSION,
+  type ClientMsg,
+  type ClipMeta,
+  type Hello,
+  type HostMsg,
+  type Member,
+  type SocketLike,
+} from './protocol';
 
 export type ClientStatus = 'connecting' | 'pending' | 'joined' | 'reconnecting' | 'rejected' | 'closed';
 
@@ -30,6 +42,11 @@ export class ClientController {
   session: Session | null = null;
   hostName = '';
 
+  /** Clips waiting for the host's ack; resent after every reconnect. */
+  private outbox = new Map<
+    string,
+    { meta: ClipMeta; base64: string; resolve: () => void; reject: (e: Error) => void }
+  >();
   private socket: SocketLike | null = null;
   private rev = -1;
   private stopped = false;
@@ -59,8 +76,43 @@ export class ClientController {
     this.send({ t: 'ring', pattern });
   }
 
+  /**
+   * Send a recorded clip to the host. Resolves once the host has stored it;
+   * survives dropped connections by resending after each reconnect.
+   */
+  uploadClip(id: string, meta: ClipMeta, base64: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.outbox.set(id, { meta, base64, resolve, reject });
+      if (this.status === 'joined') this.sendClip(id);
+    });
+  }
+
+  /** Clips still waiting for the host. */
+  get pendingClips(): number {
+    return this.outbox.size;
+  }
+
+  private sendClip(id: string) {
+    const item = this.outbox.get(id);
+    if (!item) return;
+    const { base64, meta } = item;
+    const count = Math.max(1, Math.ceil(base64.length / CLIP_CHUNK_CHARS));
+    for (let seq = 0; seq < count; seq++) {
+      this.send({
+        t: 'clip',
+        id,
+        seq,
+        last: seq === count - 1,
+        data: base64.slice(seq * CLIP_CHUNK_CHARS, (seq + 1) * CLIP_CHUNK_CHARS),
+        meta: seq === 0 ? meta : undefined,
+      });
+    }
+  }
+
   stop() {
     this.stopped = true;
+    for (const item of this.outbox.values()) item.reject(new Error('Left the room'));
+    this.outbox.clear();
     this.clearTimers();
     this.socket?.destroy();
     this.socket = null;
@@ -154,6 +206,15 @@ export class ClientController {
         this.opts.onMember?.(msg.member);
         this.opts.onState?.(msg.session);
         this.setStatus('joined');
+        for (const id of this.outbox.keys()) this.sendClip(id);
+        break;
+      case 'clipAck':
+        this.outbox.get(msg.id)?.resolve();
+        this.outbox.delete(msg.id);
+        break;
+      case 'clipRejected':
+        this.outbox.get(msg.id)?.reject(new Error(msg.reason));
+        this.outbox.delete(msg.id);
         break;
       case 'state':
         if (msg.rev <= this.rev) break;

@@ -45,13 +45,67 @@ function Scanner({ onCode, onClose }: { onCode: (text: string) => void; onClose:
   );
 }
 
-export function JoinScreen(props: { identity: Identity; onJoin: (req: JoinRequest) => void; onBack: () => void }) {
+/**
+ * Android: Google's system code scanner (Play services). It detects far more
+ * reliably than an embedded preview and needs no camera permission.
+ * Resolves with the scanned text, or null if the user backed out.
+ */
+function scanWithSystemScanner(): Promise<string | null> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const sub = CameraView.onModernBarcodeScanned((r) => {
+      if (settled) return;
+      settled = true;
+      sub.remove();
+      resolve(r.data);
+    });
+    CameraView.launchScanner({ barcodeTypes: ['qr'] }).then(
+      // The promise settles when the scanner closes; give the scan event a moment to arrive.
+      () =>
+        setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          sub.remove();
+          resolve(null);
+        }, 500),
+      () => {
+        if (settled) return;
+        settled = true;
+        sub.remove();
+        resolve(null);
+      },
+    );
+  });
+}
+
+const useSystemScanner = Platform.OS === 'android' && CameraView.isModernBarcodeScannerAvailable;
+
+export function JoinScreen(props: {
+  identity: Identity;
+  /** Join payload from a deep link (QR scanned with the phone's camera app). */
+  initialCode?: string;
+  onJoin: (req: JoinRequest) => void;
+  onBack: () => void;
+}) {
   const [name, setName] = useState(props.identity.name);
   const [role, setRole] = useState<MemberRole>('debater');
   const [seat, setSeat] = useState<string | undefined>();
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(props.initialCode ?? '');
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function startScan() {
+    setError(null);
+    if (!useSystemScanner) {
+      setScanning(true);
+      return;
+    }
+    const text = await scanWithSystemScanner();
+    if (text) {
+      setCode(text);
+      join(text);
+    }
+  }
 
   function join(text: string) {
     const info = parseJoin(text);
@@ -105,8 +159,9 @@ export function JoinScreen(props: { identity: Identity; onJoin: (req: JoinReques
             onClose={() => setScanning(false)}
           />
         ) : (
-          <Btn title="Scan QR code" color={colors.accent} big onPress={() => setScanning(true)} />
+          <Btn title="Scan QR code" color={colors.accent} big onPress={() => void startScan()} />
         )}
+        {!!props.initialCode && <Text style={styles.muted}>Code from the QR you scanned is filled in below. Pick your role, then Join.</Text>}
         <Text style={styles.muted}>Or type what's under the chair's QR code:</Text>
         <Row>
           <TextInput

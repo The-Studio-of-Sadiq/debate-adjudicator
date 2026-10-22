@@ -1,11 +1,13 @@
 import type { SessionAction } from '../session';
 import type { BellPattern, Session } from '../types';
-import { authorize } from './permissions';
+import { authorize, mayUploadClip } from './permissions';
 import {
   encodeMsg,
   isMsg,
   LineDecoder,
+  MAX_CLIP_CHARS,
   PROTOCOL_VERSION,
+  type ClipMeta,
   type ClientMsg,
   type HostMsg,
   type Member,
@@ -22,7 +24,19 @@ export interface HostOptions {
   onMembers?(members: Member[]): void;
   /** A timekeeper asked for a manual bell; ring it locally too. */
   onRing?(pattern: BellPattern): void;
+  /**
+   * Store an uploaded clip (base64) and return a URI the host can play it
+   * from. Without this, uploads are refused.
+   */
+  saveClip?(fileName: string, base64: string): Promise<string>;
   now?(): number;
+}
+
+interface IncomingClip {
+  meta: ClipMeta;
+  parts: string[];
+  chars: number;
+  nextSeq: number;
 }
 
 /**
@@ -32,6 +46,8 @@ export interface HostOptions {
 export class HostController {
   private members = new Map<string, Member>();
   private sockets = new Map<string, SocketLike>();
+  /** Partially received uploads, keyed by clip id. */
+  private uploads = new Map<string, IncomingClip>();
   private rev = 0;
   private now: () => number;
 
@@ -130,6 +146,10 @@ export class HostController {
       else this.send(socket, { t: 'denied', reason: 'Only the timekeeper can ring the bell' });
       return;
     }
+    if (msg.t === 'clip') {
+      void this.onClipChunk(socket, member, msg);
+      return;
+    }
     if (msg.t === 'act') {
       const session = this.opts.getSession();
       if (!authorize(member, msg.action, session)) {
@@ -140,6 +160,59 @@ export class HostController {
       const action = 'at' in msg.action ? { ...msg.action, at: this.now() } : msg.action;
       this.opts.dispatch(action);
     }
+  }
+
+  private async onClipChunk(socket: SocketLike, member: Member, msg: Extract<ClientMsg, { t: 'clip' }>) {
+    const reject = (reason: string) => {
+      this.uploads.delete(msg.id);
+      this.send(socket, { t: 'clipRejected', id: msg.id, reason });
+    };
+
+    if (msg.seq === 0) {
+      const meta = msg.meta;
+      // The id and extension become a file name on the host, so keep them plain.
+      if (!meta || !/^[\w-]{1,80}$/.test(msg.id) || !/^[a-z0-9]{1,5}$/.test(meta.ext)) return reject('Bad clip metadata');
+      const session = this.opts.getSession();
+      // Already stored (a retry after a reconnect): just confirm.
+      if (session.speeches[meta.speechIndex]?.clips.some((c) => c.id === msg.id)) {
+        this.uploads.delete(msg.id);
+        this.send(socket, { t: 'clipAck', id: msg.id });
+        return;
+      }
+      if (!this.opts.saveClip) return reject('This device cannot store clips');
+      if (!mayUploadClip(member, session, meta.speechIndex, meta.interruptionId)) return reject('Not your interruption');
+      this.uploads.set(msg.id, { meta, parts: [], chars: 0, nextSeq: 0 });
+    }
+
+    const up = this.uploads.get(msg.id);
+    if (!up) return; // Remainder of an upload we already answered.
+    if (msg.seq !== up.nextSeq) return reject('Clip chunks out of order');
+    up.parts.push(msg.data);
+    up.chars += msg.data.length;
+    up.nextSeq++;
+    if (up.chars > MAX_CLIP_CHARS) return reject('Clip too large');
+    if (!msg.last) return;
+
+    this.uploads.delete(msg.id);
+    let uri: string;
+    try {
+      uri = await this.opts.saveClip!(`${msg.id}.${up.meta.ext}`, up.parts.join(''));
+    } catch (e) {
+      return reject(`Could not save clip: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    this.opts.dispatch({
+      type: 'addClip',
+      speechIndex: up.meta.speechIndex,
+      clip: {
+        id: msg.id,
+        deviceId: member.deviceId,
+        uri,
+        startedAt: up.meta.startedAt,
+        durationMs: up.meta.durationMs,
+        interruptionId: up.meta.interruptionId,
+      },
+    });
+    this.send(socket, { t: 'clipAck', id: msg.id });
   }
 
   private sendWelcome(m: Member) {
@@ -201,5 +274,6 @@ export class HostController {
     for (const s of this.sockets.values()) s.destroy();
     this.sockets.clear();
     this.members.clear();
+    this.uploads.clear();
   }
 }

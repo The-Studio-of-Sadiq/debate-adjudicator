@@ -1,4 +1,4 @@
-import type { InterruptionKind, SpeechTemplate, TimerStatus } from './types';
+import type { Interruption, InterruptionKind, Session, SpeechTemplate, TimerStatus } from './types';
 
 /** A pending POI the speaker hasn't answered is dropped after this many seconds. */
 export const POI_EXPIRE_SEC = 10;
@@ -18,6 +18,21 @@ export const INTERRUPTION_NAMES: Record<InterruptionKind, string> = {
  */
 export function pausesTimer(kind: InterruptionKind): boolean {
   return kind !== 'POI';
+}
+
+/**
+ * The interruption `seat` is speaking in right now, if any: an accepted POI
+ * that hasn't ended, or a POO/POP the chair hasn't ruled on yet. A joined
+ * device records its microphone exactly while this returns something.
+ */
+export function liveInterruptionFor(session: Session, seat: string): { speechIndex: number; interruption: Interruption } | null {
+  const speechIndex = session.currentIndex;
+  const interruption = session.speeches[speechIndex]?.interruptions.find(
+    (i) =>
+      i.raisedBy === seat &&
+      (i.kind === 'POI' ? i.status === 'accepted' && i.endedAtSec === undefined : i.status === 'pending'),
+  );
+  return interruption ? { speechIndex, interruption } : null;
 }
 
 export function canRaise(

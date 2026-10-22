@@ -1,4 +1,4 @@
-import { ScrollView, Text } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { elapsedMs, formatClock, type ClipRef, type Session } from '@debate/core';
 import { colors } from '../theme';
@@ -57,14 +57,25 @@ export function ReviewScreen(props: { session: Session; onBack: () => void; onRe
                 {r.events.length ? `${formatClock(used)}${over > 0 ? ` (+${Math.round(over)}s)` : ''}` : 'Not delivered'}
               </Text>
             </Row>
-            {r.interruptions.map((i) => (
-              <Text key={i.id} style={styles.muted}>
-                {formatClock(i.raisedAtSec)} · {i.kind} from {i.raisedBy} · {describeOutcome(i)}
-              </Text>
-            ))}
-            {r.clips.map((c) => (
-              <ClipPlayer key={c.id} clip={c} />
-            ))}
+            {r.clips
+              .filter((c) => !c.interruptionId)
+              .map((c) => (
+                <View key={c.id} style={{ gap: 4 }}>
+                  <Text style={styles.muted}>Room recording</Text>
+                  <ClipPlayer clip={c} />
+                </View>
+              ))}
+            {r.interruptions.map((i) => {
+              const clip = r.clips.find((c) => c.interruptionId === i.id);
+              return (
+                <View key={i.id} style={{ gap: 4, paddingLeft: 10, borderLeftWidth: 2, borderColor: colors.border }}>
+                  <Text style={styles.muted}>
+                    {formatClock(i.raisedAtSec)} · {i.kind} from {i.raisedBy} · {describeOutcome(i)}
+                  </Text>
+                  {clip && <ClipPlayer clip={clip} />}
+                </View>
+              );
+            })}
           </Card>
         );
       })}

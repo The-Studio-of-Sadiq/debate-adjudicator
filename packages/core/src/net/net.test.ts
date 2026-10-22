@@ -1,6 +1,7 @@
 import net from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
 import { BP } from '../formats';
+import { liveInterruptionFor } from '../interruptions';
 import { createSession, currentSpeech, reduceSession, type SessionAction } from '../session';
 import { elapsedMs } from '../timer';
 import type { BellPattern, Session } from '../types';
@@ -27,7 +28,12 @@ async function startHost() {
   const clock = { t: 1_000_000 };
   let session: Session = createSession(BP, { id: 's1', now: clock.t });
   const rings: BellPattern[] = [];
+  const saved: { name: string; base64: string }[] = [];
   const host: HostController = new HostController({
+    saveClip: async (name, base64) => {
+      saved.push({ name, base64 });
+      return `file:///clips/${name}`;
+    },
     token: TOKEN,
     hostName: 'Chair',
     getSession: () => session,
@@ -52,7 +58,7 @@ async function startHost() {
     session = reduceSession(session, a);
     host.publish(session);
   };
-  return { host, port, clock, rings, act, get session() { return session; } };
+  return { host, port, clock, rings, saved, act, get session() { return session; } };
 }
 
 function join(port: number, opts: { id: string; role: MemberRole; seat?: string; token?: string; now?: () => number }) {
@@ -189,5 +195,69 @@ describe('host/client over TCP', () => {
 
     v.client.ring('single');
     await waitFor(() => v.denied.length === 1);
+  });
+});
+
+describe('interruption clips', () => {
+  async function roomWithAcceptedPoi() {
+    const h = await startHost();
+    const dlo = join(h.port, { id: 'dlo', role: 'debater', seat: 'DLO' });
+    const lo = join(h.port, { id: 'lo', role: 'debater', seat: 'LO' });
+    await waitFor(() => h.host.list().length === 2);
+    h.host.approve('dlo');
+    h.host.approve('lo');
+    await waitFor(() => dlo.client.status === 'joined' && lo.client.status === 'joined');
+    h.act({ type: 'timer', event: 'start', at: h.clock.t });
+    h.clock.t += 90_000;
+    h.act({ type: 'raise', id: 'poi1', kind: 'POI', raisedBy: 'DLO', at: h.clock.t });
+    h.act({ type: 'decidePoi', id: 'poi1', accept: true, at: h.clock.t });
+    return { h, dlo, lo };
+  }
+
+  const meta = { speechIndex: 0, interruptionId: 'poi1', startedAt: 1, durationMs: 12_000, ext: 'm4a' };
+
+  it('knows when a seat is speaking', async () => {
+    const { h } = await roomWithAcceptedPoi();
+    expect(liveInterruptionFor(h.session, 'DLO')?.interruption.id).toBe('poi1');
+    expect(liveInterruptionFor(h.session, 'LO')).toBeNull();
+    h.act({ type: 'endPoi', id: 'poi1', at: h.clock.t + 10_000 });
+    expect(liveInterruptionFor(h.session, 'DLO')).toBeNull();
+  });
+
+  it('uploads a multi-chunk clip and attaches it to the interruption', async () => {
+    const { h, dlo } = await roomWithAcceptedPoi();
+    // ~3 chunks of valid base64.
+    const base64 = Buffer.alloc(100_000, 7).toString('base64');
+    await dlo.client.uploadClip('poi1-dlo', meta, base64);
+
+    expect(h.saved).toEqual([{ name: 'poi1-dlo.m4a', base64 }]);
+    expect(currentSpeech(h.session).clips).toMatchObject([
+      { id: 'poi1-dlo', deviceId: 'dlo', uri: 'file:///clips/poi1-dlo.m4a', interruptionId: 'poi1', durationMs: 12_000 },
+    ]);
+    expect(dlo.client.pendingClips).toBe(0);
+
+    // A retry of the same clip is confirmed without storing it twice.
+    await dlo.client.uploadClip('poi1-dlo', meta, base64);
+    expect(h.saved).toHaveLength(1);
+  });
+
+  it("refuses audio for someone else's interruption", async () => {
+    const { h, lo } = await roomWithAcceptedPoi();
+    await expect(lo.client.uploadClip('poi1-lo', meta, 'AAAA')).rejects.toThrow('Not your interruption');
+    expect(h.saved).toHaveLength(0);
+  });
+
+  it('refuses ids that are unsafe as file names', async () => {
+    const { dlo } = await roomWithAcceptedPoi();
+    await expect(dlo.client.uploadClip('../evil', meta, 'AAAA')).rejects.toThrow('Bad clip metadata');
+  });
+
+  it('sends a clip queued while offline once it reconnects', async () => {
+    const { h, dlo } = await roomWithAcceptedPoi();
+    (dlo.client as unknown as { socket: SocketLike }).socket.destroy();
+    await waitFor(() => dlo.client.status === 'reconnecting');
+    const upload = dlo.client.uploadClip('poi1-dlo', meta, 'AAAA');
+    await upload;
+    expect(h.saved.map((s) => s.name)).toEqual(['poi1-dlo.m4a']);
   });
 });

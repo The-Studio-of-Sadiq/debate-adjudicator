@@ -1,6 +1,29 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { DebateFormat, Session } from '@debate/core';
 
+/** Exposed by apps/desktop/preload.js: files on disk, written immediately. */
+interface StoreBridge {
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string): Promise<void>;
+  remove(key: string): Promise<void>;
+}
+const bridge = (globalThis as { debateStore?: StoreBridge }).debateStore;
+
+/**
+ * Android: AsyncStorage (SQLite, durable). Windows app: the disk store, falling
+ * back to AsyncStorage (localStorage) for data saved before it existed.
+ */
+const kv = bridge
+  ? {
+      getItem: async (key: string) => (await bridge.get(key)) ?? AsyncStorage.getItem(key),
+      setItem: (key: string, value: string) => bridge.set(key, value),
+      removeItem: async (key: string) => {
+        await bridge.remove(key);
+        await AsyncStorage.removeItem(key);
+      },
+    }
+  : AsyncStorage;
+
 const INDEX_KEY = 'sessions:index';
 const sessionKey = (id: string) => `session:${id}`;
 const FORMATS_KEY = 'formats:custom';
@@ -14,7 +37,7 @@ export interface SessionSummary {
 
 async function readJson<T>(key: string, fallback: T): Promise<T> {
   try {
-    const raw = await AsyncStorage.getItem(key);
+    const raw = await kv.getItem(key);
     return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
     return fallback;
@@ -31,17 +54,17 @@ export async function loadSession(id: string): Promise<Session | null> {
 }
 
 export async function saveSession(s: Session): Promise<void> {
-  await AsyncStorage.setItem(sessionKey(s.id), JSON.stringify(s));
+  await kv.setItem(sessionKey(s.id), JSON.stringify(s));
   const list = await readJson<SessionSummary[]>(INDEX_KEY, []);
   const summary: SessionSummary = { id: s.id, createdAt: s.createdAt, motion: s.motion, formatName: s.format.name };
   const next = [summary, ...list.filter((x) => x.id !== s.id)];
-  await AsyncStorage.setItem(INDEX_KEY, JSON.stringify(next));
+  await kv.setItem(INDEX_KEY, JSON.stringify(next));
 }
 
 export async function deleteSession(id: string): Promise<void> {
-  await AsyncStorage.removeItem(sessionKey(id));
+  await kv.removeItem(sessionKey(id));
   const list = await readJson<SessionSummary[]>(INDEX_KEY, []);
-  await AsyncStorage.setItem(INDEX_KEY, JSON.stringify(list.filter((x) => x.id !== id)));
+  await kv.setItem(INDEX_KEY, JSON.stringify(list.filter((x) => x.id !== id)));
 }
 
 /** Custom formats saved from the bell editor, keyed by format id. */
@@ -52,13 +75,13 @@ export async function loadCustomFormats(): Promise<Record<string, DebateFormat>>
 export async function saveCustomFormat(f: DebateFormat): Promise<void> {
   const all = await loadCustomFormats();
   all[f.id] = f;
-  await AsyncStorage.setItem(FORMATS_KEY, JSON.stringify(all));
+  await kv.setItem(FORMATS_KEY, JSON.stringify(all));
 }
 
 export async function resetCustomFormat(id: string): Promise<void> {
   const all = await loadCustomFormats();
   delete all[id];
-  await AsyncStorage.setItem(FORMATS_KEY, JSON.stringify(all));
+  await kv.setItem(FORMATS_KEY, JSON.stringify(all));
 }
 
 export interface Identity {
@@ -73,12 +96,12 @@ export async function loadIdentity(): Promise<Identity> {
   const saved = await readJson<Identity | null>(IDENTITY_KEY, null);
   if (saved) return saved;
   const fresh = { deviceId: makeId(), name: '' };
-  await AsyncStorage.setItem(IDENTITY_KEY, JSON.stringify(fresh));
+  await kv.setItem(IDENTITY_KEY, JSON.stringify(fresh));
   return fresh;
 }
 
 export async function saveIdentity(i: Identity): Promise<void> {
-  await AsyncStorage.setItem(IDENTITY_KEY, JSON.stringify(i));
+  await kv.setItem(IDENTITY_KEY, JSON.stringify(i));
 }
 
 export const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);

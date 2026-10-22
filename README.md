@@ -21,6 +21,20 @@ npm run desktop        # build the web bundle and open it in Electron
 npm run android        # Expo dev server for Android
 ```
 
+### Installing on Android
+
+```bash
+cd apps/app
+npx eas-cli@latest build -p android --profile preview
+```
+
+EAS prints a link with an install QR code. On the phone, open it, download the
+`.apk` and allow installs from your browser when Android asks.
+
+Joining: scan the chair's QR with **Scan QR code** in the app, or with the
+phone's normal camera app; the `debate://` link opens the join screen with the
+code filled in.
+
 ### Testing host + client on one PC
 
 ```bash

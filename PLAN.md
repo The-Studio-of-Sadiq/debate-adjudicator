@@ -114,7 +114,12 @@ Rules vary by tournament year, so everything is editable.
 1. ✅ **Single-device MVP**: presets, timer, bells, per-speech recording, session history.
 2. ✅ **Local multi-device**: QR join + approval, roles, synced timer and bells, Wi-Fi QR for hotspots.
    Interruptions are already raised and answered from joined devices.
-3. **Interruption audio**: the raiser's mic records an accepted POI/POO/POP.
-4. **Recording forwarding + transcription**: clip upload to host, Whisper on device,
-   optional cloud provider, transcript synced to audio.
+3. ✅ **Interruption audio**: a debater's device records their accepted POI (until it ends)
+   or their POO/POP (until the chair rules), uploads it in chunks over the LAN, and the
+   chair's device attaches it to that interruption. Uploads queue and retry across
+   reconnects; the host only accepts audio for an interruption the sender's seat raised.
+   The Windows app now stores rounds and recordings on disk, so a crash loses nothing.
+4. **Transcription**: Whisper on device, optional cloud provider, transcript synced
+   to audio. (Speakers recording their own speech on their phone can reuse the
+   Phase 3 clip upload.)
 5. **Adjudicator tools**: timestamped flow notes, ballots (BP ranks, UADC scores), PDF export.

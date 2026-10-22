@@ -27,6 +27,13 @@ export function capabilitiesFor(member: Member, session: Session): Capabilities 
   };
 }
 
+/** A device may upload audio only for an interruption its own seat raised. */
+export function mayUploadClip(member: Member, session: Session, speechIndex: number, interruptionId: string): boolean {
+  if (member.status !== 'approved' || member.role !== 'debater' || !member.seat) return false;
+  const target = session.speeches[speechIndex]?.interruptions.find((i) => i.id === interruptionId);
+  return !!target && target.raisedBy === member.seat;
+}
+
 /** Host-side check for an action requested by a joined device. */
 export function authorize(member: Member, action: SessionAction, session: Session): boolean {
   if (member.status !== 'approved') return false;

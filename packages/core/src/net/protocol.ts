@@ -31,11 +31,29 @@ export interface Hello {
   want: { role: MemberRole; seat?: string };
 }
 
+/** Describes an audio clip a joined device recorded, e.g. its own accepted POI. */
+export interface ClipMeta {
+  speechIndex: number;
+  interruptionId: string;
+  /** Host epoch ms when recording started. */
+  startedAt: number;
+  durationMs: number;
+  /** File extension, e.g. "m4a" or "webm". */
+  ext: string;
+}
+
+/** Base64 chunk size; a multiple of 4 so chunks concatenate into valid base64. */
+export const CLIP_CHUNK_CHARS = 48_000;
+/** Largest clip the host accepts (base64 chars, ~15 MB of audio). */
+export const MAX_CLIP_CHARS = 20_000_000;
+
 export type ClientMsg =
   | Hello
   | { t: 'ping'; c0: number }
   | { t: 'act'; action: SessionAction }
-  | { t: 'ring'; pattern: BellPattern };
+  | { t: 'ring'; pattern: BellPattern }
+  /** One piece of a clip upload; the first chunk (seq 0) carries the metadata. */
+  | { t: 'clip'; id: string; seq: number; last: boolean; data: string; meta?: ClipMeta };
 
 export type HostMsg =
   | { t: 'pending'; hostName: string }
@@ -45,7 +63,9 @@ export type HostMsg =
   | { t: 'pong'; c0: number; h: number }
   | { t: 'ring'; pattern: BellPattern }
   | { t: 'denied'; reason: string }
-  | { t: 'rejected'; reason: string };
+  | { t: 'rejected'; reason: string }
+  | { t: 'clipAck'; id: string }
+  | { t: 'clipRejected'; id: string; reason: string };
 
 /**
  * The minimal socket surface both Node's `net.Socket` and
