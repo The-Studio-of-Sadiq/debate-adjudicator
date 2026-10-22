@@ -1,0 +1,13 @@
+{
+  "name": "desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "dev": "electron . --dev",
+    "start": "npm run export:web -w app && electron ."
+  },
+  "devDependencies": {
+    "electron": "^45.0.0"
+  }
+}
