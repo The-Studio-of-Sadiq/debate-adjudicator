@@ -6,7 +6,7 @@ import { errorText, formatName, outcomeText, roleName, useT } from '../i18n';
 import { exportPdf } from '../pdf';
 import { buildReportHtml, reportFileName } from '../report';
 import type { JobState } from '../transcription/useTranscriptionJobs';
-import { useTheme } from '../theme';
+import { FONTS, useTheme } from '../theme';
 import { Btn, Card, Chip, Row } from '../ui';
 import { progressText } from './TranscriptionSettingsScreen';
 
@@ -53,7 +53,7 @@ function ClipPlayer(props: { clip: ClipRef; transcript?: Transcript; job?: JobSt
               <Text
                 style={[
                   styles.text,
-                  i === playingIdx && { backgroundColor: colors.primary, color: colors.onPrimary, fontWeight: '600' },
+                  i === playingIdx && { backgroundColor: colors.primary, color: colors.onPrimary, fontFamily: FONTS.semibold },
                 ]}
               >
                 <Text style={i === playingIdx ? undefined : styles.muted}>{formatClock(s.startMs / 1000)} </Text>

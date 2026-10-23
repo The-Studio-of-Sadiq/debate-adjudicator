@@ -1,5 +1,14 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { StyleSheet, useColorScheme } from 'react-native';
+import { useFonts } from 'expo-font';
+// Import each weight from its own subpath: the packages' main entry pulls in
+// every weight and italic, adding megabytes of unused fonts to the app.
+import { InstrumentSerif_400Regular } from '@expo-google-fonts/instrument-serif/400Regular';
+import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
+import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
+import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
+import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
+import { Inter_800ExtraBold } from '@expo-google-fonts/inter/800ExtraBold';
 import type { SpeechPhase } from '@debate/core';
 
 /**
@@ -75,16 +84,56 @@ const PHASES: Record<ThemeName, Record<SpeechPhase, { bg: string; text: string }
   },
 };
 
+/**
+ * Type system ("Parliament"): Instrument Serif for display titles and motions,
+ * Inter for everything else, with tabular figures on the clock. Fonts ship
+ * inside the app (no network needed); see useBrandFonts().
+ *
+ * Android treats each weight of a custom font as its own family, so weights
+ * are chosen by family name, never with fontWeight.
+ */
+export const FONTS = {
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semibold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+  heavy: 'Inter_800ExtraBold',
+  serif: 'InstrumentSerif_400Regular',
+} as const;
+
+export function useBrandFonts(): boolean {
+  const [loaded, error] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_800ExtraBold,
+    InstrumentSerif_400Regular,
+  });
+  // If a font fails to load, carry on with the system font rather than a blank app.
+  return loaded || !!error;
+}
+
 function makeStyles(c: Palette) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: c.bg },
     container: { width: '100%', maxWidth: 900, alignSelf: 'center', padding: 16, gap: 16 },
-    h1: { color: c.text, fontSize: 26, fontWeight: '700' },
-    h2: { color: c.text, fontSize: 18, fontWeight: '600' },
-    text: { color: c.text, fontSize: 15 },
-    muted: { color: c.muted, fontSize: 13 },
+    /** Screen titles. */
+    h1: { color: c.text, fontSize: 34, lineHeight: 38, fontFamily: FONTS.serif },
+    /** Motions and other quoted titles. */
+    title: { color: c.text, fontSize: 24, lineHeight: 29, fontFamily: FONTS.serif },
+    /** Section headings. */
+    h2: { color: c.text, fontSize: 18, fontFamily: FONTS.semibold },
+    text: { color: c.text, fontSize: 15, lineHeight: 21, fontFamily: FONTS.regular },
+    muted: { color: c.muted, fontSize: 13, lineHeight: 18, fontFamily: FONTS.medium },
+    /** Small caps label above a title, e.g. "DEBATE". */
+    eyebrow: { color: c.text, fontSize: 11, letterSpacing: 3.5, fontFamily: FONTS.bold, textTransform: 'uppercase' },
     /** Warnings and errors: bold, prefixed with ⚠ in the text itself. */
-    alert: { color: c.text, fontSize: 14, fontWeight: '700' },
+    alert: { color: c.text, fontSize: 14, fontFamily: FONTS.bold },
+    /** Join codes and other things people read out or type. */
+    code: { color: c.text, fontSize: 28, letterSpacing: 1, fontFamily: FONTS.bold, fontVariant: ['tabular-nums'] },
+    /** The big clock. Size is set per screen. */
+    clock: { fontFamily: FONTS.heavy, fontVariant: ['tabular-nums'], letterSpacing: -2 },
     input: {
       color: c.text,
       backgroundColor: c.surfaceHi,
@@ -92,6 +141,7 @@ function makeStyles(c: Palette) {
       paddingHorizontal: 12,
       paddingVertical: 10,
       fontSize: 15,
+      fontFamily: FONTS.regular,
       borderWidth: 1,
       borderColor: c.border,
     },
@@ -99,10 +149,10 @@ function makeStyles(c: Palette) {
     row: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
     btn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
     big: { paddingVertical: 16, paddingHorizontal: 22, borderRadius: 14, minWidth: 120 },
-    btnText: { color: c.text, fontSize: 15, fontWeight: '600' },
+    btnText: { color: c.text, fontSize: 15, fontFamily: FONTS.semibold },
     bigText: { fontSize: 18 },
     chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1 },
-    chipText: { fontSize: 13, fontWeight: '600' },
+    chipText: { fontSize: 13, fontFamily: FONTS.semibold },
   });
 }
 

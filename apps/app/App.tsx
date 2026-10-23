@@ -29,7 +29,8 @@ import {
   saveThemePreference,
   type Identity,
 } from './src/storage';
-import { ThemeProvider, useTheme, type ThemePreference } from './src/theme';
+import * as SplashScreen from 'expo-splash-screen';
+import { ThemeProvider, useBrandFonts, useTheme, type ThemePreference } from './src/theme';
 import { Btn, Row } from './src/ui';
 
 type Screen =
@@ -43,11 +44,20 @@ type Screen =
   | { name: 'transcription' }
   | { name: 'client'; req: JoinRequest };
 
+// Keep the native splash up until the brand fonts are ready, so text never
+// flashes in a fallback font.
+void SplashScreen.preventAutoHideAsync().catch(() => {});
+
 export default function App() {
   const [themePref, setThemePref] = useState<ThemePreference>('system');
+  const fontsReady = useBrandFonts();
   useEffect(() => {
     void loadThemePreference().then(setThemePref);
   }, []);
+  useEffect(() => {
+    if (fontsReady) SplashScreen.hide();
+  }, [fontsReady]);
+  if (!fontsReady) return null;
   return (
     <ThemeProvider preference={themePref}>
       <AppBody
