@@ -21,8 +21,18 @@ export interface LocalEngine {
   transcribe(uri: string, model: ModelName, onProgress: (p: Progress) => void): Promise<TranscriptSegment[]>;
 }
 
+/** Language spoken in the recordings. */
+export type SpeechLanguage = 'en' | 'bn';
+export const SPEECH_LANGUAGES: SpeechLanguage[] = ['en', 'bn'];
+/** The offline models are English-only (`*.en`); other languages need the cloud. */
+export const OFFLINE_LANGUAGES: SpeechLanguage[] = ['en'];
+
+/** openai: any OpenAI-compatible `/audio/transcriptions` (OpenAI, Groq). elevenlabs: ElevenLabs Scribe. */
+export type CloudProvider = 'openai' | 'elevenlabs';
+
 export interface CloudSettings {
-  /** OpenAI-compatible API root, e.g. https://api.openai.com/v1 */
+  provider: CloudProvider;
+  /** API root, e.g. https://api.openai.com/v1 */
   baseUrl: string;
   apiKey: string;
   model: string;
@@ -31,18 +41,22 @@ export interface CloudSettings {
 export interface TranscriptionSettings {
   /** auto: cloud when online and a key is set, otherwise offline. */
   mode: 'auto' | 'local' | 'cloud';
+  language: SpeechLanguage;
   model: ModelName;
   cloud: CloudSettings;
 }
 
 export const DEFAULT_SETTINGS: TranscriptionSettings = {
   mode: 'auto',
+  language: 'en',
   model: 'base.en',
-  cloud: { baseUrl: 'https://api.openai.com/v1', apiKey: '', model: 'whisper-1' },
+  cloud: { provider: 'openai', baseUrl: 'https://api.openai.com/v1', apiKey: '', model: 'whisper-1' },
 };
 
-/** Known OpenAI-compatible providers offered as one-tap presets. */
-export const CLOUD_PRESETS: { label: string; baseUrl: string; model: string }[] = [
-  { label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', model: 'whisper-1' },
-  { label: 'Groq', baseUrl: 'https://api.groq.com/openai/v1', model: 'whisper-large-v3-turbo' },
+/** Known providers offered as one-tap presets. */
+export const CLOUD_PRESETS: { label: string; provider: CloudProvider; baseUrl: string; model: string }[] = [
+  { label: 'OpenAI', provider: 'openai', baseUrl: 'https://api.openai.com/v1', model: 'whisper-1' },
+  { label: 'Groq', provider: 'openai', baseUrl: 'https://api.groq.com/openai/v1', model: 'whisper-large-v3-turbo' },
+  // Far more accurate for Bangla in our tests (15% word errors against 82% for Whisper large-v3).
+  { label: 'ElevenLabs Scribe', provider: 'elevenlabs', baseUrl: 'https://api.elevenlabs.io/v1', model: 'scribe_v2' },
 ];

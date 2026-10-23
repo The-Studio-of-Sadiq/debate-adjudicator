@@ -5,7 +5,7 @@ import { applyTimerEvent, elapsedMs, formatClock, speechPhase, timerStatus } fro
 import { createSession, currentSpeech, publicView, reduceSession, type SessionAction } from './session';
 import { evaluateBallot } from './ballot';
 import type { TimerEvent } from './types';
-import { cleanSegments, segmentIndexAt, segmentsFromVerboseJson, transcriptText } from './transcript';
+import { cleanSegments, segmentIndexAt, segmentsFromVerboseJson, segmentsFromWords, transcriptText } from './transcript';
 
 const T0 = 1_000_000;
 const s = (n: number) => T0 + n * 1000;
@@ -187,6 +187,25 @@ describe('transcripts', () => {
   it('reads OpenAI-style verbose_json', () => {
     expect(segmentsFromVerboseJson({ segments: [{ start: 1.5, end: 3, text: ' Hello ' }] })).toEqual([{ startMs: 1500, endMs: 3000, text: 'Hello' }]);
     expect(segmentsFromVerboseJson({ text: 'Only text', duration: 4 })).toEqual([{ startMs: 0, endMs: 4000, text: 'Only text' }]);
+  });
+
+  it('groups word timestamps into lines at sentence ends and pauses', () => {
+    const w = (text: string, start: number, end: number, type = 'word') => ({ text, start, end, type });
+    const words = [
+      w('আমি', 0.5, 0.8), w(' ', 0.8, 0.9, 'spacing'), w('বলছি।', 0.9, 1.4),
+      w(' ', 1.4, 1.5, 'spacing'), w('(applause)', 1.5, 2, 'audio_event'),
+      w('Next', 2.1, 2.4), w(' ', 2.4, 2.5, 'spacing'), w('point', 2.5, 2.9),
+      // A pause of more than a second starts a new line.
+      w(' ', 2.9, 4.5, 'spacing'), w('after', 4.5, 4.9), w(' ', 4.9, 5, 'spacing'), w('pause', 5, 5.4),
+    ];
+    expect(segmentsFromWords(words)).toEqual([
+      { startMs: 500, endMs: 1400, text: 'আমি বলছি।' },
+      { startMs: 2100, endMs: 2900, text: 'Next point' },
+      { startMs: 4500, endMs: 5400, text: 'after pause' },
+    ]);
+    // A long run without punctuation or pauses is split after 15 seconds.
+    const run = Array.from({ length: 40 }, (_, i) => w('word', i * 0.5, i * 0.5 + 0.4));
+    expect(segmentsFromWords(run).length).toBe(2);
   });
 });
 

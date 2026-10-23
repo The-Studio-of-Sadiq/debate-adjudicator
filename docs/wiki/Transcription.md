@@ -2,6 +2,20 @@
 
 Transcription runs on the chair's device, which holds every recording.
 
+## Language
+
+Set **Language spoken** to the language of the speeches: **English** or
+**Bangla (বাংলা)**.
+
+- English works offline and with every cloud provider.
+- Bangla needs a cloud provider with a key, because the offline models only
+  understand English. In **Auto** mode Bangla always goes to the cloud and never
+  falls back to the offline model; **Offline only** can't transcribe it.
+- Use **ElevenLabs Scribe** for Bangla. On 20 public Bangla recordings it got
+  15% of words wrong, against 82% for Whisper large-v3 on Groq, and most of its
+  "errors" were English words written in English, which suits debates where
+  speakers switch languages.
+
 ## Modes
 
 Home → **Transcription settings**:
@@ -28,13 +42,23 @@ works, as the screen stays awake during transcription.
 
 ## Cloud providers
 
-Any OpenAI-compatible `/audio/transcriptions` API works. One-tap presets:
+One-tap presets:
 
+- **ElevenLabs Scribe**: `https://api.elevenlabs.io/v1`, model `scribe_v2`.
+  Best for Bangla. Key from elevenlabs.io → Settings → API keys.
 - **OpenAI**: `https://api.openai.com/v1`, model `whisper-1`
-- **Groq**: `https://api.groq.com/openai/v1`, model `whisper-large-v3-turbo`
+- **Groq**: `https://api.groq.com/openai/v1`, model `whisper-large-v3-turbo`.
+  Free tier, good for English.
+
+Any other OpenAI-compatible `/audio/transcriptions` API works too: pick OpenAI
+or Groq, then change the URL and model.
 
 Paste the API key and **Save**. The key is stored on the device unencrypted,
 and audio is sent to the provider you choose.
+
+To try a provider on a recording before a tournament, contributors can use
+`npm run transcribe:try` with keys in `.env` (see
+[CONTRIBUTING](https://github.com/The-Studio-of-Sadiq/debate-adjudicator/blob/main/CONTRIBUTING.md)).
 
 ## Using transcripts
 

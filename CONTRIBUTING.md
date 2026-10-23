@@ -36,9 +36,10 @@ cp .env.example .env
 npm run transcribe:try -- path/to/speech.m4a
 ```
 
-`transcribe:try` sends one recording to Groq (free account at
+`transcribe:try` sends one recording to ElevenLabs Scribe or Groq
+(`TRANSCRIBE_PROVIDER` in `.env`; Groq has a free account at
 [console.groq.com](https://console.groq.com/keys)) and prints the transcript,
-in Bangla by default (`TRANSCRIBE_LANGUAGE` in `.env`). The app doesn't read
+in Bangla by default (`TRANSCRIBE_LANGUAGE`). The app doesn't read
 `.env`: in the app, keys go in Transcription settings and stay on the device.
 
 ## Project layout

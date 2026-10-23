@@ -267,6 +267,10 @@ const en = {
   },
   transcription: {
     title: 'Transcription',
+    speechLanguage: 'Language spoken',
+    // Each language in its own script after the English name, so speakers recognise it.
+    languages: { en: 'English', bn: 'Bangla (বাংলা)' },
+    cloudOnlyLanguage: 'Needs a cloud provider with a key: the offline models understand English only. ElevenLabs Scribe is the most accurate for Bangla.',
     whenCloud: 'When to use the cloud',
     modes: {
       auto: 'Auto',
@@ -283,9 +287,9 @@ const en = {
     models: { 'tiny.en': 'Tiny (fastest)', 'base.en': 'Base (recommended)', 'small.en': 'Small (most accurate)' },
     modelSize: '{{label}} · {{size}} MB',
     cloudTitle: 'Cloud provider (optional)',
-    cloudHint: 'Any OpenAI-compatible transcription API. Audio is sent to the provider; the key stays on this device.',
+    cloudHint: 'ElevenLabs Scribe or any OpenAI-compatible transcription API. Audio is sent to the provider; the key stays on this device.',
     baseUrl: 'API base URL',
-    model: 'Model, e.g. whisper-1',
+    model: 'Model, e.g. whisper-1 or scribe_v2',
     apiKey: 'API key',
     progress: {
       starting: 'Starting…',
@@ -299,6 +303,7 @@ const en = {
     unavailableBuild: 'This build has no offline transcription module.',
     downloadFailed: 'Model download failed; check the connection and try again',
     noApiKey: 'No API key set for the cloud provider',
+    offlineEnglishOnly: 'Offline transcription is English only. Choose Auto or Cloud only and set a cloud provider.',
   },
   ballot: {
     title: 'Ballot',

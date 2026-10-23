@@ -407,7 +407,7 @@ const GUIDES = [
   ['Home', '', 'How to use Debate Adjudicator: guides for chairs, debaters and timekeepers, transcription, ballots, troubleshooting, translating and adding formats.'],
   ['Chair-guide', 'chair-guide', 'Run a debate round as the chair: set up the network, invite devices by QR code, time speeches, rule on points of order, then ballot and report.'],
   ['Joining-a-round', 'joining-a-round', 'Join a debate round from your phone as a debater, timekeeper or wing adjudicator: scan the QR code, offer POIs and points of order, keep time.'],
-  ['Transcription', 'transcription', 'Transcribe debate speeches offline with Whisper on Android or Windows, or with an OpenAI-compatible cloud provider. Models, speed and settings.'],
+  ['Transcription', 'transcription', 'Transcribe debate speeches in English or Bangla: offline with Whisper, or with ElevenLabs Scribe, OpenAI or Groq. Models, languages and settings.'],
   ['Ballots-and-reports', 'ballots-and-reports', 'Score BP, UADC and WSDC ballots: speaker ranges, ranks and team points, winner and margin, checks before marking final, and PDF reports.'],
   ['Troubleshooting', 'troubleshooting', 'Fix common problems: devices that can’t connect on venue Wi-Fi, QR codes that won’t scan, bells, recording and transcription issues.'],
   ['Translating', 'translating', 'Translate Debate Adjudicator into your language: create a dictionary with one command, translate one file, and check coverage and mistakes.'],

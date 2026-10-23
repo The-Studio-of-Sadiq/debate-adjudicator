@@ -39,8 +39,9 @@ Every time, bell and range is editable.
   on the rest, and the clock pauses while a point is heard.
 - **Recording:** the chair records each speech; a debater's phone records their
   own accepted POI or point and sends it to the chair.
-- **Transcription:** offline Whisper on Android and Windows, or an
-  OpenAI-compatible cloud provider when online. Tap a transcript line to hear it.
+- **Transcription:** offline Whisper on Android and Windows, or a
+  cloud provider when online (ElevenLabs Scribe, OpenAI or Groq); English, and
+  Bangla through the cloud. Tap a transcript line to hear it.
 - **Adjudication:** timestamped flow notes, ballots for every format with ranks or
   winner computed from speaker scores, and a printable PDF report.
 - **Private by design:** notes, ballots and transcripts never leave the chair's device.
