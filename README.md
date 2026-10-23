@@ -8,6 +8,7 @@
 [![CI](https://github.com/The-Studio-of-Sadiq/debate-adjudicator/actions/workflows/ci.yml/badge.svg)](https://github.com/The-Studio-of-Sadiq/debate-adjudicator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
 ![Platforms](https://img.shields.io/badge/platforms-Android%20%7C%20Windows-black.svg)
+[![Website](https://img.shields.io/badge/website-live-black.svg)](https://the-studio-of-sadiq.github.io/debate-adjudicator/)
 
 An offline-first app for running debate rounds. The chair adjudicator's phone or
 laptop runs the room: a synced timer and bells on every device over local
@@ -77,7 +78,7 @@ npm run desktop
 If devices can't see each other, the venue Wi-Fi is probably isolating them:
 use the chair's phone hotspot instead. The lobby can show a Wi-Fi QR code for it.
 
-More detail is in the [docs](docs/wiki/Home.md).
+More detail is in the [docs](https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/).
 
 ## Development
 
@@ -90,6 +91,8 @@ npm run web            # UI in a browser at http://localhost:8081
 npm run desktop:dev    # Electron window on top of the running `npm run web`
 npm run desktop        # build the web bundle and open it in Electron
 npm run android        # Expo dev server for Android
+npm run site           # build the website into site-dist/
+npm run brand          # regenerate logo files and app icons
 ```
 
 | Path | Contents |
@@ -118,6 +121,7 @@ may ask to allow the app through the firewall; allow it on private networks.
 
 ## Documentation
 
+- [Website](https://the-studio-of-sadiq.github.io/debate-adjudicator/): overview, formats and the docs online
 - [Docs home](docs/wiki/Home.md): guides for chairs, debaters, transcription,
   ballots and troubleshooting
 - [Brand](docs/brand/README.md): logo, typography and how to regenerate assets

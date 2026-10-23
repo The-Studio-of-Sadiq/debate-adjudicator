@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
 
 permissions:
@@ -32,3 +32,5 @@ jobs:
         run: npm run typecheck
       - name: Translation keys
         run: npm run check:i18n
+      - name: Website builds
+        run: npm run site
