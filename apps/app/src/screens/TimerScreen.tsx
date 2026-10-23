@@ -24,8 +24,8 @@ import {
 import { useBells, useNow, useSpeechRecorder } from '../hooks';
 import { errorText, formatName, outcomeText, roleName, useT } from '../i18n';
 import { makeId } from '../storage';
-import { colors, phaseColor, phaseText } from '../theme';
-import { Btn, Card, Chip, Row, styles } from '../ui';
+import { useTheme } from '../theme';
+import { Btn, Card, Chip, Row } from '../ui';
 
 const KINDS: InterruptionKind[] = ['POI', 'POO', 'POP'];
 const RULINGS: Ruling[] = ['well-taken', 'not-well-taken', 'under-consideration'];
@@ -50,6 +50,7 @@ export function TimerScreen(props: {
   /** Deliver a recorded interruption clip (to the chair). Rejects with a reason on failure. */
   onInterruptionClip?: (clip: ClipRef, target: { speechIndex: number; interruptionId: string }) => Promise<void>;
 }) {
+  const { colors, styles, phase: phaseTheme } = useTheme();
   useKeepAwake();
   const t = useT();
   const { session, dispatch, caps } = props;
@@ -172,10 +173,10 @@ export function TimerScreen(props: {
   const isLast = session.currentIndex === session.speeches.length - 1;
   const showInterruptions = caps.rule || caps.raiseAs !== null || caps.decidePoi || speech.interruptions.length > 0;
   const speechNotes = (session.notes ?? []).filter((n) => n.speechIndex === session.currentIndex).sort((a, b) => a.atSec - b.atSec);
-  // Overtime flashes between white and black once a second.
+  // Overtime flashes between its colour and the inverse once a second.
   const flashOff = phase === 'overtime' && status === 'running' && Math.floor(elapsedSec) % 2 === 1;
-  const cardBg = flashOff ? '#000000' : phaseColor[phase];
-  const cardText = flashOff ? '#ffffff' : phaseText[phase];
+  const cardBg = flashOff ? phaseTheme.overtime.text : phaseTheme[phase].bg;
+  const cardText = flashOff ? phaseTheme.overtime.bg : phaseTheme[phase].text;
   const speaker = session.speakers?.[template.role];
 
   return (

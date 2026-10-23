@@ -41,7 +41,7 @@ for (const file of files) {
     if (![...keys].some((k) => k.startsWith(prefix))) problems.push(`${relative(root, file)}: no keys under "${prefix}…"`);
   }
   // Keys chosen by a ternary or passed around as values: 'section.key' literals that look like ours.
-  for (const m of src.matchAll(/'((?:common|timer|notes|interruptions|lobby|join|client|net|review|transcription|ballot|report|home|bells|language)\.[\w.-]+)'/g)) {
+  for (const m of src.matchAll(/'((?:common|timer|notes|interruptions|lobby|join|client|net|review|transcription|ballot|report|home|bells|language|appearance)\.[\w.-]+)'/g)) {
     if (!keys.has(m[1])) problems.push(`${relative(root, file)}: missing key "${m[1]}"`);
   }
 }

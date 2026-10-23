@@ -3,8 +3,8 @@ import { ScrollView, Text, TextInput, View } from 'react-native';
 import { errorText, useT, type T } from '../i18n';
 import { CLOUD_PRESETS, localEngine, type ModelName, type Progress, type TranscriptionSettings } from '../transcription';
 import { loadTranscriptionSettings, saveTranscriptionSettings } from '../storage';
-import { colors } from '../theme';
-import { Btn, Card, Chip, Row, styles } from '../ui';
+import { useTheme } from '../theme';
+import { Btn, Card, Chip, Row } from '../ui';
 
 const MODES: TranscriptionSettings['mode'][] = ['auto', 'local', 'cloud'];
 
@@ -19,6 +19,7 @@ export function progressText(t: T, p: Progress | undefined): string {
 }
 
 export function TranscriptionSettingsScreen({ onBack }: { onBack: () => void }) {
+  const { colors, styles } = useTheme();
   const t = useT();
   const [settings, setSettings] = useState<TranscriptionSettings | null>(null);
   const [downloaded, setDownloaded] = useState<Partial<Record<ModelName, boolean>>>({});

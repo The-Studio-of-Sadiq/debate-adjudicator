@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { DebateFormat, Session } from '@debate/core';
 import type { LanguagePreference } from './i18n';
+import type { ThemePreference } from './theme';
 import { DEFAULT_SETTINGS, type TranscriptionSettings } from './transcription/types';
 
 /** Exposed by apps/desktop/preload.js: files on disk, written immediately. */
@@ -84,6 +85,16 @@ export async function resetCustomFormat(id: string): Promise<void> {
   const all = await loadCustomFormats();
   delete all[id];
   await kv.setItem(FORMATS_KEY, JSON.stringify(all));
+}
+
+const THEME_KEY = 'settings:theme';
+
+export async function loadThemePreference(): Promise<ThemePreference> {
+  return readJson<ThemePreference>(THEME_KEY, 'system');
+}
+
+export async function saveThemePreference(pref: ThemePreference): Promise<void> {
+  await kv.setItem(THEME_KEY, JSON.stringify(pref));
 }
 
 const LANGUAGE_KEY = 'settings:language';

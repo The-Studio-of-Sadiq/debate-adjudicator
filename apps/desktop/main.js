@@ -1,6 +1,6 @@
 // Windows shell: hosts the shared Expo web UI and gives it Node services over
 // IPC: LAN sockets (net.js), clip storage and offline Whisper (whisper.js).
-const { app, BrowserWindow, dialog, ipcMain, net, protocol, session } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, nativeTheme, net, protocol, session } = require('electron');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -45,7 +45,8 @@ function createWindow() {
     width: 1200,
     height: 850,
     minWidth: 380,
-    backgroundColor: '#0f1115',
+    // Matches the app's "match device" theme until the page has loaded.
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#000000' : '#ffffff',
     title: profile ? `Debate Adjudicator (${profile})` : 'Debate Adjudicator',
     autoHideMenuBar: true,
     webPreferences: {

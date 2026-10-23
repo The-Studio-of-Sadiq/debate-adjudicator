@@ -1,19 +1,84 @@
 # Debate Adjudicator
 
-Timekeeper, bells, per-speech recording and POI/POO/POP log for BP and UADC
-debates. Android + Windows. See [PLAN.md](PLAN.md) for the design and roadmap.
+[![CI](https://github.com/The-Studio-of-Sadiq/debate-adjudicator/actions/workflows/ci.yml/badge.svg)](https://github.com/The-Studio-of-Sadiq/debate-adjudicator/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
+![Platforms](https://img.shields.io/badge/platforms-Android%20%7C%20Windows-black.svg)
 
-## Layout
+An offline-first app for running debate rounds. The chair adjudicator's phone or
+laptop runs the room: a synced timer and bells on every device over local
+Wi-Fi, POIs and points of order raised from debaters' phones, recordings,
+offline transcription, ballots and a PDF report. No accounts, no cloud needed.
 
-- `packages/core`: timer engine, bell scheduler, format presets, interruptions, session reducer (pure TS, unit tested)
-- `apps/app`: Expo app (Android + web UI)
-- `apps/desktop`: Electron shell for Windows, serving the web build
+Built for **British Parliamentary** and **UADC (Asian Parliamentary)**; every
+time, bell and range is editable.
 
-## Commands
+<p align="center">
+  <img src="docs/screenshots/timer-dark.png" alt="Chair's timer in dark mode with a pending POI" width="62%">
+  <img src="docs/screenshots/debater-phone-light.png" alt="Debater's phone in light mode" width="22%">
+</p>
+
+## Features
+
+- **Timekeeping:** BP and UADC presets, phase display (protected, POIs open,
+  wrap up, grace, overtime), scheduled and manual bells, editable bell plans.
+- **Local multi-device rooms:** join by QR code or typed code over the room's
+  Wi-Fi or a phone hotspot; the chair approves each device and assigns roles
+  (debater seat, timekeeper, wing adjudicator, viewer). Every device shows the
+  same second and rings bells together.
+- **Interruptions:** POI, Point of Order and Point of Personal Privilege raised
+  from debaters' phones; the speaker accepts or declines POIs, the chair rules
+  on the rest, and the clock pauses while a point is heard.
+- **Recording:** the chair records each speech; a debater's phone records their
+  own accepted POI or point and sends it to the chair.
+- **Transcription:** offline Whisper on Android and Windows, or an
+  OpenAI-compatible cloud provider when online. Tap a transcript line to hear it.
+- **Adjudication:** timestamped flow notes, BP and UADC ballots with ranks or
+  winner computed from speaker scores, and a printable PDF report.
+- **Private by design:** notes, ballots and transcripts never leave the chair's device.
+- **Light and dark** monochrome themes; all text translatable.
+
+| Lobby | Ballot | Transcript |
+|---|---|---|
+| ![Invite devices with QR code](docs/screenshots/lobby-dark.png) | ![BP ballot](docs/screenshots/ballot-dark.png) | ![Transcript synced to audio](docs/screenshots/transcript-dark.png) |
+
+## Install
+
+**Android:** build an installable APK in the cloud (free Expo account):
+
+```bash
+cd apps/app
+npx eas-cli@latest login
+npx eas-cli@latest build -p android --profile preview
+```
+
+Open the link EAS prints on the phone, download the `.apk` and allow installs
+from your browser when Android asks.
+
+**Windows:** from a clone of this repository:
+
+```bash
+npm install
+npm run desktop
+```
+
+## Using it
+
+1. **Chair:** start a round, tap **Invite devices** and show the QR code.
+2. **Everyone else:** tap **Join**, pick a role (and seat, for debaters), then
+   scan the QR, either in the app or with the phone's normal camera.
+3. **Chair:** approve each request, then run the speeches.
+4. After the round: **Transcribe all**, fill in the **Ballot**, **Export PDF**.
+
+If devices can't see each other, the venue Wi-Fi is probably isolating them:
+use the chair's phone hotspot instead. The lobby can show a Wi-Fi QR code for it.
+
+More detail is in the [docs](docs/wiki/Home.md).
+
+## Development
 
 ```bash
 npm install            # also downloads the Electron binary
-npm test               # core unit tests
+npm test               # core unit and network tests
 npm run typecheck
 npm run check:i18n     # every t('…') key exists in the English dictionary
 npm run web            # UI in a browser at http://localhost:8081
@@ -22,19 +87,15 @@ npm run desktop        # build the web bundle and open it in Electron
 npm run android        # Expo dev server for Android
 ```
 
-### Installing on Android
+| Path | Contents |
+|---|---|
+| `packages/core` | Pure TypeScript: formats, timer, bells, interruptions, ballots, session reducer, LAN protocol. Unit tested. |
+| `apps/app` | Expo (React Native) app for Android, also built for web. |
+| `apps/app/modules/audio-decoder` | Local Expo module (Kotlin) that decodes recordings for Whisper. |
+| `apps/desktop` | Electron shell for Windows: LAN sockets, storage, Whisper and PDF export over IPC. |
 
-```bash
-cd apps/app
-npx eas-cli@latest build -p android --profile preview
-```
-
-EAS prints a link with an install QR code. On the phone, open it, download the
-`.apk` and allow installs from your browser when Android asks.
-
-Joining: scan the chair's QR with **Scan QR code** in the app, or with the
-phone's normal camera app; the `debate://` link opens the join screen with the
-code filled in.
+Android features that use native code (networking, recording, transcription)
+need a development or preview build, not Expo Go.
 
 ### Testing host + client on one PC
 
@@ -48,8 +109,21 @@ npx electron . --profile=client
 `--profile` gives each instance its own storage and device id. In the host
 window, start a round and open **Invite devices**. In the client, choose
 **Join** and type the code shown under the QR. The first time it hosts, Windows
-may ask to allow the app through the firewall. Allow it on private networks.
+may ask to allow the app through the firewall; allow it on private networks.
 
-Recording on Android needs a development build, not Expo Go, because of the
-background-recording config and the TCP socket module: `npx expo run:android` from `apps/app` with
-Android Studio installed, or `npx eas-cli@latest build --profile development`.
+## Documentation
+
+- [Docs home](docs/wiki/Home.md): guides for chairs, debaters, transcription,
+  ballots and troubleshooting
+- [PLAN.md](PLAN.md): design, protocol and roadmap
+- [CHANGELOG.md](CHANGELOG.md)
+
+## Contributing
+
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[Code of Conduct](CODE_OF_CONDUCT.md). Report security issues privately as
+described in [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE) © The Studio of Sadiq

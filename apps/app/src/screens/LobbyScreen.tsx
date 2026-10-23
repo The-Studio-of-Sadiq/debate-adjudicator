@@ -5,8 +5,8 @@ import { errorText, useT } from '../i18n';
 import type { Hosting } from '../net/useHosting';
 import { transport } from '../net/transport';
 import { QrCode } from '../QrCode';
-import { colors } from '../theme';
-import { Btn, Card, Chip, Row, styles } from '../ui';
+import { useTheme } from '../theme';
+import { Btn, Card, Chip, Row } from '../ui';
 
 export const ROLES: MemberRole[] = ['debater', 'timekeeper', 'wing', 'viewer'];
 
@@ -31,6 +31,7 @@ function RolePicker(props: { session: Session; role: MemberRole; seat?: string; 
 }
 
 function PendingRow({ m, session, hosting }: { m: Member; session: Session; hosting: Hosting }) {
+  const { colors, styles } = useTheme();
   const t = useT();
   const [role, setRole] = useState(m.role);
   const validSeat = m.seat && session.format.speeches.some((s) => s.role === m.seat) ? m.seat : undefined;
@@ -65,6 +66,7 @@ function PendingRow({ m, session, hosting }: { m: Member; session: Session; host
 }
 
 export function LobbyScreen({ hosting, session, hostName, onBack }: { hosting: Hosting; session: Session; hostName: string; onBack: () => void }) {
+  const { colors, styles } = useTheme();
   const t = useT();
   const { width } = useWindowDimensions();
   const [extraIp, setExtraIp] = useState('');

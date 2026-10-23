@@ -1,6 +1,14 @@
 {
   "name": "debate-app",
   "private": true,
+  "description": "Offline-first debate adjudication app for BP and UADC (Android + Windows)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/The-Studio-of-Sadiq/debate-adjudicator.git"
+  },
+  "homepage": "https://github.com/The-Studio-of-Sadiq/debate-adjudicator#readme",
+  "bugs": "https://github.com/The-Studio-of-Sadiq/debate-adjudicator/issues",
   "workspaces": [
     "packages/*",
     "apps/*"

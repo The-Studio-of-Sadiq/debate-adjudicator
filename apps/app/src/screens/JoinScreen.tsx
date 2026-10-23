@@ -5,14 +5,15 @@ import { BP, parseJoin, UADC, type MemberRole } from '@debate/core';
 import { useT } from '../i18n';
 import type { JoinRequest } from '../net/useClient';
 import { saveIdentity, type Identity } from '../storage';
-import { colors } from '../theme';
-import { Btn, Card, Chip, Row, styles } from '../ui';
+import { useTheme } from '../theme';
+import { Btn, Card, Chip, Row } from '../ui';
 import { ROLES } from './LobbyScreen';
 
 // Every seat across the presets; the chair confirms or corrects it on approval.
 const SEATS = [...new Map([...BP.speeches, ...UADC.speeches].map((s) => [s.role, s])).values()];
 
 function Scanner({ onCode, onClose }: { onCode: (text: string) => void; onClose: () => void }) {
+  const { styles } = useTheme();
   const t = useT();
   const [permission, requestPermission] = useCameraPermissions();
   // The camera reports the same code many times a second; act on the first.
@@ -88,6 +89,7 @@ export function JoinScreen(props: {
   onJoin: (req: JoinRequest) => void;
   onBack: () => void;
 }) {
+  const { colors, styles } = useTheme();
   const t = useT();
   const [name, setName] = useState(props.identity.name);
   const [role, setRole] = useState<MemberRole>('debater');

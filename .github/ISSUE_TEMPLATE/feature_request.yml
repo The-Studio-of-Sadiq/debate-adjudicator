@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest an idea or a format the app should support
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation in a round or tournament where you hit it.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to happen?
+    validations:
+      required: true
+  - type: input
+    id: format
+    attributes:
+      label: Debate format, if relevant
+      placeholder: e.g. BP, UADC, WSDC, a tournament's own rules
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Anything else (alternatives, examples, links)

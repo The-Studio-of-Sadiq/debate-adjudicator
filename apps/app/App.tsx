@@ -20,14 +20,16 @@ import {
   loadIdentity,
   loadLanguagePreference,
   loadSession,
+  loadThemePreference,
   makeId,
   resetCustomFormat,
   saveCustomFormat,
   saveLanguagePreference,
   saveSession,
+  saveThemePreference,
   type Identity,
 } from './src/storage';
-import { colors } from './src/theme';
+import { ThemeProvider, useTheme, type ThemePreference } from './src/theme';
 import { Btn, Row } from './src/ui';
 
 type Screen =
@@ -42,7 +44,27 @@ type Screen =
   | { name: 'client'; req: JoinRequest };
 
 export default function App() {
+  const [themePref, setThemePref] = useState<ThemePreference>('system');
+  useEffect(() => {
+    void loadThemePreference().then(setThemePref);
+  }, []);
+  return (
+    <ThemeProvider preference={themePref}>
+      <AppBody
+        themePref={themePref}
+        onThemePref={(pref) => {
+          setThemePref(pref);
+          void saveThemePreference(pref);
+        }}
+      />
+    </ThemeProvider>
+  );
+}
+
+function AppBody({ themePref, onThemePref }: { themePref: ThemePreference; onThemePref: (pref: ThemePreference) => void }) {
   const t = useT();
+  const theme = useTheme();
+  const { colors } = theme;
   const [screen, setScreen] = useState<Screen>({ name: 'home' });
   const [session, setSession] = useState<Session | null>(null);
   const [identity, setIdentity] = useState<Identity | null>(null);
@@ -180,6 +202,8 @@ export default function App() {
           setSession(s);
           setScreen({ name: 'review' });
         }}
+        themePref={themePref}
+        onThemePref={onThemePref}
         language={language}
         onLanguage={(pref) => {
           setLanguage(pref);
@@ -194,7 +218,7 @@ export default function App() {
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.bg, paddingTop: Platform.OS === 'android' ? RNStatusBar.currentHeight : 0 }}
     >
-      <StatusBar style="light" />
+      <StatusBar style={theme.name === 'dark' ? 'light' : 'dark'} />
       {body}
     </SafeAreaView>
   );

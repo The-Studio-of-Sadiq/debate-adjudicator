@@ -3,8 +3,8 @@ import { ScrollView, Text, TextInput, View } from 'react-native';
 import { formatClock, normalizeBells, type BellPattern, type BellRule, type DebateFormat, type SpeechTemplate } from '@debate/core';
 import { ringBell } from '../hooks';
 import { formatName, useT } from '../i18n';
-import { colors } from '../theme';
-import { Btn, Card, Chip, Row, styles } from '../ui';
+import { useTheme } from '../theme';
+import { Btn, Card, Chip, Row } from '../ui';
 
 const PATTERNS: BellPattern[] = ['single', 'double', 'triple', 'continuous'];
 
@@ -19,6 +19,7 @@ function parseClock(v: string): number | null {
 }
 
 function ClockInput({ value, onChange }: { value: number; onChange: (sec: number) => void }) {
+  const { colors, styles } = useTheme();
   const [text, setText] = useState(formatClock(value));
   return (
     <TextInput
@@ -40,6 +41,7 @@ function ClockInput({ value, onChange }: { value: number; onChange: (sec: number
 }
 
 export function BellEditor(props: { format: DebateFormat; onSave: (f: DebateFormat) => void; onReset: () => void; onClose: () => void }) {
+  const { colors, styles } = useTheme();
   const t = useT();
   const [format, setFormat] = useState(props.format);
   const groups = (['substantive', 'reply'] as Group[]).filter((g) => format.speeches.some((s) => groupOf(s) === g));

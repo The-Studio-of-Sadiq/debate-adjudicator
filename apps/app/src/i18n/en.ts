@@ -23,6 +23,7 @@ const en = {
     edit: 'Edit',
   },
   language: { title: 'Language', system: 'Device language', en: 'English' },
+  appearance: { title: 'Appearance', system: 'Match device', dark: 'Dark', light: 'Light' },
   sides: { gov: 'Government', opp: 'Opposition' },
   roles: {
     PM: 'Prime Minister',

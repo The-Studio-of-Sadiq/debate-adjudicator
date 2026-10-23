@@ -11,8 +11,8 @@ import {
   type SpeechTemplate,
 } from '@debate/core';
 import { roleName, teamName, useT, type T } from '../i18n';
-import { colors } from '../theme';
-import { Btn, Card, Row, styles } from '../ui';
+import { useTheme } from '../theme';
+import { Btn, Card, Row } from '../ui';
 
 export const fmtScore = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
@@ -25,6 +25,7 @@ function CommitField(props: {
   width?: number;
   onCommit: (text: string) => void;
 }) {
+  const { colors, styles } = useTheme();
   const [text, setText] = useState(props.value);
   const [focused, setFocused] = useState(false);
   return (
@@ -61,6 +62,7 @@ function SpeakerRow(props: {
   onName: (name: string) => void;
   onScore: (score: number | null) => void;
 }) {
+  const { colors, styles } = useTheme();
   const t = useT();
   const { speech: s, range, score } = props;
   const bump = (dir: 1 | -1) => {
@@ -106,6 +108,7 @@ export function issueText(t: T, issue: BallotIssue, speakerOf: (id: string) => s
 }
 
 export function BallotScreen({ session, dispatch, onBack }: { session: Session; dispatch: (a: SessionAction) => void; onBack: () => void }) {
+  const { colors, styles } = useTheme();
   const t = useT();
   const spec = ballotSpecFor(session.format);
   const result = evaluateBallot(session.format, session.ballot);
