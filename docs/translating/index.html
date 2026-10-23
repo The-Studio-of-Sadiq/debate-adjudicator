@@ -55,7 +55,7 @@
 <p>Every word in the app comes from a dictionary file, so adding a language
 needs no programming. English is the reference; a translation can be partial,
 and anything not yet translated shows in English.</p>
-<p>Available today: English, Bangla, Spanish, French, Portuguese, German, Russian, Turkish, Hindi, Chinese (Simplified), Japanese, Korean, Indonesian, Malay and Vietnamese. Under Home → <strong>Language</strong>, &quot;Device
+<p>Available today: English, Bangla, Spanish, French, Portuguese, German, Russian, Turkish, Hindi, Chinese (Simplified), Japanese, Korean, Indonesian, Malay, Vietnamese, Arabic and Urdu. Under Home → <strong>Language</strong>, &quot;Device
 language&quot; picks whichever of these matches the phone or PC, and falls back to
 English.</p>
 <p>Apart from English, the translations were drafted with AI help and haven&#39;t all
@@ -63,8 +63,8 @@ been reviewed by native speakers yet. If a word reads wrong, especially a
 debate term your circuit says differently, edit that line in
 <code>apps/app/src/i18n/&lt;code&gt;.ts</code> and open a pull request, or
 <a href="https://github.com/The-Studio-of-Sadiq/debate-adjudicator/issues/new?template=translation.yml">open a translation issue</a>.</p>
-<p>Right-to-left languages (Arabic, Urdu, Hebrew, Persian) aren&#39;t available yet:
-they also need the layout mirrored, not just the words translated.</p>
+<p>Arabic and Urdu are right-to-left: choosing one mirrors the whole layout (see
+<a href="#right-to-left-languages">Right-to-left languages</a> below).</p>
 <h2>Start a new language</h2>
 <p>You need <a href="https://nodejs.org/">Node.js</a> and a copy of the
 <a href="https://github.com/The-Studio-of-Sadiq/debate-adjudicator">source code</a>.
@@ -95,6 +95,25 @@ see the <a href="https://www.unicode.org/cldr/charts/latest/supplemental/languag
 <li><strong>Skip anything</strong> by deleting its line; it will show in English.</li>
 <li>Debate terms (POI, BP, Prime Minister…) can stay in English if that&#39;s what
 debaters in your language use.</li>
+</ul>
+<h2>Right-to-left languages</h2>
+<p>Arabic, Urdu, Hebrew, Persian and other right-to-left languages work the same
+way; the app recognises them by their code and mirrors the layout on its own.</p>
+<ul>
+<li><strong>Windows and browsers</strong> switch straight away.</li>
+<li><strong>Android</strong> mirrors the layout when the app starts, so after switching
+between a left-to-right and a right-to-left language the app asks you to
+close and reopen it.</li>
+<li><strong>Arrows</strong> in your text should point the way your language reads: Back is
+<code>&#39;→ رجوع&#39;</code> and Next is <code>&#39;التالي ←&#39;</code>.</li>
+<li><strong>Numbers</strong> stay in Western digits (0–9) and left to right, as they appear
+on the clock and the ballot. Write <code>{{min}}–{{max}}</code> style ranges as words
+if you can (<code>&#39;بين {{min}} و{{max}}&#39;</code>).</li>
+<li>Don&#39;t add invisible direction marks yourself: the app starts every
+right-to-left string with one, so a line that begins with a placeholder or a
+role code (&quot;POO من DLO&quot;) still reads right to left.</li>
+<li>Arabic uses all six plural forms: <code>_zero</code>, <code>_one</code>, <code>_two</code>, <code>_few</code>, <code>_many</code>
+and <code>_other</code>.</li>
 </ul>
 <h2>Check your work</h2>
 <pre><code class="language-bash">npm run check:i18n
