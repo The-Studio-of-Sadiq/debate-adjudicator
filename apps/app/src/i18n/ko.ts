@@ -31,7 +31,15 @@ const ko: LocaleDictionary = {
     edit: '편집',
   },
   // Languages are listed by their own names (from i18n/index.ts), not translated.
-  language: { title: '언어', system: '기기 언어' },
+  language: {
+    title: '언어',
+    system: '기기 언어',
+    restartTitle: '완료하려면 다시 시작하세요',
+    restartBody: '다음에 앱을 시작할 때 화면 방향이 왼쪽→오른쪽과 오른쪽→왼쪽 사이에서 바뀝니다. 앱을 닫았다가 다시 여세요.',
+    restartNow: '지금 다시 시작',
+    later: '나중에',
+    ok: '확인',
+  },
   appearance: { title: '화면 모드', system: '기기 설정 따르기', dark: '다크', light: '라이트' },
   sides: { gov: '정부', opp: '야당' },
   roles: {

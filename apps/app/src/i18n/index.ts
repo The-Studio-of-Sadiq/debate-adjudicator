@@ -1,7 +1,8 @@
-import i18n, { type TFunction } from 'i18next';
+import i18n, { type PostProcessorModule, type TFunction } from 'i18next';
 import { initReactI18next, useTranslation } from 'react-i18next';
 import { getLocales } from 'expo-localization';
 import type { Interruption, SpeechTemplate } from '@debate/core';
+import { applyDirection } from '../direction';
 import en from './en';
 import type { LanguageEntry } from './types';
 import bn from './bn';
@@ -18,6 +19,8 @@ import ko from './ko';
 import id from './id';
 import ms from './ms';
 import vi from './vi';
+import ar from './ar';
+import ur from './ur';
 // i18n:new adds imports above this line.
 
 /**
@@ -40,6 +43,8 @@ export const LANGUAGES: Record<string, LanguageEntry> = {
   id: { name: 'Bahasa Indonesia', englishName: 'Indonesian', translation: id },
   ms: { name: 'Bahasa Melayu', englishName: 'Malay', translation: ms },
   vi: { name: 'Tiếng Việt', englishName: 'Vietnamese', translation: vi },
+  ar: { name: 'العربية', englishName: 'Arabic', translation: ar },
+  ur: { name: 'اردو', englishName: 'Urdu', translation: ur },
   // i18n:new adds entries above this line.
 };
 export type Language = string;
@@ -53,10 +58,23 @@ export function deviceLanguage(): Language {
   return 'en';
 }
 
-void i18n.use(initReactI18next).init({
+/**
+ * Every right-to-left string starts with a right-to-left mark. Text takes its
+ * direction from its first strong letter (React Native Web's dir="auto", and
+ * Android), so a line like "POO من DLO" would otherwise lay out left to right.
+ */
+const rtlStart: PostProcessorModule = {
+  type: 'postProcessor',
+  name: 'rtlStart',
+  process: (value: string, _key: string | string[], _options: unknown, translator: { language?: string }) =>
+    isRTL(translator.language ?? i18n.language) ? `\u200F${value}` : value,
+};
+
+void i18n.use(initReactI18next).use(rtlStart).init({
   resources: Object.fromEntries(Object.entries(LANGUAGES).map(([code, l]) => [code, { translation: l.translation }])),
   lng: deviceLanguage(),
   fallbackLng: 'en',
+  postProcess: ['rtlStart'],
   // React already escapes text; the PDF report escapes its own HTML.
   interpolation: { escapeValue: false },
   // Errors may be a key or raw text from a library; raw text containing ':'
@@ -67,8 +85,39 @@ void i18n.use(initReactI18next).init({
 /** Show an error that is either an i18n key or a raw message. */
 export const errorText = (t: T, error: string) => t(error, { defaultValue: error });
 
-export async function applyLanguage(pref: LanguagePreference) {
-  await i18n.changeLanguage(pref === 'system' ? deviceLanguage() : pref);
+/** Arabic, Urdu and other right-to-left languages (i18next knows which they are). */
+export const isRTL = (language: Language) => i18n.dir(language) === 'rtl';
+
+// Mirror the web page straight away rather than after the saved preference loads.
+applyDirection(isRTL(i18n.language), i18n.language);
+
+/**
+ * Switch language and layout direction. On Android a change of direction only
+ * takes effect after a restart; `restartNeeded` says so.
+ */
+export async function applyLanguage(pref: LanguagePreference): Promise<{ restartNeeded: boolean }> {
+  const language = pref === 'system' ? deviceLanguage() : pref;
+  await i18n.changeLanguage(language);
+  return applyDirection(isRTL(language), language);
+}
+
+/**
+ * Keep times, scores and ranges like "65–80" left to right inside
+ * right-to-left text (Unicode left-to-right isolate).
+ */
+export const ltr = (s: string) => `\u2066${s}\u2069`;
+
+/** Date and time in the device's style, always with Western digits like the clock and scores. */
+export const dateTime = (ms: number) => new Date(ms).toLocaleString(undefined, { numberingSystem: 'latn' });
+
+/** For lines that start with a role code or a name rather than a translated word (see rtlStart). */
+export const rtlMark = () => (isRTL(i18n.language) ? '\u200F' : '');
+
+/** "PM → LO → DPM", with the arrows pointing the way the language reads. */
+export function sequence(items: string[]): string {
+  if (!isRTL(i18n.language)) return items.join(' → ');
+  // Right-to-left marks make the Latin role codes run right to left too.
+  return `\u200F${items.join(' \u200F←\u200F ')}`;
 }
 
 export function useT() {

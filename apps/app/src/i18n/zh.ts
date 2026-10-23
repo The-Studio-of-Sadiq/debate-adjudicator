@@ -31,7 +31,15 @@ const zh: LocaleDictionary = {
     edit: '编辑',
   },
   // Languages are listed by their own names (from i18n/index.ts), not translated.
-  language: { title: '语言', system: '设备语言' },
+  language: {
+    title: '语言',
+    system: '设备语言',
+    restartTitle: '重启以完成',
+    restartBody: '下次启动应用时，界面会在从左到右和从右到左之间切换。请关闭应用后重新打开。',
+    restartNow: '立即重启',
+    later: '稍后',
+    ok: '确定',
+  },
   appearance: { title: '外观', system: '跟随设备', dark: '深色', light: '浅色' },
   sides: { gov: '政府方', opp: '反对方' },
   roles: {

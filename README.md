@@ -45,8 +45,8 @@ Every time, bell and range is editable.
 - **Adjudication:** timestamped flow notes, ballots for every format with ranks or
   winner computed from speaker scores, and a printable PDF report.
 - **Private by design:** notes, ballots and transcripts never leave the chair's device.
-- **Light and dark** monochrome themes. The interface is in **15 languages**
-  (English, Bangla, Spanish, French, Portuguese, German, Russian, Turkish, Hindi, Chinese (Simplified), Japanese, Korean, Indonesian, Malay and Vietnamese) and follows the device's language; corrections and more
+- **Light and dark** monochrome themes. The interface is in **17 languages**
+  (English, Bangla, Spanish, French, Portuguese, German, Russian, Turkish, Hindi, Chinese (Simplified), Japanese, Korean, Indonesian, Malay, Vietnamese, and right-to-left Arabic and Urdu with a mirrored layout) and follows the device's language; corrections and more
   languages welcome.
 
 | Lobby | Ballot | Transcript |

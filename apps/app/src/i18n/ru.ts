@@ -31,7 +31,15 @@ const ru: LocaleDictionary = {
     edit: 'Изменить',
   },
   // Languages are listed by their own names (from i18n/index.ts), not translated.
-  language: { title: 'Язык', system: 'Язык устройства' },
+  language: {
+    title: 'Язык',
+    system: 'Язык устройства',
+    restartTitle: 'Перезапустите, чтобы завершить',
+    restartBody: 'Направление интерфейса (слева направо или справа налево) сменится при следующем запуске приложения. Закройте приложение и откройте его снова.',
+    restartNow: 'Перезапустить',
+    later: 'Позже',
+    ok: 'ОК',
+  },
   appearance: { title: 'Оформление', system: 'Как на устройстве', dark: 'Тёмное', light: 'Светлое' },
   sides: { gov: 'Правительство', opp: 'Оппозиция' },
   roles: {

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { elapsedMs, formatClock, segmentIndexAt, type ClipRef, type Session, type Transcript } from '@debate/core';
-import { errorText, formatName, outcomeText, roleName, useT } from '../i18n';
+import { dateTime, errorText, formatName, outcomeText, roleName, rtlMark, useT } from '../i18n';
 import { exportPdf } from '../pdf';
 import { buildReportHtml, reportFileName } from '../report';
 import type { JobState } from '../transcription/useTranscriptionJobs';
@@ -115,7 +115,7 @@ export function ReviewScreen(props: {
       </Row>
       <Text style={styles.h1}>{session.motion || t('common.untitledMotion')}</Text>
       <Text style={styles.muted}>
-        {formatName(t, session.format)} · {new Date(session.createdAt).toLocaleString()}
+        {formatName(t, session.format)} · {dateTime(session.createdAt)}
       </Text>
 
       <Card>
@@ -140,6 +140,7 @@ export function ReviewScreen(props: {
           <Card key={tpl.id}>
             <Row style={{ justifyContent: 'space-between' }}>
               <Text style={[styles.h2, { color: tpl.side === 'gov' ? colors.gov : colors.opp }]}>
+                {rtlMark()}
                 {tpl.role} · {roleName(t, tpl)}
                 {speaker ? ` · ${speaker}` : ''}
               </Text>
@@ -160,7 +161,7 @@ export function ReviewScreen(props: {
             {r.interruptions.map((i) => {
               const clip = r.clips.find((c) => c.interruptionId === i.id);
               return (
-                <View key={i.id} style={{ gap: 4, paddingLeft: 10, borderLeftWidth: 2, borderColor: colors.border }}>
+                <View key={i.id} style={{ gap: 4, paddingStart: 10, borderStartWidth: 2, borderColor: colors.border }}>
                   <Text style={styles.muted}>
                     {t('interruptions.logLine', { time: formatClock(i.raisedAtSec), kind: i.kind, seat: i.raisedBy, outcome: outcomeText(t, i) })}
                   </Text>

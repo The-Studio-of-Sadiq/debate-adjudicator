@@ -22,7 +22,7 @@ import {
   type SessionAction,
 } from '@debate/core';
 import { useBells, useNow, useSpeechRecorder } from '../hooks';
-import { errorText, formatName, outcomeText, roleName, useT } from '../i18n';
+import { errorText, formatName, outcomeText, roleName, rtlMark, useT } from '../i18n';
 import { makeId } from '../storage';
 import { FONTS, useTheme } from '../theme';
 import { Btn, Card, Chip, Row } from '../ui';
@@ -212,6 +212,7 @@ export function TimerScreen(props: {
         style={{ backgroundColor: cardBg, borderRadius: 20, padding: 20, alignItems: 'center', gap: 4, borderWidth: 1, borderColor: colors.border }}
       >
         <Text style={[styles.h2, { color: cardText }]}>
+          {rtlMark()}
           {template.role} · {roleName(t, template)}
           {speaker ? ` · ${speaker}` : ''}
           {caps.decidePoi && !caps.rule ? ` · ${t('timer.youHaveFloor')}` : ''}

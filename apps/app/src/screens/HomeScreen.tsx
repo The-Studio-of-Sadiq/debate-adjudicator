@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput } from 'react-native';
 import { PRESETS, type DebateFormat } from '@debate/core';
-import { LANGUAGES, useT, type LanguagePreference } from '../i18n';
+import { dateTime, LANGUAGES, rtlMark, sequence, useT, type LanguagePreference } from '../i18n';
 import { transport } from '../net/transport';
 import { listSessions, loadCustomFormats, type SessionSummary } from '../storage';
 import { Lockup } from '../Logo';
@@ -54,7 +54,7 @@ export function HomeScreen(props: {
         <Text style={styles.h2}>{t('home.newRound')}</Text>
         <FormatPicker formats={formats} selectedId={formatId} onSelect={setFormatId} />
         {!!format.info?.description && <Text style={styles.text}>{format.info.description}</Text>}
-        <Text style={styles.muted}>{format.speeches.map((s) => s.role).join(' → ')}</Text>
+        <Text style={styles.muted}>{sequence(format.speeches.map((s) => s.role))}</Text>
         <TextInput
           style={styles.input}
           placeholder={t('home.motionPlaceholder')}
@@ -85,7 +85,8 @@ export function HomeScreen(props: {
           <Pressable key={h.id} onPress={() => props.onOpen(h.id)} style={{ paddingVertical: 8, borderTopWidth: 1, borderColor: colors.border }}>
             <Text style={styles.text}>{h.motion || t('common.untitledMotion')}</Text>
             <Text style={styles.muted}>
-              {h.formatName} · {new Date(h.createdAt).toLocaleString()}
+              {rtlMark()}
+              {h.formatName} · {dateTime(h.createdAt)}
             </Text>
           </Pressable>
         ))}

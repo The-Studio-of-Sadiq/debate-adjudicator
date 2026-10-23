@@ -63,3 +63,9 @@ export function Row({ children, style }: { children: ReactNode; style?: ViewStyl
   const { styles } = useTheme();
   return <View style={[styles.row, style]}>{children}</View>;
 }
+
+/** A row that stays left to right in right-to-left languages, e.g. a − score + stepper. */
+export function LtrRow({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+  const { styles } = useTheme();
+  return <View style={[styles.row, { direction: 'ltr' }, style]}>{children}</View>;
+}

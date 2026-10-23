@@ -35,7 +35,15 @@ const bn: LocaleDictionary = {
     edit: 'সম্পাদনা',
   },
   // Languages are listed by their own names (from i18n/index.ts), not translated.
-  language: { title: 'ভাষা', system: 'ডিভাইসের ভাষা' },
+  language: {
+    title: 'ভাষা',
+    system: 'ডিভাইসের ভাষা',
+    restartTitle: 'শেষ করতে আবার চালু করুন',
+    restartBody: 'পরের বার অ্যাপ চালু হলে বিন্যাস বাম-থেকে-ডান ও ডান-থেকে-বামের মধ্যে বদলাবে। অ্যাপটি বন্ধ করে আবার খুলুন।',
+    restartNow: 'এখনই আবার চালু করুন',
+    later: 'পরে',
+    ok: 'ঠিক আছে',
+  },
   appearance: { title: 'থিম', system: 'ডিভাইসের মতো', dark: 'ডার্ক', light: 'লাইট' },
   sides: { gov: 'সরকারি দল', opp: 'বিরোধী দল' },
   roles: {

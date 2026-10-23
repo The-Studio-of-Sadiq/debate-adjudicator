@@ -24,7 +24,15 @@ const en = {
     edit: 'Edit',
   },
   // Languages are listed by their own names (from i18n/index.ts), not translated.
-  language: { title: 'Language', system: 'Device language' },
+  language: {
+    title: 'Language',
+    system: 'Device language',
+    restartTitle: 'Restart to finish',
+    restartBody: 'The layout switches between left-to-right and right-to-left the next time the app starts. Close the app and open it again.',
+    restartNow: 'Restart now',
+    later: 'Later',
+    ok: 'OK',
+  },
   appearance: { title: 'Appearance', system: 'Match device', dark: 'Dark', light: 'Light' },
   sides: { gov: 'Government', opp: 'Opposition' },
   roles: {
