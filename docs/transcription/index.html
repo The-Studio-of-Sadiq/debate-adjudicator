@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Transcription · Debate Adjudicator</title>
-<meta name="description" content="Transcribe debate speeches offline with Whisper on Android or Windows, or with an OpenAI-compatible cloud provider. Models, speed and settings.">
+<meta name="description" content="Transcribe debate speeches in English or Bangla: offline with Whisper, or with ElevenLabs Scribe, OpenAI or Groq. Models, languages and settings.">
 <link rel="canonical" href="https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/transcription/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
@@ -15,7 +15,7 @@
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Debate Adjudicator">
 <meta property="og:title" content="Transcription · Debate Adjudicator">
-<meta property="og:description" content="Transcribe debate speeches offline with Whisper on Android or Windows, or with an OpenAI-compatible cloud provider. Models, speed and settings.">
+<meta property="og:description" content="Transcribe debate speeches in English or Bangla: offline with Whisper, or with ElevenLabs Scribe, OpenAI or Groq. Models, languages and settings.">
 <meta property="og:url" content="https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/transcription/">
 <meta property="og:image" content="https://the-studio-of-sadiq.github.io/debate-adjudicator/img/social-preview.png">
 <meta property="og:image:width" content="1280">
@@ -23,9 +23,9 @@
 <meta property="og:image:alt" content="Debate Adjudicator: run the debate room from one phone.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Transcription · Debate Adjudicator">
-<meta name="twitter:description" content="Transcribe debate speeches offline with Whisper on Android or Windows, or with an OpenAI-compatible cloud provider. Models, speed and settings.">
+<meta name="twitter:description" content="Transcribe debate speeches in English or Bangla: offline with Whisper, or with ElevenLabs Scribe, OpenAI or Groq. Models, languages and settings.">
 <meta name="twitter:image" content="https://the-studio-of-sadiq.github.io/debate-adjudicator/img/social-preview.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Transcription","description":"Transcribe debate speeches offline with Whisper on Android or Windows, or with an OpenAI-compatible cloud provider. Models, speed and settings.","url":"https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/transcription/","dateModified":"2026-10-23","image":"https://the-studio-of-sadiq.github.io/debate-adjudicator/img/social-preview.png","isPartOf":{"@type":"WebSite","name":"Debate Adjudicator","url":"https://the-studio-of-sadiq.github.io/debate-adjudicator/"},"about":{"@type":"SoftwareApplication","name":"Debate Adjudicator"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Transcription","description":"Transcribe debate speeches in English or Bangla: offline with Whisper, or with ElevenLabs Scribe, OpenAI or Groq. Models, languages and settings.","url":"https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/transcription/","dateModified":"2026-10-23","image":"https://the-studio-of-sadiq.github.io/debate-adjudicator/img/social-preview.png","isPartOf":{"@type":"WebSite","name":"Debate Adjudicator","url":"https://the-studio-of-sadiq.github.io/debate-adjudicator/"},"about":{"@type":"SoftwareApplication","name":"Debate Adjudicator"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://the-studio-of-sadiq.github.io/debate-adjudicator/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/"},{"@type":"ListItem","position":3,"name":"Transcription","item":"https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/transcription/"}]}</script>
 </head>
 <body>
@@ -53,6 +53,19 @@
     <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="../../">Home</a></li><li><a href="../">Docs</a></li><li aria-current="page">Transcription</li></ol></nav>
     <h1>Transcription</h1>
 <p>Transcription runs on the chair&#39;s device, which holds every recording.</p>
+<h2>Language</h2>
+<p>Set <strong>Language spoken</strong> to the language of the speeches: <strong>English</strong> or
+<strong>Bangla (বাংলা)</strong>.</p>
+<ul>
+<li>English works offline and with every cloud provider.</li>
+<li>Bangla needs a cloud provider with a key, because the offline models only
+understand English. In <strong>Auto</strong> mode Bangla always goes to the cloud and never
+falls back to the offline model; <strong>Offline only</strong> can&#39;t transcribe it.</li>
+<li>Use <strong>ElevenLabs Scribe</strong> for Bangla. On 20 public Bangla recordings it got
+15% of words wrong, against 82% for Whisper large-v3 on Groq, and most of its
+&quot;errors&quot; were English words written in English, which suits debates where
+speakers switch languages.</li>
+</ul>
 <h2>Modes</h2>
 <p>Home → <strong>Transcription settings</strong>:</p>
 <div class="table-wrap"><table>
@@ -109,13 +122,21 @@
 speech in under 2 minutes). Phones are slower; keep the app open while it
 works, as the screen stays awake during transcription.</p>
 <h2>Cloud providers</h2>
-<p>Any OpenAI-compatible <code>/audio/transcriptions</code> API works. One-tap presets:</p>
+<p>One-tap presets:</p>
 <ul>
+<li><strong>ElevenLabs Scribe</strong>: <code>https://api.elevenlabs.io/v1</code>, model <code>scribe_v2</code>.
+Best for Bangla. Key from elevenlabs.io → Settings → API keys.</li>
 <li><strong>OpenAI</strong>: <code>https://api.openai.com/v1</code>, model <code>whisper-1</code></li>
-<li><strong>Groq</strong>: <code>https://api.groq.com/openai/v1</code>, model <code>whisper-large-v3-turbo</code></li>
+<li><strong>Groq</strong>: <code>https://api.groq.com/openai/v1</code>, model <code>whisper-large-v3-turbo</code>.
+Free tier, good for English.</li>
 </ul>
+<p>Any other OpenAI-compatible <code>/audio/transcriptions</code> API works too: pick OpenAI
+or Groq, then change the URL and model.</p>
 <p>Paste the API key and <strong>Save</strong>. The key is stored on the device unencrypted,
 and audio is sent to the provider you choose.</p>
+<p>To try a provider on a recording before a tournament, contributors can use
+<code>npm run transcribe:try</code> with keys in <code>.env</code> (see
+<a href="https://github.com/The-Studio-of-Sadiq/debate-adjudicator/blob/main/CONTRIBUTING.md">CONTRIBUTING</a>).</p>
 <h2>Using transcripts</h2>
 <p>On a round&#39;s review screen: <strong>Transcribe</strong> per recording or <strong>Transcribe all</strong>.
 Jobs run one at a time. Tap any line to play the audio from that moment; the
