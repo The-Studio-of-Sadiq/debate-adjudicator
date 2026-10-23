@@ -10,6 +10,7 @@ import type {
   SpeechRecord,
   SpeechTemplate,
   TimerEventType,
+  Transcript,
 } from './types';
 
 /**
@@ -27,7 +28,8 @@ export type SessionAction =
   | { type: 'expire'; id: string; at: number }
   | { type: 'withdraw'; id: string; at: number }
   | { type: 'rule'; id: string; ruling: Ruling; at: number }
-  | { type: 'addClip'; speechIndex: number; clip: ClipRef };
+  | { type: 'addClip'; speechIndex: number; clip: ClipRef }
+  | { type: 'setTranscript'; transcript: Transcript };
 
 export function createSession(format: DebateFormat, opts: { id: string; now: number; motion?: string }): Session {
   return {
@@ -148,6 +150,12 @@ export function reduceSession(s: Session, a: SessionAction): Session {
         if (!next) return r;
         return resumeIfChairDone(next, next.interruptions.find((i) => i.id === a.id)!.kind, a.at);
       });
+
+    case 'setTranscript': {
+      const known = s.speeches.some((r) => r.clips.some((c) => c.id === a.transcript.clipId));
+      if (!known) return s;
+      return { ...s, transcripts: { ...s.transcripts, [a.transcript.clipId]: a.transcript } };
+    }
 
     case 'addClip': {
       const target = s.speeches[a.speechIndex];

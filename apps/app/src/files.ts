@@ -36,6 +36,12 @@ export async function persistRecording(uri: string): Promise<string> {
   return bridge.saveClip(`${makeId()}.webm`, await readAsBase64(uri));
 }
 
+/** A file for a multipart upload. */
+export async function formDataFile(uri: string, name: string, type: string): Promise<Blob> {
+  const blob = await (await fetch(uri)).blob();
+  return new File([blob], name, { type });
+}
+
 export function extensionOf(uri: string): string {
   return uri.match(/\.([a-z0-9]{1,5})(?:\?|$)/i)?.[1]?.toLowerCase() ?? 'webm';
 }

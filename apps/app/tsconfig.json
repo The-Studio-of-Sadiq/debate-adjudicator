@@ -1,6 +1,10 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    // Type-check against packages' published .d.ts files rather than their
+    // "react-native" source entry points (whisper.rn's sources don't compile
+    // standalone). Bundling with Metro is unaffected.
+    "customConditions": []
   }
 }

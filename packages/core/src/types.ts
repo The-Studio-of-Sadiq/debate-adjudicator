@@ -84,6 +84,21 @@ export interface SpeechRecord {
   clips: ClipRef[];
 }
 
+export interface TranscriptSegment {
+  /** Milliseconds from the start of the clip. */
+  startMs: number;
+  endMs: number;
+  text: string;
+}
+
+export interface Transcript {
+  clipId: string;
+  /** e.g. "whisper-local:base.en" or "cloud:whisper-1". */
+  engine: string;
+  createdAt: number;
+  segments: TranscriptSegment[];
+}
+
 export interface Session {
   id: string;
   createdAt: number;
@@ -91,4 +106,6 @@ export interface Session {
   format: DebateFormat;
   currentIndex: number;
   speeches: SpeechRecord[];
+  /** Transcripts keyed by clip id. Missing on sessions saved before Phase 4. */
+  transcripts?: Record<string, Transcript>;
 }

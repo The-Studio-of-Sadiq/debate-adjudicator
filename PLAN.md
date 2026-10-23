@@ -119,7 +119,17 @@ Rules vary by tournament year, so everything is editable.
    chair's device attaches it to that interruption. Uploads queue and retry across
    reconnects; the host only accepts audio for an interruption the sender's seat raised.
    The Windows app now stores rounds and recordings on disk, so a crash loses nothing.
-4. **Transcription**: Whisper on device, optional cloud provider, transcript synced
-   to audio. (Speakers recording their own speech on their phone can reuse the
-   Phase 3 clip upload.)
+4. ✅ **Transcription**: on the chair's device, per clip or "Transcribe all" from the
+   review screen. Transcripts are stored on the round with segment timestamps;
+   tapping a line plays the audio from there.
+   - Windows: Whisper via transformers.js on onnxruntime-node in Electron's main
+     process; the window decodes audio (webm/m4a) to 16 kHz PCM with Web Audio.
+     base.en ≈ 4× faster than real time on CPU.
+   - Android: whisper.rn (whisper.cpp) with q5_1 models from Hugging Face; a local
+     Expo module (`apps/app/modules/audio-decoder`) decodes m4a to 16 kHz WAV with
+     MediaCodec, since whisper.cpp only reads WAV.
+   - Cloud (optional): any OpenAI-compatible `/audio/transcriptions` API (OpenAI,
+     Groq). "Auto" mode uses it when online with a key and falls back to offline.
+   - Models download once from settings (tiny / base / small, English).
 5. **Adjudicator tools**: timestamped flow notes, ballots (BP ranks, UADC scores), PDF export.
+   Speakers recording their own speech on their phone can reuse the Phase 3 clip upload.

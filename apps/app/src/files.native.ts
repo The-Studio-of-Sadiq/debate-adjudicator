@@ -23,6 +23,11 @@ export async function persistRecording(uri: string): Promise<string> {
   return uri;
 }
 
+/** A file for a multipart upload; React Native's fetch streams it from the URI. */
+export async function formDataFile(uri: string, name: string, type: string): Promise<Blob> {
+  return { uri, name, type } as unknown as Blob;
+}
+
 export function extensionOf(uri: string): string {
   return uri.match(/\.([a-z0-9]{1,5})(?:\?|$)/i)?.[1]?.toLowerCase() ?? 'm4a';
 }

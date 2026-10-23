@@ -1,10 +1,11 @@
 // Windows shell: hosts the shared Expo web UI and gives it Node services over
-// IPC: LAN sockets (net.js), clip storage, and later whisper.cpp transcription.
+// IPC: LAN sockets (net.js), clip storage and offline Whisper (whisper.js).
 const { app, BrowserWindow, ipcMain, net, protocol, session } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const lanNet = require('./net');
+const whisper = require('./whisper');
 
 const DEV = process.argv.includes('--dev');
 
@@ -99,6 +100,7 @@ ipcMain.handle('store:remove', async (_e, key) => {
 
 app.whenReady().then(() => {
   lanNet.register();
+  whisper.register();
   protocol.handle('app', (req) => {
     const file = resolveAsset(new URL(req.url).pathname);
     if (!file || !fs.existsSync(file)) return new Response('Not found', { status: 404 });

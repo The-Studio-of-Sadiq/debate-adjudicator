@@ -11,6 +11,8 @@ import { JoinScreen } from './src/screens/JoinScreen';
 import { LobbyScreen } from './src/screens/LobbyScreen';
 import { ReviewScreen } from './src/screens/ReviewScreen';
 import { TimerScreen } from './src/screens/TimerScreen';
+import { TranscriptionSettingsScreen } from './src/screens/TranscriptionSettingsScreen';
+import { useTranscriptionJobs } from './src/transcription/useTranscriptionJobs';
 import {
   deleteSession,
   loadIdentity,
@@ -31,6 +33,7 @@ type Screen =
   | { name: 'lobby' }
   | { name: 'review' }
   | { name: 'join'; initialCode?: string }
+  | { name: 'transcription' }
   | { name: 'client'; req: JoinRequest };
 
 export default function App() {
@@ -40,6 +43,7 @@ export default function App() {
 
   const dispatch = useCallback((a: SessionAction) => setSession((s) => (s ? reduceSession(s, a) : s)), []);
   const hosting = useHosting(session, dispatch, identity?.name || 'Chair');
+  const transcription = useTranscriptionJobs(session, dispatch);
 
   useEffect(() => {
     void loadIdentity().then(setIdentity);
@@ -114,6 +118,8 @@ export default function App() {
     body = (
       <ReviewScreen
         session={session}
+        jobs={transcription.jobs}
+        onTranscribe={(clips) => transcription.enqueue(session.id, clips)}
         onBack={() => setScreen({ name: 'home' })}
         onResume={() => setScreen({ name: 'timer' })}
         onDelete={async () => {
@@ -136,6 +142,8 @@ export default function App() {
         }}
       />
     );
+  } else if (screen.name === 'transcription') {
+    body = <TranscriptionSettingsScreen onBack={() => setScreen({ name: 'home' })} />;
   } else if (screen.name === 'client') {
     body = <ClientScreen req={screen.req} onLeave={() => setScreen({ name: 'home' })} />;
   } else {
@@ -147,6 +155,7 @@ export default function App() {
         }}
         onEditBells={(format) => setScreen({ name: 'bells', format })}
         onJoin={() => setScreen({ name: 'join' })}
+        onTranscriptionSettings={() => setScreen({ name: 'transcription' })}
         onOpen={async (id) => {
           const s = await loadSession(id);
           if (!s) return;

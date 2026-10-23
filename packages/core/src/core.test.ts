@@ -4,6 +4,7 @@ import { bellsBetween, CONTINUOUS_REPEAT_SEC } from './bells';
 import { applyTimerEvent, elapsedMs, formatClock, speechPhase, timerStatus } from './timer';
 import { createSession, currentSpeech, reduceSession, type SessionAction } from './session';
 import type { TimerEvent } from './types';
+import { cleanSegments, segmentIndexAt, segmentsFromVerboseJson, transcriptText } from './transcript';
 
 const T0 = 1_000_000;
 const s = (n: number) => T0 + n * 1000;
@@ -146,5 +147,44 @@ describe('session', () => {
     const st = run({ type: 'timer', event: 'start', at: s(0) }, { type: 'goto', index: 1, at: s(400) });
     expect(st.currentIndex).toBe(1);
     expect(timerStatus(st.speeches[0]!.events)).toBe('stopped');
+  });
+});
+
+describe('transcripts', () => {
+  const withClip = () =>
+    reduceSession(createSession(BP, { id: 'x', now: T0 }), {
+      type: 'addClip',
+      speechIndex: 0,
+      clip: { id: 'c1', deviceId: 'host', uri: 'file:///c1.m4a', startedAt: T0, durationMs: 60_000 },
+    });
+
+  it('stores a transcript only for a known clip', () => {
+    const t = { clipId: 'c1', engine: 'whisper-local:base.en', createdAt: T0, segments: [] };
+    expect(reduceSession(withClip(), { type: 'setTranscript', transcript: t }).transcripts).toEqual({ c1: t });
+    const unknown = reduceSession(withClip(), { type: 'setTranscript', transcript: { ...t, clipId: 'nope' } });
+    expect(unknown.transcripts).toBeUndefined();
+  });
+
+  it('cleans whisper output and finds the playing segment', () => {
+    const segments = cleanSegments([
+      { startMs: 4000.4, endMs: 7000, text: '  the  second  ' },
+      { startMs: 0, endMs: 3000, text: 'First point.' },
+      { startMs: 7000, endMs: 9000, text: '[BLANK_AUDIO]' },
+      { startMs: 9000, endMs: 9500, text: ' (applause) ' },
+    ]);
+    expect(segments).toEqual([
+      { startMs: 0, endMs: 3000, text: 'First point.' },
+      { startMs: 4000, endMs: 7000, text: 'the second' },
+    ]);
+    const t = { clipId: 'c', engine: 'x', createdAt: 0, segments };
+    expect(transcriptText(t)).toBe('First point. the second');
+    expect(segmentIndexAt(t, 5000)).toBe(1);
+    expect(segmentIndexAt(t, 3500)).toBe(0);
+    expect(segmentIndexAt(t, 60_000)).toBe(-1);
+  });
+
+  it('reads OpenAI-style verbose_json', () => {
+    expect(segmentsFromVerboseJson({ segments: [{ start: 1.5, end: 3, text: ' Hello ' }] })).toEqual([{ startMs: 1500, endMs: 3000, text: 'Hello' }]);
+    expect(segmentsFromVerboseJson({ text: 'Only text', duration: 4 })).toEqual([{ startMs: 0, endMs: 4000, text: 'Only text' }]);
   });
 });

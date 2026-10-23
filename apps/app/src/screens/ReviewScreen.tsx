@@ -1,34 +1,83 @@
-import { ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { elapsedMs, formatClock, type ClipRef, type Session } from '@debate/core';
+import { elapsedMs, formatClock, segmentIndexAt, type ClipRef, type Session, type Transcript } from '@debate/core';
+import type { JobState } from '../transcription/useTranscriptionJobs';
 import { colors } from '../theme';
 import { Btn, Card, Row, styles } from '../ui';
+import { progressText } from './TranscriptionSettingsScreen';
 import { describeOutcome } from './TimerScreen';
 
-function ClipPlayer({ clip }: { clip: ClipRef }) {
+/** Player plus its transcript; tapping a line plays from that moment. */
+function ClipPlayer(props: { clip: ClipRef; transcript?: Transcript; job?: JobState; onTranscribe: () => void }) {
+  const { clip, transcript, job } = props;
   const player = useAudioPlayer(clip.uri);
   const status = useAudioPlayerStatus(player);
+  const playingIdx = transcript && status.playing ? segmentIndexAt(transcript, status.currentTime * 1000) : -1;
+
+  const playFrom = (sec: number) => {
+    void player.seekTo(sec);
+    player.play();
+  };
+
   return (
-    <Row>
-      <Btn
-        title={status.playing ? 'Pause' : 'Play'}
-        onPress={() => {
-          if (status.playing) player.pause();
-          else {
-            if (status.didJustFinish || status.currentTime >= status.duration) void player.seekTo(0);
-            player.play();
-          }
-        }}
-      />
-      <Text style={styles.muted}>
-        {formatClock(status.currentTime)} / {formatClock(clip.durationMs / 1000)}
-      </Text>
-    </Row>
+    <View style={{ gap: 6 }}>
+      <Row>
+        <Btn
+          title={status.playing ? 'Pause' : 'Play'}
+          onPress={() => {
+            if (status.playing) player.pause();
+            else if (status.didJustFinish || status.currentTime >= status.duration) playFrom(0);
+            else player.play();
+          }}
+        />
+        <Text style={styles.muted}>
+          {formatClock(status.currentTime)} / {formatClock(status.duration || clip.durationMs / 1000)}
+        </Text>
+        {job?.status === 'queued' && <Text style={styles.muted}>Waiting to transcribe…</Text>}
+        {job?.status === 'running' && <Text style={[styles.muted, { color: colors.accent }]}>{progressText(job.progress)}</Text>}
+        {!job || job.status === 'error' ? (
+          <Btn title={transcript ? 'Re-transcribe' : 'Transcribe'} onPress={props.onTranscribe} />
+        ) : null}
+      </Row>
+      {job?.status === 'error' && <Text style={{ color: colors.danger }}>{job.error}</Text>}
+      {transcript && (
+        <View style={{ gap: 2, backgroundColor: colors.surfaceHi, borderRadius: 10, padding: 10 }}>
+          {transcript.segments.length === 0 && <Text style={styles.muted}>No speech detected.</Text>}
+          {transcript.segments.map((s, i) => (
+            <Pressable key={i} onPress={() => playFrom(s.startMs / 1000)}>
+              <Text style={[styles.text, i === playingIdx && { color: colors.accent }]}>
+                <Text style={styles.muted}>{formatClock(s.startMs / 1000)} </Text>
+                {s.text}
+              </Text>
+            </Pressable>
+          ))}
+          <Text style={[styles.muted, { fontSize: 11 }]}>
+            {transcript.engine.startsWith('cloud') ? 'Cloud' : 'Offline'} · {transcript.engine.split(':')[1]}
+          </Text>
+        </View>
+      )}
+    </View>
   );
 }
 
-export function ReviewScreen(props: { session: Session; onBack: () => void; onResume: () => void; onDelete: () => void }) {
-  const { session } = props;
+export function ReviewScreen(props: {
+  session: Session;
+  jobs: Record<string, JobState>;
+  onTranscribe: (clips: ClipRef[]) => void;
+  onBack: () => void;
+  onResume: () => void;
+  onDelete: () => void;
+}) {
+  const { session, jobs } = props;
+  const allClips = session.speeches.flatMap((r) => r.clips);
+  const untranscribed = allClips.filter((c) => !session.transcripts?.[c.id] && !jobs[c.id]);
+  const clipProps = (c: ClipRef) => ({
+    clip: c,
+    transcript: session.transcripts?.[c.id],
+    job: jobs[c.id],
+    onTranscribe: () => props.onTranscribe([c]),
+  });
+
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
       <Row style={{ justifyContent: 'space-between' }}>
@@ -42,6 +91,14 @@ export function ReviewScreen(props: { session: Session; onBack: () => void; onRe
       <Text style={styles.muted}>
         {session.format.name} · {new Date(session.createdAt).toLocaleString()}
       </Text>
+      {untranscribed.length > 0 && (
+        <Btn
+          title={`Transcribe all (${untranscribed.length})`}
+          color={colors.accent}
+          style={{ alignSelf: 'flex-start' }}
+          onPress={() => props.onTranscribe(untranscribed)}
+        />
+      )}
 
       {session.format.speeches.map((t, idx) => {
         const r = session.speeches[idx]!;
@@ -62,7 +119,7 @@ export function ReviewScreen(props: { session: Session; onBack: () => void; onRe
               .map((c) => (
                 <View key={c.id} style={{ gap: 4 }}>
                   <Text style={styles.muted}>Room recording</Text>
-                  <ClipPlayer clip={c} />
+                  <ClipPlayer {...clipProps(c)} />
                 </View>
               ))}
             {r.interruptions.map((i) => {
@@ -72,7 +129,7 @@ export function ReviewScreen(props: { session: Session; onBack: () => void; onRe
                   <Text style={styles.muted}>
                     {formatClock(i.raisedAtSec)} · {i.kind} from {i.raisedBy} · {describeOutcome(i)}
                   </Text>
-                  {clip && <ClipPlayer clip={clip} />}
+                  {clip && <ClipPlayer {...clipProps(clip)} />}
                 </View>
               );
             })}

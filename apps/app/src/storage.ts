@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { DebateFormat, Session } from '@debate/core';
+import { DEFAULT_SETTINGS, type TranscriptionSettings } from './transcription/types';
 
 /** Exposed by apps/desktop/preload.js: files on disk, written immediately. */
 interface StoreBridge {
@@ -82,6 +83,18 @@ export async function resetCustomFormat(id: string): Promise<void> {
   const all = await loadCustomFormats();
   delete all[id];
   await kv.setItem(FORMATS_KEY, JSON.stringify(all));
+}
+
+const TRANSCRIPTION_KEY = 'settings:transcription';
+
+/** Stored as-is; the API key is kept on this device only. */
+export async function loadTranscriptionSettings(): Promise<TranscriptionSettings> {
+  const saved = await readJson<Partial<TranscriptionSettings> | null>(TRANSCRIPTION_KEY, null);
+  return { ...DEFAULT_SETTINGS, ...saved, cloud: { ...DEFAULT_SETTINGS.cloud, ...saved?.cloud } };
+}
+
+export async function saveTranscriptionSettings(s: TranscriptionSettings): Promise<void> {
+  await kv.setItem(TRANSCRIPTION_KEY, JSON.stringify(s));
 }
 
 export interface Identity {

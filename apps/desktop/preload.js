@@ -10,6 +10,19 @@ contextBridge.exposeInMainWorld('debateStore', {
   remove: (key) => ipcRenderer.invoke('store:remove', key),
 });
 
+// Offline Whisper in the main process (whisper.js).
+contextBridge.exposeInMainWorld('debateWhisper', {
+  status: () => ipcRenderer.invoke('whisper:status'),
+  prepare: (jobId, model) => ipcRenderer.invoke('whisper:prepare', jobId, model),
+  transcribe: (jobId, model, pcm) => ipcRenderer.invoke('whisper:transcribe', jobId, model, pcm),
+  deleteModel: (model) => ipcRenderer.invoke('whisper:delete', model),
+  onProgress: (cb) => {
+    const handler = (_e, p) => cb(p);
+    ipcRenderer.on('whisper:progress', handler);
+    return () => ipcRenderer.removeListener('whisper:progress', handler);
+  },
+});
+
 contextBridge.exposeInMainWorld('debateFiles', {
   // Writes a clip to disk and returns an app:// URL that plays it.
   saveClip: (fileName, base64) => ipcRenderer.invoke('files:saveClip', fileName, base64),

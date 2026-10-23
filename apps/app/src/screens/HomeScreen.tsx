@@ -11,6 +11,7 @@ export function HomeScreen(props: {
   onEditBells: (format: DebateFormat) => void;
   onOpen: (id: string) => void;
   onJoin: () => void;
+  onTranscriptionSettings: () => void;
 }) {
   const [formats, setFormats] = useState<DebateFormat[]>(PRESETS);
   const [formatId, setFormatId] = useState(PRESETS[0]!.id);
@@ -64,7 +65,10 @@ export function HomeScreen(props: {
       </Card>
 
       <Card>
-        <Text style={styles.h2}>History</Text>
+        <Row style={{ justifyContent: 'space-between' }}>
+          <Text style={styles.h2}>History</Text>
+          <Btn title="Transcription settings" onPress={props.onTranscriptionSettings} />
+        </Row>
         {history.length === 0 && <Text style={styles.muted}>No rounds yet.</Text>}
         {history.map((h) => (
           <Pressable key={h.id} onPress={() => props.onOpen(h.id)} style={{ paddingVertical: 8, borderTopWidth: 1, borderColor: colors.border }}>
