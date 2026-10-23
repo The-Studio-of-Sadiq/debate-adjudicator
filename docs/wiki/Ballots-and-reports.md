@@ -18,7 +18,15 @@ ballot can never contradict itself.
 - Substantive speeches 70–80; reply speeches 35–40 in 0.5 steps.
 - The team with the higher total wins; the margin is shown.
 
+## World Schools (WSDC)
+
+- Proposition: three speakers and the Proposition Reply; Opposition likewise.
+- Substantive speeches 60–80; reply speeches 30–40 in 0.5 steps.
+- The team with the higher total wins; the margin is shown.
+
 Ranges reflect common practice; tournaments vary, so tell us if yours differ.
+Each format's scoring lives in its definition file (see
+[Adding a debate format](Adding-a-format.md)).
 
 ## Marking final
 

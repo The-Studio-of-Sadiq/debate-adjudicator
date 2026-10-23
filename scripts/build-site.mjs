@@ -7,8 +7,13 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { register } from 'node:module';
 import { marked } from 'marked';
-import { BP, UADC } from '../packages/core/src/formats.ts';
+
+// The core package uses extensionless TypeScript imports, as bundlers allow;
+// teach Node to resolve them so the site reads the app's own format presets.
+register('./resolve-ts.mjs', import.meta.url);
+const { PRESETS } = await import('../packages/core/src/formats/index.ts');
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const at = (...p) => join(root, ...p);
@@ -104,7 +109,7 @@ function write(path, html) {
 // ── Landing page ────────────────────────────────────────────────────────────
 
 const FEATURES = [
-  ['Timekeeping that just works', 'BP and UADC presets with protected time, POI window, grace period and overtime, plus scheduled and manual bells you can retime.'],
+  ['Timekeeping that just works', 'British Parliamentary, UADC and World Schools presets with protected time, POI window, grace period and overtime, plus bells you can retime.'],
   ['One room, many devices', 'Debaters, the timekeeper and wing adjudicators join by QR code over the room’s Wi-Fi or a phone hotspot. Every screen shows the same second.'],
   ['POIs and points of order', 'Debaters offer POIs from their phones; the speaker accepts or declines. Points of order pause the clock until the chair rules.'],
   ['Recordings', 'The chair records every speech. A debater’s phone records their own accepted POI or point and sends it to the chair.'],
@@ -116,7 +121,8 @@ const FEATURES = [
 
 const FAQ = [
   ['Does it need the internet?', 'No. Rounds, joining, bells, recording and transcription all work offline. Devices only need to be on the same Wi-Fi network or the chair’s phone hotspot. The internet is used only if you choose a cloud transcription provider.'],
-  ['Which debate formats are supported?', 'British Parliamentary (BP) and UADC (Asian Parliamentary). Speech lengths, grace periods, POI windows and bells can all be changed in Bell settings.'],
+  ['Which debate formats are supported?', 'British Parliamentary (BP), UADC (Asian Parliamentary) and World Schools (WSDC). Speech lengths, grace periods, POI windows and bells can be changed in Bell settings, and new formats can be added with a short definition file.'],
+  ['Is it available in my language?', 'The app is in English today and is built to be translated: adding a language takes one command and one file to translate. Translations are welcome.'],
   ['Do debaters have to install the app?', 'Only to take part from their own phone, to offer POIs or see the synced timer. The chair can run a whole round alone and raise points on anyone’s behalf.'],
   ['What happens if the Wi-Fi drops?', 'Joined devices reconnect automatically and keep their role. Recordings waiting to be sent to the chair are retried until they arrive.'],
   ['Who can see my notes and ballot?', 'Only the chair. Notes, ballots and transcripts stay on the chair’s device and are never sent to other devices.'],
@@ -125,11 +131,12 @@ const FAQ = [
 ];
 
 function formatTable(format) {
+  const sideName = (side) => format.sides?.[side] ?? (side === 'gov' ? 'Government' : 'Opposition');
   const rows = format.speeches
     .map((s) => {
       const poi = s.poiWindow ? `${clock(s.poiWindow.from)}–${clock(s.poiWindow.to)}` : 'None';
       const bells = s.bells.map((b) => `${clock(b.at)} ${esc(b.pattern)}`).join('<br>');
-      return `<tr><td><b>${esc(s.role)}</b> ${esc(s.name)}</td><td>${s.side === 'gov' ? 'Government' : 'Opposition'}</td><td class="num">${clock(s.durationSec)}</td><td class="num">${poi}</td><td class="bells">${bells}</td></tr>`;
+      return `<tr><td><b>${esc(s.role)}</b> ${esc(s.name)}</td><td>${esc(sideName(s.side))}${s.reply ? ' (reply)' : ''}</td><td class="num">${clock(s.durationSec)}</td><td class="num">${poi}</td><td class="bells">${bells}</td></tr>`;
     })
     .join('');
   return `<div class="table-wrap"><table>
@@ -139,14 +146,14 @@ function formatTable(format) {
 
 function landing() {
   const description =
-    'Free, offline-first app for debate adjudicators: synced timer and bells over local Wi-Fi, POIs and points of order from debaters’ phones, recordings, offline transcription, BP and UADC ballots and PDF reports. Android and Windows.';
+    'Free, offline-first app for debate adjudicators: synced timer and bells over local Wi-Fi, POIs and points of order from debaters’ phones, recordings, offline transcription, ballots and PDF reports for BP, UADC and WSDC. Android and Windows.';
   const body = `
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
       <span class="eyebrow">For debate adjudicators</span>
       <h1>Run the debate room from one phone.</h1>
-      <p class="lede">${NAME} keeps time, rings the bells on every device, takes POIs and points of order from debaters’ phones, records and transcribes the speeches, and fills in the ballot. Offline, for British Parliamentary and UADC.</p>
+      <p class="lede">${NAME} keeps time, rings the bells on every device, takes POIs and points of order from debaters’ phones, records and transcribes the speeches, and fills in the ballot. Offline, for British Parliamentary, UADC and World Schools.</p>
       <div class="actions">
         <a class="btn primary" href="#get-the-app">Get the app</a>
         <a class="btn" href="docs/">Read the docs</a>
@@ -190,12 +197,9 @@ function landing() {
 <section id="formats">
   <div class="wrap">
     <span class="eyebrow">Formats</span>
-    <h2>British Parliamentary and UADC, ready to go.</h2>
-    <p class="lede">These are the default timings. Every length, grace period, POI window and bell can be changed on the device.</p>
-    <h3 style="margin-top:32px">British Parliamentary (BP)</h3>
-    ${formatTable(BP)}
-    <h3 style="margin-top:32px">UADC (Asian Parliamentary)</h3>
-    ${formatTable(UADC)}
+    <h2>${PRESETS.length} formats, ready to go.</h2>
+    <p class="lede">These are the default timings. Every length, grace period, POI window and bell can be changed on the device, and new formats can be <a href="docs/adding-a-format/">added with a short definition file</a>.</p>
+    ${PRESETS.map((f) => `<h3 style="margin-top:32px">${esc(f.name)}</h3>${f.source ? `<p class="lede" style="font-size:15px">Rules: ${esc(f.source)}</p>` : ''}${formatTable(f)}`).join('\n    ')}
   </div>
 </section>
 
@@ -252,6 +256,7 @@ function landing() {
     </div>
     <div>
       <p>${NAME} is MIT-licensed and built in the open by The Studio of Sadiq. Bug reports, new debate formats and translations are all welcome.</p>
+      <p><a href="docs/translating/">Translate the app</a> · <a href="docs/adding-a-format/">Add a debate format</a></p>
       <div class="actions">
         <a class="btn" href="${REPO_URL}/blob/main/CONTRIBUTING.md">How to contribute</a>
         <a class="btn" href="${REPO_URL}/issues/new/choose">Report a bug or idea</a>
@@ -293,12 +298,14 @@ function landing() {
 
 // [file in docs/wiki, URL slug, search description (≤ 160 chars)]
 const GUIDES = [
-  ['Home', '', 'How to use Debate Adjudicator: guides for chairs, debaters and timekeepers, offline transcription, BP and UADC ballots, and troubleshooting.'],
+  ['Home', '', 'How to use Debate Adjudicator: guides for chairs, debaters and timekeepers, transcription, ballots, troubleshooting, translating and adding formats.'],
   ['Chair-guide', 'chair-guide', 'Run a debate round as the chair: set up the network, invite devices by QR code, time speeches, rule on points of order, then ballot and report.'],
   ['Joining-a-round', 'joining-a-round', 'Join a debate round from your phone as a debater, timekeeper or wing adjudicator: scan the QR code, offer POIs and points of order, keep time.'],
   ['Transcription', 'transcription', 'Transcribe debate speeches offline with Whisper on Android or Windows, or with an OpenAI-compatible cloud provider. Models, speed and settings.'],
-  ['Ballots-and-reports', 'ballots-and-reports', 'Score British Parliamentary and UADC ballots: speaker ranges, ranks and team points, winner and margin, checks before marking final, and PDF reports.'],
+  ['Ballots-and-reports', 'ballots-and-reports', 'Score BP, UADC and WSDC ballots: speaker ranges, ranks and team points, winner and margin, checks before marking final, and PDF reports.'],
   ['Troubleshooting', 'troubleshooting', 'Fix common problems: devices that can’t connect on venue Wi-Fi, QR codes that won’t scan, bells, recording and transcription issues.'],
+  ['Translating', 'translating', 'Translate Debate Adjudicator into your language: create a dictionary with one command, translate one file, and check coverage and mistakes.'],
+  ['Adding-a-format', 'adding-a-format', 'Add a debate format to Debate Adjudicator: define speeches, timing, POI rules, teams and scoring in one short file, validated by the tests.'],
 ];
 const slugOf = Object.fromEntries(GUIDES.map(([file, slug]) => [file, slug]));
 

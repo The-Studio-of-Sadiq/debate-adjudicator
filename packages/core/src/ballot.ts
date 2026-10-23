@@ -1,56 +1,21 @@
-import type { Ballot, DebateFormat, Side } from './types';
+import { PRESETS } from './formats';
+import type { Ballot, BallotSpec, DebateFormat, ScoreRange, Side } from './types';
 
-export interface ScoreRange {
-  min: number;
-  max: number;
-  step: number;
-}
+export type { BallotSpec, ScoreRange, TeamSpec } from './types';
 
-export interface TeamSpec {
-  id: string;
-  side: Side;
-  /** Speech template ids whose scores count for this team. */
-  speechIds: string[];
-}
-
-export interface BallotSpec {
-  /** ranked: BP-style 1st–4th. winloss: one winner between two teams. */
-  kind: 'ranked' | 'winloss';
-  teams: TeamSpec[];
-  range: ScoreRange;
-  /** Reply speeches are scored on their own, smaller scale. */
-  replyRange?: ScoreRange;
-}
-
-const BP_SPEC: BallotSpec = {
-  kind: 'ranked',
-  teams: [
-    { id: 'OG', side: 'gov', speechIds: ['pm', 'dpm'] },
-    { id: 'OO', side: 'opp', speechIds: ['lo', 'dlo'] },
-    { id: 'CG', side: 'gov', speechIds: ['mg', 'gw'] },
-    { id: 'CO', side: 'opp', speechIds: ['mo', 'ow'] },
-  ],
-  range: { min: 50, max: 100, step: 1 },
-};
-
-const UADC_SPEC: BallotSpec = {
-  kind: 'winloss',
-  teams: [
-    { id: 'GOV', side: 'gov', speechIds: ['pm', 'dpm', 'gw', 'gr'] },
-    { id: 'OPP', side: 'opp', speechIds: ['lo', 'dlo', 'ow', 'or'] },
-  ],
-  range: { min: 70, max: 80, step: 1 },
-  replyRange: { min: 35, max: 40, step: 0.5 },
-};
-
-/** Scoring rules for a format; unknown formats get a two-sided win/loss ballot. */
+/**
+ * Scoring rules for a format: from its definition, or for rounds saved before
+ * formats carried their own rules, from the built-in format with the same id.
+ * Anything else gets a two-sided win/loss ballot.
+ */
 export function ballotSpecFor(format: DebateFormat): BallotSpec {
-  if (format.id === 'bp') return BP_SPEC;
-  if (format.id === 'uadc') return UADC_SPEC;
+  const known = format.ballot ?? PRESETS.find((p) => p.id === format.id)?.ballot;
+  if (known) return known;
   return {
     kind: 'winloss',
     teams: (['gov', 'opp'] as Side[]).map((side) => ({
       id: side.toUpperCase(),
+      name: format.sides?.[side] ?? (side === 'gov' ? 'Government' : 'Opposition'),
       side,
       speechIds: format.speeches.filter((s) => s.side === side).map((s) => s.id),
     })),
@@ -58,8 +23,10 @@ export function ballotSpecFor(format: DebateFormat): BallotSpec {
   };
 }
 
+/** Reply speeches have their own range; older saved rounds mark replies only by having no POIs. */
 export function rangeFor(spec: BallotSpec, format: DebateFormat, speechId: string): ScoreRange {
-  const isReply = format.speeches.find((s) => s.id === speechId)?.poiWindow === null;
+  const speech = format.speeches.find((s) => s.id === speechId);
+  const isReply = speech?.reply ?? speech?.poiWindow === null;
   return isReply && spec.replyRange ? spec.replyRange : spec.range;
 }
 

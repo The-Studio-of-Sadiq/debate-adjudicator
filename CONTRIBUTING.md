@@ -79,10 +79,22 @@ And keep to these conventions:
 
 ## Adding a language
 
-Copy `apps/app/src/i18n/en.ts` to e.g. `bn.ts`, translate the values (keep the
-keys, `{{placeholders}}` and `_one`/`_other` plural suffixes), register it in
-`LANGUAGES` in `apps/app/src/i18n/index.ts`, and add its name under
-`language` in every dictionary.
+```bash
+npm run i18n:new -- bn "বাংলা" "Bangla"   # code, native name, English name
+```
+
+This creates `apps/app/src/i18n/bn.ts` from the English dictionary and adds
+the language to the picker. Translate the values, then run
+`npm run check:i18n` to see coverage and catch mistakes. Partial translations
+are fine: anything missing shows in English. Full guide:
+[Translating the app](docs/wiki/Translating.md).
+
+## Adding a debate format
+
+Copy `packages/core/src/formats/_template.ts`, fill in the speeches, timing,
+teams and scoring, and register it in `packages/core/src/formats/index.ts`.
+`npm test` validates every format and explains any mistakes. Full guide:
+[Adding a debate format](docs/wiki/Adding-a-format.md).
 
 ## Reporting bugs and ideas
 

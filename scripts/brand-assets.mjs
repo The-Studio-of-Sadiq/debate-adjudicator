@@ -82,7 +82,7 @@ function socialPreview() {
   const eyebrow = textPath(inter, 'DEBATE', tx + 3, y + 28, 26, 0.32);
   const name = textPath(serif, 'Adjudicator', tx, y + markH, 116);
   const tag1 = textPath(interMedium, 'Run the debate room from one phone.', x, 448, 40);
-  const tag2 = textPath(interMedium, 'Offline-first  ·  BP & UADC  ·  Android & Windows  ·  Open source', x, 512, 26);
+  const tag2 = textPath(interMedium, 'Offline-first  ·  BP, UADC & WSDC  ·  Android & Windows  ·  Open source', x, 512, 26);
   return svgDoc(
     W,
     H,

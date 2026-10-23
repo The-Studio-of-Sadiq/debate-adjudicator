@@ -3,19 +3,30 @@ import { initReactI18next, useTranslation } from 'react-i18next';
 import { getLocales } from 'expo-localization';
 import type { Interruption, SpeechTemplate } from '@debate/core';
 import en from './en';
+import type { LanguageEntry } from './types';
+// i18n:new adds imports above this line.
 
-/** Languages the app ships. Add a dictionary here to offer it in the picker. */
-export const LANGUAGES = { en } as const;
-export type Language = keyof typeof LANGUAGES;
+/**
+ * Languages the app ships, keyed by BCP 47 code ("bn", "pt-BR"). Add one with
+ * `npm run i18n:new`, which also registers it here.
+ */
+export const LANGUAGES: Record<string, LanguageEntry> = {
+  en: { name: 'English', englishName: 'English', translation: en },
+  // i18n:new adds entries above this line.
+};
+export type Language = string;
 export type LanguagePreference = 'system' | Language;
 
+/** The device's language if the app has it (exact tag first, then the base language), else English. */
 export function deviceLanguage(): Language {
-  const code = getLocales()[0]?.languageCode ?? 'en';
-  return code in LANGUAGES ? (code as Language) : 'en';
+  const locale = getLocales()[0];
+  if (locale?.languageTag && locale.languageTag in LANGUAGES) return locale.languageTag;
+  if (locale?.languageCode && locale.languageCode in LANGUAGES) return locale.languageCode;
+  return 'en';
 }
 
 void i18n.use(initReactI18next).init({
-  resources: Object.fromEntries(Object.entries(LANGUAGES).map(([code, translation]) => [code, { translation }])),
+  resources: Object.fromEntries(Object.entries(LANGUAGES).map(([code, l]) => [code, { translation: l.translation }])),
   lng: deviceLanguage(),
   fallbackLng: 'en',
   // React already escapes text; the PDF report escapes its own HTML.
@@ -46,7 +57,8 @@ export const roleName = (t: T, s: Pick<SpeechTemplate, 'role' | 'name'>) => t(`r
 
 export const formatName = (t: T, f: { id: string; name: string }) => t(`formats.${f.id}`, { defaultValue: f.name });
 
-export const teamName = (t: T, id: string) => t(`teams.${id}`, { defaultValue: id });
+/** Team name: translated if the dictionary has it, else the format's own English name. */
+export const teamName = (t: T, id: string, fallback?: string) => t(`teams.${id}`, { defaultValue: fallback ?? id });
 
 /** Server reason codes → sentence; unknown text (e.g. from an older device) passes through. */
 export const netReason = (t: T, code: string | undefined) => (code ? t(`net.${code}`, { defaultValue: code }) : '');

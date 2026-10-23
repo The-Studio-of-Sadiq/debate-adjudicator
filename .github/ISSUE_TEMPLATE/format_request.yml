@@ -1,0 +1,42 @@
+name: Debate format request
+description: Ask for a format the app doesn't have yet
+labels: [format]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Formats are short definition files; see [Adding a debate format](https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/adding-a-format/) if you'd like to write one yourself. Otherwise, describe the rules below.
+  - type: input
+    id: name
+    attributes:
+      label: Format name
+      placeholder: e.g. Australs, Policy, Lincoln–Douglas
+    validations:
+      required: true
+  - type: input
+    id: rules
+    attributes:
+      label: Link to the rules
+      description: A rulebook or tournament guide, so the timings can be checked.
+  - type: textarea
+    id: speeches
+    attributes:
+      label: Speeches in order
+      description: Who speaks, for how long, and whether there are reply speeches.
+      placeholder: |
+        1st Affirmative: 8 min
+        1st Negative: 8 min
+        …
+        Negative reply: 5 min
+    validations:
+      required: true
+  - type: textarea
+    id: poi
+    attributes:
+      label: Points of information and bells
+      description: Are POIs allowed, and when? When do bells ring? Is there a grace period?
+  - type: textarea
+    id: scoring
+    attributes:
+      label: Teams and scoring
+      description: Which speakers form a team, the speaker score range, and how the result is decided (one winner, or teams ranked).

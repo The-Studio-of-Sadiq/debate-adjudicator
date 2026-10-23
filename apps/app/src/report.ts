@@ -48,12 +48,12 @@ export function buildReportHtml(session: Session, t: T, opts: { includeTranscrip
             : rank === 1
               ? '✓'
               : '';
-        return `<tr><td>${esc(teamName(t, team.id))}</td><td>${speakers}</td><td class="num">${fmtScore(result.totals[team.id] ?? 0)}</td><td>${outcome}</td></tr>`;
+        return `<tr><td>${esc(teamName(t, team.id, team.name))}</td><td>${speakers}</td><td class="num">${fmtScore(result.totals[team.id] ?? 0)}</td><td>${outcome}</td></tr>`;
       })
       .join('');
     const winner =
       spec.kind === 'winloss' && result.complete && result.margin !== undefined
-        ? `<p class="result">${esc(t('ballot.winner', { team: teamName(t, result.order[0]!), margin: fmtScore(result.margin) }))}</p>`
+        ? `<p class="result">${esc(t('ballot.winner', { team: teamName(t, result.order[0]!, spec.teams.find((x) => x.id === result.order[0])?.name), margin: fmtScore(result.margin) }))}</p>`
         : '';
     const status = session.ballot?.finalizedAt
       ? `<p>${esc(t('ballot.finalized', { time: new Date(session.ballot.finalizedAt).toLocaleString() }))}</p>`

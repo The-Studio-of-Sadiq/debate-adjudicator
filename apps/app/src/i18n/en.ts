@@ -1,7 +1,8 @@
 /**
- * English strings. To add a language, copy this file (e.g. `bn.ts`), translate
- * the values, and register it in `./index.ts`. Keep the keys identical;
- * `{{name}}` placeholders and `_one`/`_other` plural suffixes must stay.
+ * English strings: the reference for every other language.
+ * To add a language, run `npm run i18n:new -- <code> "<native name>" "<English name>"`
+ * (see docs/wiki/Translating.md). New English keys show up in every other
+ * language's coverage report until they're translated.
  */
 const en = {
   app: { title: 'Debate Adjudicator' },
@@ -22,7 +23,8 @@ const en = {
     none: 'none',
     edit: 'Edit',
   },
-  language: { title: 'Language', system: 'Device language', en: 'English' },
+  // Languages are listed by their own names (from i18n/index.ts), not translated.
+  language: { title: 'Language', system: 'Device language' },
   appearance: { title: 'Appearance', system: 'Match device', dark: 'Dark', light: 'Light' },
   sides: { gov: 'Government', opp: 'Opposition' },
   roles: {
@@ -36,8 +38,15 @@ const en = {
     OW: 'Opposition Whip',
     GR: 'Government Reply',
     OR: 'Opposition Reply',
+    P1: 'First Proposition',
+    O1: 'First Opposition',
+    P2: 'Second Proposition',
+    O2: 'Second Opposition',
+    P3: 'Third Proposition',
+    O3: 'Third Opposition',
+    PR: 'Proposition Reply',
   },
-  formats: { bp: 'British Parliamentary', uadc: 'UADC (Asian Parliamentary)' },
+  formats: { bp: 'British Parliamentary', uadc: 'UADC (Asian Parliamentary)', wsdc: 'World Schools (WSDC)' },
   teams: {
     OG: 'Opening Government',
     OO: 'Opening Opposition',
@@ -45,6 +54,7 @@ const en = {
     CO: 'Closing Opposition',
     GOV: 'Government',
     OPP: 'Opposition',
+    PROP: 'Proposition',
   },
   memberRoles: { timekeeper: 'Timekeeper', debater: 'Debater', wing: 'Wing adjudicator', viewer: 'Viewer' },
   phases: {
@@ -326,4 +336,3 @@ const en = {
 };
 
 export default en;
-export type Translation = typeof en;

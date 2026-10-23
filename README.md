@@ -15,7 +15,7 @@ laptop runs the room: a synced timer and bells on every device over local
 Wi-Fi, POIs and points of order raised from debaters' phones, recordings,
 offline transcription, ballots and a PDF report. No accounts, no cloud needed.
 
-Built for **British Parliamentary** and **UADC (Asian Parliamentary)**; every
+Built for **British Parliamentary**, **UADC (Asian Parliamentary)** and **World Schools (WSDC)**; every
 time, bell and range is editable.
 
 <p align="center">
@@ -25,7 +25,7 @@ time, bell and range is editable.
 
 ## Features
 
-- **Timekeeping:** BP and UADC presets, phase display (protected, POIs open,
+- **Timekeeping:** BP, UADC and WSDC presets (and more via [format definitions](docs/wiki/Adding-a-format.md)), phase display (protected, POIs open,
   wrap up, grace, overtime), scheduled and manual bells, editable bell plans.
 - **Local multi-device rooms:** join by QR code or typed code over the room's
   Wi-Fi or a phone hotspot; the chair approves each device and assigns roles
@@ -38,7 +38,7 @@ time, bell and range is editable.
   own accepted POI or point and sends it to the chair.
 - **Transcription:** offline Whisper on Android and Windows, or an
   OpenAI-compatible cloud provider when online. Tap a transcript line to hear it.
-- **Adjudication:** timestamped flow notes, BP and UADC ballots with ranks or
+- **Adjudication:** timestamped flow notes, ballots for every format with ranks or
   winner computed from speaker scores, and a printable PDF report.
 - **Private by design:** notes, ballots and transcripts never leave the chair's device.
 - **Light and dark** monochrome themes; all text translatable.

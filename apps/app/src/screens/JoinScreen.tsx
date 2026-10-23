@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Platform, ScrollView, Text, TextInput, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { BP, parseJoin, UADC, type MemberRole } from '@debate/core';
+import { parseJoin, PRESETS, type MemberRole } from '@debate/core';
 import { useT } from '../i18n';
 import type { JoinRequest } from '../net/useClient';
 import { saveIdentity, type Identity } from '../storage';
@@ -10,7 +10,7 @@ import { Btn, Card, Chip, Row } from '../ui';
 import { ROLES } from './LobbyScreen';
 
 // Every seat across the presets; the chair confirms or corrects it on approval.
-const SEATS = [...new Map([...BP.speeches, ...UADC.speeches].map((s) => [s.role, s])).values()];
+const SEATS = [...new Map(PRESETS.flatMap((f) => f.speeches).map((s) => [s.role, s])).values()];
 
 function Scanner({ onCode, onClose }: { onCode: (text: string) => void; onClose: () => void }) {
   const { styles } = useTheme();

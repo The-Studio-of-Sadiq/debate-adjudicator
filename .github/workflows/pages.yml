@@ -11,7 +11,8 @@ on:
       - 'site/**'
       - 'docs/**'
       - 'scripts/build-site.mjs'
-      - 'packages/core/src/formats.ts'
+      - 'packages/core/src/formats/**'
+      - 'scripts/resolve-ts.mjs'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
