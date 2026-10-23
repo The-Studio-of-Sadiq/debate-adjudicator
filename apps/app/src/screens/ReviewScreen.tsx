@@ -6,12 +6,13 @@ import { errorText, formatName, outcomeText, roleName, useT } from '../i18n';
 import { exportPdf } from '../pdf';
 import { buildReportHtml, reportFileName } from '../report';
 import type { JobState } from '../transcription/useTranscriptionJobs';
-import { colors } from '../theme';
-import { Btn, Card, Chip, Row, styles } from '../ui';
+import { useTheme } from '../theme';
+import { Btn, Card, Chip, Row } from '../ui';
 import { progressText } from './TranscriptionSettingsScreen';
 
 /** Player plus its transcript; tapping a line plays from that moment. */
 function ClipPlayer(props: { clip: ClipRef; transcript?: Transcript; job?: JobState; onTranscribe: () => void }) {
+  const { colors, styles } = useTheme();
   const t = useT();
   const { clip, transcript, job } = props;
   const player = useAudioPlayer(clip.uri);
@@ -78,6 +79,7 @@ export function ReviewScreen(props: {
   onResume: () => void;
   onDelete: () => void;
 }) {
+  const { colors, styles } = useTheme();
   const t = useT();
   const { session, jobs } = props;
   const [includeTranscripts, setIncludeTranscripts] = useState(true);

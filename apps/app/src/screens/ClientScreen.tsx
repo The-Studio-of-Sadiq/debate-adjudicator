@@ -5,10 +5,12 @@ import { capabilitiesFor, type ClipRef } from '@debate/core';
 import { extensionOf, readAsBase64 } from '../files';
 import { netReason, useT } from '../i18n';
 import { useClient, type JoinRequest } from '../net/useClient';
-import { Btn, Card, Row, styles } from '../ui';
+import { useTheme } from '../theme';
+import { Btn, Card, Row } from '../ui';
 import { TimerScreen } from './TimerScreen';
 
 export function ClientScreen({ req, onLeave }: { req: JoinRequest; onLeave: () => void }) {
+  const { styles } = useTheme();
   const t = useT();
   const c = useClient(req);
   const session = c.client?.session;

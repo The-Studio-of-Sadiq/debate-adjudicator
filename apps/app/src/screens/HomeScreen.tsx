@@ -4,8 +4,8 @@ import { PRESETS, type DebateFormat } from '@debate/core';
 import { formatName, LANGUAGES, useT, type LanguagePreference } from '../i18n';
 import { transport } from '../net/transport';
 import { listSessions, loadCustomFormats, type SessionSummary } from '../storage';
-import { colors } from '../theme';
-import { Btn, Card, Chip, Row, styles } from '../ui';
+import { useTheme, type ThemePreference } from '../theme';
+import { Btn, Card, Chip, Row } from '../ui';
 
 export function HomeScreen(props: {
   onStart: (format: DebateFormat, motion: string) => void;
@@ -15,7 +15,10 @@ export function HomeScreen(props: {
   onTranscriptionSettings: () => void;
   language: LanguagePreference;
   onLanguage: (pref: LanguagePreference) => void;
+  themePref: ThemePreference;
+  onThemePref: (pref: ThemePreference) => void;
 }) {
+  const { colors, styles } = useTheme();
   const t = useT();
   const [formats, setFormats] = useState<DebateFormat[]>(PRESETS);
   const [formatId, setFormatId] = useState(PRESETS[0]!.id);
@@ -80,6 +83,15 @@ export function HomeScreen(props: {
             </Text>
           </Pressable>
         ))}
+      </Card>
+
+      <Card>
+        <Text style={styles.h2}>{t('appearance.title')}</Text>
+        <Row>
+          {(['system', 'dark', 'light'] as ThemePreference[]).map((p) => (
+            <Chip key={p} label={t(`appearance.${p}`)} active={props.themePref === p} onPress={() => props.onThemePref(p)} />
+          ))}
+        </Row>
       </Card>
 
       <Card>

@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import { colors } from './theme';
+import { Pressable, Text, View, type ViewStyle } from 'react-native';
+import { useTheme } from './theme';
 
 /**
- * primary: filled white (the main action). default: dark grey.
- * outline: transparent with a border (destructive or secondary actions).
+ * primary: filled (white in dark mode, black in light mode) for the main action.
+ * default: a grey surface. outline: transparent with a border (destructive or secondary).
  */
 export type BtnVariant = 'primary' | 'default' | 'outline';
 
@@ -16,6 +16,7 @@ export function Btn(props: {
   big?: boolean;
   style?: ViewStyle;
 }) {
+  const { colors, styles } = useTheme();
   const variant = props.variant ?? 'default';
   return (
     <Pressable
@@ -37,8 +38,9 @@ export function Btn(props: {
   );
 }
 
-/** Toggle chip; `dim` draws the inactive outline in the dimmer (opposition) grey. */
+/** Toggle chip; `dim` draws it in the fainter (opposition) tone. */
 export function Chip(props: { label: string; active?: boolean; dim?: boolean; onPress: () => void }) {
+  const { colors, styles } = useTheme();
   const tone = props.dim ? colors.opp : colors.text;
   return (
     <Pressable
@@ -53,38 +55,11 @@ export function Chip(props: { label: string; active?: boolean; dim?: boolean; on
 }
 
 export function Card({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+  const { styles } = useTheme();
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
 export function Row({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+  const { styles } = useTheme();
   return <View style={[styles.row, style]}>{children}</View>;
 }
-
-export const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
-  container: { width: '100%', maxWidth: 900, alignSelf: 'center', padding: 16, gap: 16 },
-  h1: { color: colors.text, fontSize: 26, fontWeight: '700' },
-  h2: { color: colors.text, fontSize: 18, fontWeight: '600' },
-  text: { color: colors.text, fontSize: 15 },
-  muted: { color: colors.muted, fontSize: 13 },
-  /** Warnings and errors: bold white, prefixed with ⚠ in the text itself. */
-  alert: { color: colors.text, fontSize: 14, fontWeight: '700' },
-  input: {
-    color: colors.text,
-    backgroundColor: colors.surfaceHi,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  card: { backgroundColor: colors.surface, borderRadius: 14, padding: 14, gap: 10, borderWidth: 1, borderColor: colors.border },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  btn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  big: { paddingVertical: 16, paddingHorizontal: 22, borderRadius: 14, minWidth: 120 },
-  btnText: { color: colors.text, fontSize: 15, fontWeight: '600' },
-  bigText: { fontSize: 18 },
-  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1 },
-  chipText: { fontSize: 13, fontWeight: '600' },
-});
