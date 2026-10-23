@@ -8,6 +8,9 @@ import { Lockup } from '../Logo';
 import { useTheme, type ThemePreference } from '../theme';
 import { Btn, Card, Chip, Row } from '../ui';
 
+// Remembered while the app runs, so visiting Bell settings doesn't reset the choice.
+let lastFormatId = PRESETS[0]!.id;
+
 export function HomeScreen(props: {
   onStart: (format: DebateFormat, motion: string) => void;
   onEditBells: (format: DebateFormat) => void;
@@ -22,7 +25,11 @@ export function HomeScreen(props: {
   const { colors, styles } = useTheme();
   const t = useT();
   const [formats, setFormats] = useState<DebateFormat[]>(PRESETS);
-  const [formatId, setFormatId] = useState(PRESETS[0]!.id);
+  const [formatId, setFormatIdState] = useState(lastFormatId);
+  const setFormatId = (id: string) => {
+    lastFormatId = id;
+    setFormatIdState(id);
+  };
   const [motion, setMotion] = useState('');
   const [history, setHistory] = useState<SessionSummary[]>([]);
 
@@ -99,10 +106,10 @@ export function HomeScreen(props: {
         <Text style={styles.h2}>{t('language.title')}</Text>
         <Row>
           <Chip label={t('language.system')} active={props.language === 'system'} onPress={() => props.onLanguage('system')} />
-          {Object.keys(LANGUAGES).map((code) => (
+          {Object.entries(LANGUAGES).map(([code, lang]) => (
             <Chip
               key={code}
-              label={t(`language.${code}`, { defaultValue: code })}
+              label={lang.name}
               active={props.language === code}
               onPress={() => props.onLanguage(code as LanguagePreference)}
             />

@@ -94,7 +94,7 @@ function SpeakerRow(props: {
   );
 }
 
-export function issueText(t: T, issue: BallotIssue, speakerOf: (id: string) => string): string {
+export function issueText(t: T, issue: BallotIssue, speakerOf: (id: string) => string, teamOf: (id: string) => string): string {
   switch (issue.code) {
     case 'missingScore':
       return t('ballot.issues.missingScore', { speaker: speakerOf(issue.speechId) });
@@ -103,7 +103,7 @@ export function issueText(t: T, issue: BallotIssue, speakerOf: (id: string) => s
     case 'offStep':
       return t('ballot.issues.offStep', { speaker: speakerOf(issue.speechId), step: issue.step });
     case 'tiedTotals':
-      return t('ballot.issues.tiedTotals', { teams: issue.teamIds.map((id) => teamName(t, id)).join(' / ') });
+      return t('ballot.issues.tiedTotals', { teams: issue.teamIds.map(teamOf).join(' / ') });
   }
 }
 
@@ -115,6 +115,7 @@ export function BallotScreen({ session, dispatch, onBack }: { session: Session; 
   const scores = session.ballot?.scores ?? {};
   const finalizedAt = session.ballot?.finalizedAt;
   const templateOf = (id: string) => session.format.speeches.find((s) => s.id === id);
+  const teamOf = (id: string) => teamName(t, id, spec.teams.find((x) => x.id === id)?.name);
   const speakerOf = (id: string) => {
     const s = templateOf(id);
     if (!s) return id;
@@ -145,7 +146,7 @@ export function BallotScreen({ session, dispatch, onBack }: { session: Session; 
       {spec.kind === 'winloss' && result.complete && result.margin !== undefined && (
         <Card style={{ backgroundColor: colors.primary }}>
           <Text style={[styles.h2, { color: colors.onPrimary }]}>
-            {t('ballot.winner', { team: teamName(t, result.order[0]!), margin: fmtScore(result.margin) })}
+            {t('ballot.winner', { team: teamOf(result.order[0]!), margin: fmtScore(result.margin) })}
           </Text>
         </Card>
       )}
@@ -156,7 +157,7 @@ export function BallotScreen({ session, dispatch, onBack }: { session: Session; 
         return (
           <Card key={team.id}>
             <Row style={{ justifyContent: 'space-between' }}>
-              <Text style={[styles.h2, { color: team.side === 'gov' ? colors.gov : colors.opp }]}>{teamName(t, team.id)}</Text>
+              <Text style={[styles.h2, { color: team.side === 'gov' ? colors.gov : colors.opp }]}>{teamName(t, team.id, team.name)}</Text>
               <Text style={styles.text}>
                 {result.complete && spec.kind === 'ranked'
                   ? `${t(`ballot.rank_${rank}`)} · ${t('ballot.points', { count: result.points[team.id] })} · `
@@ -183,7 +184,7 @@ export function BallotScreen({ session, dispatch, onBack }: { session: Session; 
         <Card>
           {result.issues.map((issue, i) => (
             <Text key={i} style={styles.alert}>
-              ⚠ {issueText(t, issue, speakerOf)}
+              ⚠ {issueText(t, issue, speakerOf, teamOf)}
             </Text>
           ))}
         </Card>

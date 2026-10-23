@@ -1,0 +1,30 @@
+name: Translation
+description: Offer or request a translation of the app
+labels: [translation]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping! The [translation guide](https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/translating/) shows how to start a language with one command and translate one file. If you'd rather not use Git, tell us here and we'll set the file up for you.
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: e.g. Bangla (বাংলা), code bn
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What would you like to do?
+      options:
+        - I'd like to translate it
+        - I'm requesting this language
+        - I found a mistake in an existing translation
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: For mistakes, quote the screen and the text. Mention debate terms that should stay in English in your language, if any.

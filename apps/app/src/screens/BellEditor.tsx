@@ -10,7 +10,8 @@ const PATTERNS: BellPattern[] = ['single', 'double', 'triple', 'continuous'];
 
 /** Speeches that share timing (e.g. all substantives, all replies) are edited together. */
 type Group = 'substantive' | 'reply';
-const groupOf = (t: SpeechTemplate): Group => (t.poiWindow ? 'substantive' : 'reply');
+// Older saved formats have no reply flag; there, replies are the speeches without POIs.
+const groupOf = (t: SpeechTemplate): Group => ((t.reply ?? !t.poiWindow) ? 'reply' : 'substantive');
 
 function parseClock(v: string): number | null {
   const m = v.trim().match(/^(\d+)(?::(\d{1,2}))?$/);

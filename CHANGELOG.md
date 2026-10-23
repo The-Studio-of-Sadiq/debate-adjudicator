@@ -5,6 +5,17 @@ Notable changes, newest first. The project follows the phases in
 
 ## Unreleased
 
+- Debate formats are definition files (`packages/core/src/formats/`):
+  speeches, timing, teams and scoring in one place, validated by the tests,
+  with a template to copy. Ballots read their scoring from the format.
+- New format: World Schools (WSDC).
+- Translations: `npm run i18n:new` starts a language from the English
+  dictionary and registers it; `npm run check:i18n` reports each language's
+  coverage and catches wrong keys and placeholders. The language picker shows
+  native names.
+- Guides for translating and adding formats, on the website too, and issue
+  templates for translation and format requests.
+
 - Brand identity: "The House" logo (Government's solid bench, Opposition's
   open bench, the Speaker's chair between them) and the "Parliament" type
   system: Instrument Serif for titles and motions, Inter for everything else,

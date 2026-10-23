@@ -21,12 +21,44 @@ export interface SpeechTemplate {
   /** Window in which POIs may be offered; null when POIs are not allowed. */
   poiWindow: { from: number; to: number } | null;
   bells: BellRule[];
+  /** Reply speeches use the reply timing and score range. */
+  reply?: boolean;
 }
 
 export interface DebateFormat {
   id: string;
   name: string;
   speeches: SpeechTemplate[];
+  /** What the two sides are called, e.g. Proposition / Opposition. */
+  sides?: { gov: string; opp: string };
+  /** Teams and scoring. Missing on sessions saved before format definitions. */
+  ballot?: BallotSpec;
+  /** Where the rules come from (rulebook name or URL). */
+  source?: string;
+}
+
+export interface ScoreRange {
+  min: number;
+  max: number;
+  step: number;
+}
+
+export interface TeamSpec {
+  id: string;
+  /** English team name; translated via the app's teams.* keys when present. */
+  name?: string;
+  side: Side;
+  /** Speech template ids whose scores count for this team. */
+  speechIds: string[];
+}
+
+export interface BallotSpec {
+  /** ranked: BP-style 1st–4th. winloss: one winner between two teams. */
+  kind: 'ranked' | 'winloss';
+  teams: TeamSpec[];
+  range: ScoreRange;
+  /** Reply speeches are scored on their own, smaller scale. */
+  replyRange?: ScoreRange;
 }
 
 export type TimerEventType = 'start' | 'pause' | 'resume' | 'stop';
