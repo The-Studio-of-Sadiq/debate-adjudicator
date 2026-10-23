@@ -138,7 +138,7 @@ export function BallotScreen({ session, dispatch, onBack }: { session: Session; 
         )}
       </Row>
       <Text style={styles.h1}>{t('ballot.title')}</Text>
-      {!!session.motion && <Text style={styles.h2}>{session.motion}</Text>}
+      {!!session.motion && <Text style={styles.title}>{session.motion}</Text>}
       <Text style={styles.muted}>{t(spec.kind === 'ranked' ? 'ballot.rankedHint' : 'ballot.winlossHint')}</Text>
       {finalizedAt && <Text style={styles.text}>{t('ballot.finalized', { time: new Date(finalizedAt).toLocaleString() })}</Text>}
 

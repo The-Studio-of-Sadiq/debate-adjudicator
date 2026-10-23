@@ -103,7 +103,7 @@ export function LobbyScreen({ hosting, session, hostName, onBack }: { hosting: H
             <>
               <QrCode value={encodeJoin({ hosts: info.addresses, port: info.port, token: info.token, name: hostName })} size={qrSize} />
               <Text style={styles.muted}>{t('lobby.scanOrType')}</Text>
-              <Text style={[styles.h1, { fontVariant: ['tabular-nums'], letterSpacing: 1 }]}>{typedCode}</Text>
+              <Text style={styles.code}>{typedCode}</Text>
             </>
           ) : (
             <Text style={styles.alert}>{t('lobby.noAddress')}</Text>

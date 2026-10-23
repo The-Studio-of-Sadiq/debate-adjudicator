@@ -4,6 +4,7 @@ import { PRESETS, type DebateFormat } from '@debate/core';
 import { formatName, LANGUAGES, useT, type LanguagePreference } from '../i18n';
 import { transport } from '../net/transport';
 import { listSessions, loadCustomFormats, type SessionSummary } from '../storage';
+import { Lockup } from '../Logo';
 import { useTheme, type ThemePreference } from '../theme';
 import { Btn, Card, Chip, Row } from '../ui';
 
@@ -39,7 +40,7 @@ export function HomeScreen(props: {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
-      <Text style={styles.h1}>{t('app.title')}</Text>
+      <Lockup />
 
       <Card>
         <Text style={styles.h2}>{t('home.newRound')}</Text>

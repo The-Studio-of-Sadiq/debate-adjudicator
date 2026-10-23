@@ -99,8 +99,8 @@ export function buildReportHtml(session: Session, t: T, opts: { includeTranscrip
 
   return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(t('report.title'))}</title><style>
     @page { size: A4; margin: 16mm; }
-    body { font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; color: #000; background: #fff; font-size: 11pt; line-height: 1.4; }
-    h1 { font-size: 20pt; margin: 0 0 4pt; } h2 { font-size: 15pt; border-bottom: 2px solid #000; padding-bottom: 2pt; margin-top: 18pt; }
+    body { font-family: Inter, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; color: #000; background: #fff; font-size: 11pt; line-height: 1.4; }
+    h1 { font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif; font-weight: 400; font-size: 28pt; margin: 0 0 4pt; } h2 { font-size: 15pt; border-bottom: 2px solid #000; padding-bottom: 2pt; margin-top: 18pt; }
     h3 { font-size: 12pt; margin: 14pt 0 4pt; } h4 { font-size: 10pt; margin: 8pt 0 2pt; text-transform: uppercase; letter-spacing: .04em; }
     table { width: 100%; border-collapse: collapse; margin-top: 6pt; } th, td { border: 1px solid #000; padding: 4pt 6pt; vertical-align: top; text-align: left; }
     th { background: #000; color: #fff; } td.num { text-align: right; font-weight: bold; }

@@ -1,4 +1,9 @@
-# Debate Adjudicator
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/lockup-white.svg">
+    <img src="docs/brand/lockup.svg" alt="Debate Adjudicator" width="340">
+  </picture>
+</h1>
 
 [![CI](https://github.com/The-Studio-of-Sadiq/debate-adjudicator/actions/workflows/ci.yml/badge.svg)](https://github.com/The-Studio-of-Sadiq/debate-adjudicator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
@@ -115,6 +120,7 @@ may ask to allow the app through the firewall; allow it on private networks.
 
 - [Docs home](docs/wiki/Home.md): guides for chairs, debaters, transcription,
   ballots and troubleshooting
+- [Brand](docs/brand/README.md): logo, typography and how to regenerate assets
 - [PLAN.md](PLAN.md): design, protocol and roadmap
 - [CHANGELOG.md](CHANGELOG.md)
 

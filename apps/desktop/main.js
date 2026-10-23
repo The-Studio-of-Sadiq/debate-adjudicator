@@ -48,6 +48,7 @@ function createWindow() {
     // Matches the app's "match device" theme until the page has loaded.
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#000000' : '#ffffff',
     title: profile ? `Debate Adjudicator (${profile})` : 'Debate Adjudicator',
+    icon: path.join(__dirname, 'icon.png'),
     autoHideMenuBar: true,
     webPreferences: {
       contextIsolation: true,

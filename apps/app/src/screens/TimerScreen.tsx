@@ -24,7 +24,7 @@ import {
 import { useBells, useNow, useSpeechRecorder } from '../hooks';
 import { errorText, formatName, outcomeText, roleName, useT } from '../i18n';
 import { makeId } from '../storage';
-import { useTheme } from '../theme';
+import { FONTS, useTheme } from '../theme';
 import { Btn, Card, Chip, Row } from '../ui';
 
 const KINDS: InterruptionKind[] = ['POI', 'POO', 'POP'];
@@ -194,7 +194,7 @@ export function TimerScreen(props: {
         </Text>
       </Row>
       {props.banner}
-      {!!session.motion && <Text style={styles.h2}>{session.motion}</Text>}
+      {!!session.motion && <Text style={styles.title}>{session.motion}</Text>}
 
       <Row>
         {session.format.speeches.map((s, i) => (
@@ -216,16 +216,16 @@ export function TimerScreen(props: {
           {speaker ? ` · ${speaker}` : ''}
           {caps.decidePoi && !caps.rule ? ` · ${t('timer.youHaveFloor')}` : ''}
         </Text>
-        <Text style={{ color: cardText, fontSize: clockSize, fontWeight: '700', fontVariant: ['tabular-nums'] }}>
+        <Text style={[styles.clock, { color: cardText, fontSize: clockSize, lineHeight: clockSize * 1.1 }]}>
           {formatClock(elapsedSec)}
         </Text>
-        <Text style={{ color: cardText, fontSize: 18, fontWeight: '600' }}>
+        <Text style={{ color: cardText, fontSize: 18, fontFamily: FONTS.semibold }}>
           {status === 'paused' ? t('timer.paused') : status === 'stopped' ? t('timer.finished') : t(`phases.${phase}`)} ·{' '}
           {remaining >= 0 ? t('timer.timeLeft', { time: formatClock(remaining) }) : t('timer.timeOver', { time: formatClock(-remaining) })}
         </Text>
         {recorder.recording && <Text style={{ color: cardText }}>{t('timer.recording')}</Text>}
-        {clipStatus && <Text style={{ color: cardText, fontWeight: clipStatus.alert ? '700' : '600' }}>{clipStatus.text}</Text>}
-        {recorder.error && <Text style={{ color: cardText, fontWeight: '700' }}>{t('timer.recorderError', { error: errorText(t, recorder.error) })}</Text>}
+        {clipStatus && <Text style={{ color: cardText, fontFamily: clipStatus.alert ? FONTS.bold : FONTS.semibold }}>{clipStatus.text}</Text>}
+        {recorder.error && <Text style={{ color: cardText, fontFamily: FONTS.bold }}>{t('timer.recorderError', { error: errorText(t, recorder.error) })}</Text>}
       </View>
 
       {caps.controlTimer && (
