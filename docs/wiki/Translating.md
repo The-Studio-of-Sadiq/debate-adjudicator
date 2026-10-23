@@ -4,7 +4,7 @@ Every word in the app comes from a dictionary file, so adding a language
 needs no programming. English is the reference; a translation can be partial,
 and anything not yet translated shows in English.
 
-Available today: English, Bangla, Spanish, French, Portuguese, German, Russian, Turkish, Hindi, Chinese (Simplified), Japanese, Korean, Indonesian, Malay and Vietnamese. Under Home → **Language**, "Device
+Available today: English, Bangla, Spanish, French, Portuguese, German, Russian, Turkish, Hindi, Chinese (Simplified), Japanese, Korean, Indonesian, Malay, Vietnamese, Arabic and Urdu. Under Home → **Language**, "Device
 language" picks whichever of these matches the phone or PC, and falls back to
 English.
 
@@ -14,8 +14,8 @@ debate term your circuit says differently, edit that line in
 `apps/app/src/i18n/<code>.ts` and open a pull request, or
 [open a translation issue](https://github.com/The-Studio-of-Sadiq/debate-adjudicator/issues/new?template=translation.yml).
 
-Right-to-left languages (Arabic, Urdu, Hebrew, Persian) aren't available yet:
-they also need the layout mirrored, not just the words translated.
+Arabic and Urdu are right-to-left: choosing one mirrors the whole layout (see
+[Right-to-left languages](#right-to-left-languages) below).
 
 ## Start a new language
 
@@ -56,6 +56,26 @@ home: {
 - **Skip anything** by deleting its line; it will show in English.
 - Debate terms (POI, BP, Prime Minister…) can stay in English if that's what
   debaters in your language use.
+
+## Right-to-left languages
+
+Arabic, Urdu, Hebrew, Persian and other right-to-left languages work the same
+way; the app recognises them by their code and mirrors the layout on its own.
+
+- **Windows and browsers** switch straight away.
+- **Android** mirrors the layout when the app starts, so after switching
+  between a left-to-right and a right-to-left language the app asks you to
+  close and reopen it.
+- **Arrows** in your text should point the way your language reads: Back is
+  `'→ رجوع'` and Next is `'التالي ←'`.
+- **Numbers** stay in Western digits (0–9) and left to right, as they appear
+  on the clock and the ballot. Write `{{min}}–{{max}}` style ranges as words
+  if you can (`'بين {{min}} و{{max}}'`).
+- Don't add invisible direction marks yourself: the app starts every
+  right-to-left string with one, so a line that begins with a placeholder or a
+  role code ("POO من DLO") still reads right to left.
+- Arabic uses all six plural forms: `_zero`, `_one`, `_two`, `_few`, `_many`
+  and `_other`.
 
 ## Check your work
 

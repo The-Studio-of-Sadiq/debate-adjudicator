@@ -31,7 +31,15 @@ const hi: LocaleDictionary = {
     edit: 'संपादित करें',
   },
   // Languages are listed by their own names (from i18n/index.ts), not translated.
-  language: { title: 'भाषा', system: 'डिवाइस की भाषा' },
+  language: {
+    title: 'भाषा',
+    system: 'डिवाइस की भाषा',
+    restartTitle: 'पूरा करने के लिए फिर से शुरू करें',
+    restartBody: 'अगली बार ऐप शुरू होने पर लेआउट बाएँ-से-दाएँ और दाएँ-से-बाएँ के बीच बदलेगा। ऐप बंद करके फिर से खोलें।',
+    restartNow: 'अभी फिर से शुरू करें',
+    later: 'बाद में',
+    ok: 'ठीक है',
+  },
   appearance: { title: 'रूप', system: 'डिवाइस के अनुसार', dark: 'डार्क', light: 'लाइट' },
   sides: { gov: 'सरकार', opp: 'विपक्ष' },
   roles: {

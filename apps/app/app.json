@@ -47,7 +47,12 @@
           "recordAudioAndroid": false
         }
       ],
-      "expo-localization",
+      [
+        "expo-localization",
+        {
+          "supportsRTL": true
+        }
+      ],
       "expo-sharing",
       "expo-font",
       [

@@ -31,7 +31,15 @@ const vi: LocaleDictionary = {
     edit: 'Sửa',
   },
   // Languages are listed by their own names (from i18n/index.ts), not translated.
-  language: { title: 'Ngôn ngữ', system: 'Ngôn ngữ thiết bị' },
+  language: {
+    title: 'Ngôn ngữ',
+    system: 'Ngôn ngữ thiết bị',
+    restartTitle: 'Khởi động lại để hoàn tất',
+    restartBody: 'Bố cục sẽ chuyển giữa trái sang phải và phải sang trái vào lần mở ứng dụng tiếp theo. Hãy đóng ứng dụng rồi mở lại.',
+    restartNow: 'Khởi động lại ngay',
+    later: 'Để sau',
+    ok: 'OK',
+  },
   appearance: { title: 'Giao diện', system: 'Theo thiết bị', dark: 'Tối', light: 'Sáng' },
   sides: { gov: 'Chính phủ', opp: 'Đối lập' },
   roles: {

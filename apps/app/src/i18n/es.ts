@@ -31,7 +31,15 @@ const es: LocaleDictionary = {
     edit: 'Editar',
   },
   // Languages are listed by their own names (from i18n/index.ts), not translated.
-  language: { title: 'Idioma', system: 'Idioma del dispositivo' },
+  language: {
+    title: 'Idioma',
+    system: 'Idioma del dispositivo',
+    restartTitle: 'Reinicia para terminar',
+    restartBody: 'El diseño cambia entre izquierda a derecha y derecha a izquierda la próxima vez que se abra la app. Cierra la app y vuelve a abrirla.',
+    restartNow: 'Reiniciar ahora',
+    later: 'Más tarde',
+    ok: 'Aceptar',
+  },
   appearance: { title: 'Apariencia', system: 'Igual que el dispositivo', dark: 'Oscuro', light: 'Claro' },
   sides: { gov: 'Gobierno', opp: 'Oposición' },
   roles: {

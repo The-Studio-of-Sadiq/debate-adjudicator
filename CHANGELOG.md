@@ -9,6 +9,10 @@ Notable changes, newest first. The project follows the phases in
   devices set to one of them switch automatically. Bangla uses Bangladeshi
   debate terms (সরকারি দল / বিরোধী দল, পক্ষ / বিপক্ষ, চেয়ার). Translations other
   than English are AI-drafted and await native review.
+- **Arabic and Urdu**, the first right-to-left languages. Choosing one mirrors
+  the layout: at once on Windows and in browsers, after a restart on Android
+  (the app asks). Clocks, scores and score steppers stay left to right in
+  Western digits, and the PDF report is mirrored too.
 
 ## [0.6.0] – 2026-10-23: first public release
 

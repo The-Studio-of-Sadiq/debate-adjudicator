@@ -31,7 +31,15 @@ const ms: LocaleDictionary = {
     edit: 'Edit',
   },
   // Languages are listed by their own names (from i18n/index.ts), not translated.
-  language: { title: 'Bahasa', system: 'Bahasa peranti' },
+  language: {
+    title: 'Bahasa',
+    system: 'Bahasa peranti',
+    restartTitle: 'Mula semula untuk selesai',
+    restartBody: 'Susun atur bertukar antara kiri-ke-kanan dan kanan-ke-kiri apabila aplikasi dibuka seterusnya. Tutup aplikasi dan buka semula.',
+    restartNow: 'Mula semula sekarang',
+    later: 'Kemudian',
+    ok: 'OK',
+  },
   appearance: { title: 'Penampilan', system: 'Ikut peranti', dark: 'Gelap', light: 'Cerah' },
   sides: { gov: 'Kerajaan', opp: 'Pembangkang' },
   roles: {

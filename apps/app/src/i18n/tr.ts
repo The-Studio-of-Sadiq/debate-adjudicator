@@ -31,7 +31,15 @@ const tr: LocaleDictionary = {
     edit: 'Düzenle',
   },
   // Languages are listed by their own names (from i18n/index.ts), not translated.
-  language: { title: 'Dil', system: 'Cihaz dili' },
+  language: {
+    title: 'Dil',
+    system: 'Cihaz dili',
+    restartTitle: 'Bitirmek için yeniden başlatın',
+    restartBody: 'Düzen, uygulama bir sonraki açılışında soldan sağa ile sağdan sola arasında değişir. Uygulamayı kapatıp yeniden açın.',
+    restartNow: 'Şimdi yeniden başlat',
+    later: 'Sonra',
+    ok: 'Tamam',
+  },
   appearance: { title: 'Görünüm', system: 'Cihaza uy', dark: 'Koyu', light: 'Açık' },
   sides: { gov: 'Hükümet', opp: 'Muhalefet' },
   roles: {

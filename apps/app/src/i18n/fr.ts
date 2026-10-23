@@ -31,7 +31,15 @@ const fr: LocaleDictionary = {
     edit: 'Modifier',
   },
   // Languages are listed by their own names (from i18n/index.ts), not translated.
-  language: { title: 'Langue', system: "Langue de l'appareil" },
+  language: {
+    title: 'Langue',
+    system: "Langue de l'appareil",
+    restartTitle: 'Redémarrez pour terminer',
+    restartBody: 'La mise en page passe de gauche à droite à droite à gauche (ou l\'inverse) au prochain démarrage. Fermez l\'application et rouvrez-la.',
+    restartNow: 'Redémarrer maintenant',
+    later: 'Plus tard',
+    ok: 'OK',
+  },
   appearance: { title: 'Apparence', system: "Comme l'appareil", dark: 'Sombre', light: 'Clair' },
   sides: { gov: 'Gouvernement', opp: 'Opposition' },
   roles: {

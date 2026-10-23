@@ -117,13 +117,13 @@ const FEATURES = [
   ['Offline transcription', 'Whisper runs on the device, with no internet needed. Optionally use a cloud provider when you’re online. Tap a line to hear it.'],
   ['Ballots and reports', 'Speaker scores give BP ranks or the UADC winner automatically, with checks for missing, invalid or tied scores. Export a PDF report.'],
   ['Private by design', 'No accounts and no cloud. Flow notes, ballots and transcripts never leave the chair’s device.'],
-  ['Made for any room', 'Black-and-white light and dark themes, readable across a room and for colour-blind adjudicators. In 15 languages.'],
+  ['Made for any room', 'Black-and-white light and dark themes, readable across a room and for colour-blind adjudicators. In 17 languages, including right-to-left Arabic and Urdu.'],
 ];
 
 const FAQ = [
   ['Does it need the internet?', 'No. Rounds, joining, bells, recording and transcription all work offline. Devices only need to be on the same Wi-Fi network or the chair’s phone hotspot. The internet is used only if you choose a cloud transcription provider.'],
   ['Which debate formats are supported?', `${PRESETS.length} of them: British Parliamentary (BP), UADC 7-7-7-4 and 5-5-5-3 (Asian Parliamentary), World Schools (WSDC), and ${DEBATEKEEPER.length} more from the Debatekeeper format library, including Australs, Canadian and American Parliamentary, and school and league formats from Australia, New Zealand, Europe and beyond. Speech lengths, grace periods, POI windows and bells can be changed in Bell settings, and new formats can be added with a short definition file.`],
-  ['Is it available in my language?', 'The interface is in 15 languages: English, Bangla, Spanish, French, Portuguese, German, Russian, Turkish, Hindi, Chinese (Simplified), Japanese, Korean, Indonesian, Malay and Vietnamese. It follows your device’s language, or you can pick one under Home → Language. Adding another language takes one command and one file to translate; corrections and new languages are welcome.'],
+  ['Is it available in my language?', 'The interface is in 17 languages: English, Bangla, Spanish, French, Portuguese, German, Russian, Turkish, Hindi, Chinese (Simplified), Japanese, Korean, Indonesian, Malay, Vietnamese, Arabic and Urdu (with the layout mirrored right to left). It follows your device’s language, or you can pick one under Home → Language. Adding another language takes one command and one file to translate; corrections and new languages are welcome.'],
   ['Do debaters have to install the app?', 'Only to take part from their own phone, to offer POIs or see the synced timer. The chair can run a whole round alone and raise points on anyone’s behalf.'],
   ['What happens if the Wi-Fi drops?', 'Joined devices reconnect automatically and keep their role. Recordings waiting to be sent to the chair are retried until they arrive.'],
   ['Who can see my notes and ballot?', 'Only the chair. Notes, ballots and transcripts stay on the chair’s device and are never sent to other devices.'],

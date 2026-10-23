@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { FEATURED, formatRegion, type DebateFormat } from '@debate/core';
-import { formatName, useT } from '../i18n';
+import { formatName, i18n, isRTL, useT } from '../i18n';
 import { FONTS, useTheme } from '../theme';
 import { Btn, Chip, Row } from '../ui';
 
@@ -72,7 +72,7 @@ export function FormatPicker(props: { formats: DebateFormat[]; selectedId: strin
           {groups.length === 0 && <Text style={styles.muted}>{t('home.noFormatMatch', { query: query.trim() })}</Text>}
           {groups.map(([region, formats]) => (
             <View key={region}>
-              <Text style={[styles.muted, { marginTop: 8, textTransform: 'uppercase', letterSpacing: 1, fontSize: 12, fontFamily: FONTS.semibold }]}>{region}</Text>
+              <Text style={[styles.muted, { marginTop: 8, textTransform: 'uppercase', letterSpacing: isRTL(i18n.language) ? 0 : 1, fontSize: 12, fontFamily: FONTS.semibold }]}>{region}</Text>
               {formats.map((f) => {
                 const active = f.id === props.selectedId;
                 return (

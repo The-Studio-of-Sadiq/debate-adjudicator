@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Linking, SafeAreaView, StatusBar as RNStatusBar, Platform, Text } from 'react-native';
+import { Alert, Linking, SafeAreaView, StatusBar as RNStatusBar, Platform, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { CHAIR_CAPS, createSession, parseJoin, PRESETS, reduceSession, type DebateFormat, type Session, type SessionAction } from '@debate/core';
-import { applyLanguage, useT, type LanguagePreference } from './src/i18n';
+import { restartApp, rootDirectionProps } from './src/direction';
+import { applyLanguage, i18n, isRTL, useT, type LanguagePreference } from './src/i18n';
 import type { JoinRequest } from './src/net/useClient';
 import { useHosting } from './src/net/useHosting';
 import { BallotScreen } from './src/screens/BallotScreen';
@@ -32,6 +33,19 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { ThemeProvider, useBrandFonts, useTheme, type ThemePreference } from './src/theme';
 import { Btn, Row } from './src/ui';
+
+/** Android only mirrors the layout after a restart (see src/direction.native.ts). */
+function promptRestartIfNeeded({ restartNeeded }: { restartNeeded: boolean }) {
+  if (!restartNeeded) return;
+  const t = i18n.t.bind(i18n);
+  Alert.alert(
+    t('language.restartTitle'),
+    t('language.restartBody'),
+    restartApp
+      ? [{ text: t('language.later'), style: 'cancel' }, { text: t('language.restartNow'), onPress: restartApp }]
+      : [{ text: t('language.ok') }],
+  );
+}
 
 type Screen =
   | { name: 'home' }
@@ -88,7 +102,7 @@ function AppBody({ themePref, onThemePref }: { themePref: ThemePreference; onThe
     void loadIdentity().then(setIdentity);
     void loadLanguagePreference().then((pref) => {
       setLanguage(pref);
-      void applyLanguage(pref);
+      void applyLanguage(pref).then(promptRestartIfNeeded);
     });
   }, []);
 
@@ -217,8 +231,7 @@ function AppBody({ themePref, onThemePref }: { themePref: ThemePreference; onThe
         language={language}
         onLanguage={(pref) => {
           setLanguage(pref);
-          void applyLanguage(pref);
-          void saveLanguagePreference(pref);
+          void saveLanguagePreference(pref).then(() => applyLanguage(pref).then(promptRestartIfNeeded));
         }}
       />
     );
@@ -226,6 +239,7 @@ function AppBody({ themePref, onThemePref }: { themePref: ThemePreference; onThe
 
   return (
     <SafeAreaView
+      {...rootDirectionProps(isRTL(i18n.language), i18n.language)}
       style={{ flex: 1, backgroundColor: colors.bg, paddingTop: Platform.OS === 'android' ? RNStatusBar.currentHeight : 0 }}
     >
       <StatusBar style={theme.name === 'dark' ? 'light' : 'dark'} />

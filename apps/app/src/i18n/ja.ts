@@ -31,7 +31,15 @@ const ja: LocaleDictionary = {
     edit: '編集',
   },
   // Languages are listed by their own names (from i18n/index.ts), not translated.
-  language: { title: '言語', system: '端末の言語' },
+  language: {
+    title: '言語',
+    system: '端末の言語',
+    restartTitle: '再起動して完了',
+    restartBody: '次回アプリを起動すると、レイアウトが左から右／右から左に切り替わります。アプリを閉じてから開き直してください。',
+    restartNow: '今すぐ再起動',
+    later: '後で',
+    ok: 'OK',
+  },
   appearance: { title: '外観', system: '端末に合わせる', dark: 'ダーク', light: 'ライト' },
   sides: { gov: '政府', opp: '野党' },
   roles: {

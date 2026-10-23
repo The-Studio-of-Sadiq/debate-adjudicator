@@ -31,7 +31,15 @@ const id: LocaleDictionary = {
     edit: 'Edit',
   },
   // Languages are listed by their own names (from i18n/index.ts), not translated.
-  language: { title: 'Bahasa', system: 'Bahasa perangkat' },
+  language: {
+    title: 'Bahasa',
+    system: 'Bahasa perangkat',
+    restartTitle: 'Mulai ulang untuk menyelesaikan',
+    restartBody: 'Tata letak berganti antara kiri-ke-kanan dan kanan-ke-kiri saat aplikasi dibuka berikutnya. Tutup aplikasi lalu buka lagi.',
+    restartNow: 'Mulai ulang sekarang',
+    later: 'Nanti',
+    ok: 'OK',
+  },
   appearance: { title: 'Tampilan', system: 'Ikuti perangkat', dark: 'Gelap', light: 'Terang' },
   sides: { gov: 'Pemerintah', opp: 'Oposisi' },
   roles: {

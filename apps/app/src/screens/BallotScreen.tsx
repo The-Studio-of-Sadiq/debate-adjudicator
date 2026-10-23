@@ -10,9 +10,9 @@ import {
   type SessionAction,
   type SpeechTemplate,
 } from '@debate/core';
-import { roleName, teamName, useT, type T } from '../i18n';
+import { dateTime, ltr, roleName, rtlMark, teamName, useT, type T } from '../i18n';
 import { useTheme } from '../theme';
-import { Btn, Card, Row } from '../ui';
+import { Btn, Card, LtrRow, Row } from '../ui';
 
 export const fmtScore = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
@@ -32,7 +32,9 @@ function CommitField(props: {
     <TextInput
       style={[
         styles.input,
-        { width: props.width, flex: props.width || props.multiline ? undefined : 1, minWidth: 120, textAlign: props.numeric ? 'center' : 'left' },
+        { width: props.width, flex: props.width || props.multiline ? undefined : 1, minWidth: 120 },
+        // Scores are centred; other text starts on the side the language reads from.
+        props.numeric && { textAlign: 'center', writingDirection: 'ltr' },
         props.multiline && { minHeight: 120, textAlignVertical: 'top' },
       ]}
       value={focused ? text : props.value}
@@ -73,22 +75,26 @@ function SpeakerRow(props: {
   return (
     <View style={{ gap: 6, paddingVertical: 8, borderTopWidth: 1, borderColor: colors.border }}>
       <Text style={styles.text}>
-        {s.role} · {roleName(t, s)} <Text style={styles.muted}>({t('ballot.range', { min: range.min, max: range.max })})</Text>
+        {rtlMark()}
+        {s.role} · {roleName(t, s)} <Text style={styles.muted}>({ltr(t('ballot.range', { min: range.min, max: range.max }))})</Text>
       </Text>
       <Row>
         <CommitField value={props.name} placeholder={t('ballot.name')} onCommit={props.onName} />
-        <Btn title="−" onPress={() => bump(-1)} />
-        <CommitField
-          numeric
-          width={80}
-          value={score === undefined ? '' : fmtScore(score)}
-          placeholder="—"
-          onCommit={(text) => {
-            const v = parseFloat(text.replace(',', '.'));
-            props.onScore(text.trim() === '' || Number.isNaN(v) ? null : v);
-          }}
-        />
-        <Btn title="+" onPress={() => bump(1)} />
+        {/* − score + reads left to right in every language, like a number line. */}
+        <LtrRow>
+          <Btn title="−" onPress={() => bump(-1)} />
+          <CommitField
+            numeric
+            width={80}
+            value={score === undefined ? '' : fmtScore(score)}
+            placeholder="—"
+            onCommit={(text) => {
+              const v = parseFloat(text.replace(',', '.'));
+              props.onScore(text.trim() === '' || Number.isNaN(v) ? null : v);
+            }}
+          />
+          <Btn title="+" onPress={() => bump(1)} />
+        </LtrRow>
       </Row>
     </View>
   );
@@ -141,7 +147,7 @@ export function BallotScreen({ session, dispatch, onBack }: { session: Session; 
       <Text style={styles.h1}>{t('ballot.title')}</Text>
       {!!session.motion && <Text style={styles.title}>{session.motion}</Text>}
       <Text style={styles.muted}>{t(spec.kind === 'ranked' ? 'ballot.rankedHint' : 'ballot.winlossHint')}</Text>
-      {finalizedAt && <Text style={styles.text}>{t('ballot.finalized', { time: new Date(finalizedAt).toLocaleString() })}</Text>}
+      {finalizedAt && <Text style={styles.text}>{t('ballot.finalized', { time: dateTime(finalizedAt) })}</Text>}
 
       {spec.kind === 'winloss' && result.complete && result.margin !== undefined && (
         <Card style={{ backgroundColor: colors.primary }}>
