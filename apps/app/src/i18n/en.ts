@@ -46,7 +46,8 @@ const en = {
     O3: 'Third Opposition',
     PR: 'Proposition Reply',
   },
-  formats: { bp: 'British Parliamentary', uadc: 'UADC (Asian Parliamentary)', wsdc: 'World Schools (WSDC)' },
+  // Imported formats (Debatekeeper's library) show their English names.
+  formats: { bp: 'British Parliamentary', uadc: 'UADC 7-7-7-4', 'uadc-5553': 'UADC 5-5-5-3', wsdc: 'World Schools (WSDC)' },
   teams: {
     OG: 'Opening Government',
     OO: 'Opening Opposition',
@@ -55,6 +56,12 @@ const en = {
     GOV: 'Government',
     OPP: 'Opposition',
     PROP: 'Proposition',
+    AFF: 'Affirmative',
+    NEG: 'Negative',
+    PRO: 'Pro',
+    CON: 'Contra',
+    FOR: 'In favour',
+    AGST: 'Against',
   },
   memberRoles: { timekeeper: 'Timekeeper', debater: 'Debater', wing: 'Wing adjudicator', viewer: 'Viewer' },
   phases: {
@@ -74,11 +81,18 @@ const en = {
     history: 'History',
     noRounds: 'No rounds yet.',
     transcriptionSettings: 'Transcription settings',
+    allFormats: 'All formats ({{count}})',
+    fewerFormats: 'Fewer formats',
+    searchFormats: 'Search by name, country or level',
+    noFormatMatch: 'No format matches “{{query}}”.',
+    prep: '{{minutes}} min prep',
+    otherRegion: 'Other',
   },
   bells: {
     title: 'Bells · {{format}}',
     substantive: 'Substantive speeches',
     reply: 'Reply speeches',
+    // Formats with other kinds of speeches (e.g. "Rebuttal") show the format's own English names.
     length: 'Length',
     grace: 'Grace',
     poisFrom: 'POIs from',

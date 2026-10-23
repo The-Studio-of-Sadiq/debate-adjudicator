@@ -9,6 +9,17 @@ Notable changes, newest first. The project follows the phases in
   speeches, timing, teams and scoring in one place, validated by the tests,
   with a template to copy. Ballots read their scoring from the format.
 - New format: World Schools (WSDC).
+- UADC comes in two timings: **UADC 7-7-7-4** (the existing preset, renamed)
+  and **UADC 5-5-5-3** (5-minute speeches, POIs 1:00–4:00, 3-minute replies).
+- 45 formats from the Debatekeeper format library (MIT), converted by
+  `npm run formats:import`: Australs, Canadian and American Parliamentary, BP
+  5 and 6 minutes, NSW, Auckland, Spanish, Polish, Greek and more. 49 formats
+  in all.
+- Home: the featured formats as buttons, plus a searchable list of every
+  format grouped by region, showing level, summary and prep time.
+- Bell settings group speeches by kind in formats that have more than
+  substantives and replies (e.g. Canadian rebuttals).
+- Website: a format library with a page for each format.
 - Translations: `npm run i18n:new` starts a language from the English
   dictionary and registers it; `npm run check:i18n` reports each language's
   coverage and catches wrong keys and placeholders. The language picker shows

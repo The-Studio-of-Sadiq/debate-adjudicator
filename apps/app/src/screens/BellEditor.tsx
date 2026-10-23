@@ -8,10 +8,12 @@ import { Btn, Card, Chip, Row } from '../ui';
 
 const PATTERNS: BellPattern[] = ['single', 'double', 'triple', 'continuous'];
 
-/** Speeches that share timing (e.g. all substantives, all replies) are edited together. */
-type Group = 'substantive' | 'reply';
+/**
+ * Speeches that share timing are edited together: all substantives and all
+ * replies, or each kind of speech in formats that name them ("Rebuttal").
+ */
 // Older saved formats have no reply flag; there, replies are the speeches without POIs.
-const groupOf = (t: SpeechTemplate): Group => ((t.reply ?? !t.poiWindow) ? 'reply' : 'substantive');
+const groupOf = (t: SpeechTemplate): string => t.kind ?? ((t.reply ?? !t.poiWindow) ? 'reply' : 'substantive');
 
 function parseClock(v: string): number | null {
   const m = v.trim().match(/^(\d+)(?::(\d{1,2}))?$/);
@@ -45,9 +47,9 @@ export function BellEditor(props: { format: DebateFormat; onSave: (f: DebateForm
   const { colors, styles } = useTheme();
   const t = useT();
   const [format, setFormat] = useState(props.format);
-  const groups = (['substantive', 'reply'] as Group[]).filter((g) => format.speeches.some((s) => groupOf(s) === g));
+  const groups = [...new Set(format.speeches.map(groupOf))];
 
-  function updateGroup(g: Group, fn: (s: SpeechTemplate) => SpeechTemplate) {
+  function updateGroup(g: string, fn: (s: SpeechTemplate) => SpeechTemplate) {
     setFormat((f) => ({ ...f, speeches: f.speeches.map((s) => (groupOf(s) === g ? fn(s) : s)) }));
   }
 
@@ -59,7 +61,7 @@ export function BellEditor(props: { format: DebateFormat; onSave: (f: DebateForm
         const setBells = (bells: BellRule[]) => updateGroup(g, (s) => ({ ...s, bells }));
         return (
           <Card key={g}>
-            <Text style={styles.h2}>{t(g === 'substantive' ? 'bells.substantive' : 'bells.reply')}</Text>
+            <Text style={styles.h2}>{g === 'substantive' ? t('bells.substantive') : g === 'reply' ? t('bells.reply') : g}</Text>
             <Text style={styles.muted}>{format.speeches.filter((s) => groupOf(s) === g).map((s) => s.role).join(' · ')}</Text>
 
             <Row>

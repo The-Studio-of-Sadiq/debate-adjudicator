@@ -28,5 +28,6 @@ export const WSDC = defineFormat({
     speech: { min: 60, max: 80, step: 1 },
     reply: { min: 30, max: 40, step: 0.5 },
   },
+  info: { region: 'World', level: 'High school', usedAt: 'World Schools Debating Championships', description: '3 vs 3, 8-minute speeches, 4-minute replies, POIs allowed', prepSec: 3600 },
   source: 'World Schools Debating Championships rules',
 });

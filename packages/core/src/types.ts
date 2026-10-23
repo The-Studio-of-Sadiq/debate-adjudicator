@@ -23,6 +23,8 @@ export interface SpeechTemplate {
   bells: BellRule[];
   /** Reply speeches use the reply timing and score range. */
   reply?: boolean;
+  /** Speeches of the same kind share timing in Bell settings, e.g. "Rebuttal". */
+  kind?: string;
 }
 
 export interface DebateFormat {
@@ -33,8 +35,23 @@ export interface DebateFormat {
   sides?: { gov: string; opp: string };
   /** Teams and scoring. Missing on sessions saved before format definitions. */
   ballot?: BallotSpec;
+  info?: FormatInfo;
   /** Where the rules come from (rulebook name or URL). */
   source?: string;
+}
+
+/** Where a format is used, for the format list and the website. All English. */
+export interface FormatInfo {
+  /** Country or region, e.g. "New Zealand" or "World". */
+  region?: string;
+  /** e.g. "High school", "University". */
+  level?: string;
+  /** Tournaments or leagues that use it. */
+  usedAt?: string;
+  /** One line: team sizes, speech lengths, POIs. */
+  description?: string;
+  /** Preparation time before the round, in seconds. */
+  prepSec?: number;
 }
 
 export interface ScoreRange {

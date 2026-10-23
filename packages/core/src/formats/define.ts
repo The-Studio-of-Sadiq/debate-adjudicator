@@ -1,4 +1,4 @@
-import type { BallotSpec, BellRule, DebateFormat, ScoreRange, Side, SpeechTemplate } from '../types';
+import type { BallotSpec, BellRule, DebateFormat, FormatInfo, ScoreRange, Side, SpeechTemplate } from '../types';
 
 /**
  * A debate format, written as data. Copy `_template.ts` to add one, then
@@ -35,6 +35,8 @@ export interface FormatDefinition {
     /** Range for reply speeches, if they're scored differently. */
     reply?: ScoreRange;
   };
+  /** Where and by whom the format is used; shown in the format list and on the website. */
+  info?: FormatInfo;
   /** Where the rules come from: a rulebook name or URL. */
   source?: string;
 }
@@ -47,6 +49,11 @@ export interface SpeechDefinition {
   side: Side;
   /** Reply speeches use the reply timing and score range. */
   reply?: boolean;
+  /**
+   * Speeches of the same kind share timing in Bell settings, e.g. "Rebuttal".
+   * Leave it out for plain substantive and reply speeches.
+   */
+  kind?: string;
   /** Overrides for this speech only. */
   durationSec?: number;
   graceSec?: number;
@@ -88,7 +95,7 @@ export function defineFormat(def: FormatDefinition): DebateFormat {
     const protectedSec = s.reply ? null : def.timing.speech.protectedSec;
     const poiWindow = s.poiWindow !== undefined ? s.poiWindow : protectedSec === null ? null : { from: protectedSec, to: durationSec - protectedSec };
     const bells = s.bells ?? (poiWindow ? standardBells(durationSec, poiWindow.from, graceSec) : replyBells(durationSec, graceSec));
-    return { id: s.role.toLowerCase(), role: s.role, name: s.name, side: s.side, durationSec, graceSec, poiWindow, bells, reply: !!s.reply };
+    return { id: s.role.toLowerCase(), role: s.role, name: s.name, side: s.side, durationSec, graceSec, poiWindow, bells, reply: !!s.reply, ...(s.kind && { kind: s.kind }) };
   });
 
   const ballot: BallotSpec = {
@@ -98,7 +105,7 @@ export function defineFormat(def: FormatDefinition): DebateFormat {
     replyRange: def.scoring.reply,
   };
 
-  return { id: def.id, name: def.name, speeches, sides: def.sides, ballot, source: def.source };
+  return { id: def.id, name: def.name, speeches, sides: def.sides, ballot, ...(def.info && { info: def.info }), source: def.source };
 }
 
 const validRange = (r: ScoreRange) => r.min < r.max && r.step > 0 && Number.isFinite(r.min) && Number.isFinite(r.max);
