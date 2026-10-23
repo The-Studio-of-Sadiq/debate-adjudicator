@@ -53,7 +53,7 @@ Every time, bell and range is editable.
 
 ## Install
 
-Download from the [latest release](https://github.com/The-Studio-of-Sadiq/debate-adjudicator/releases/latest):
+Download from [Releases](https://github.com/The-Studio-of-Sadiq/debate-adjudicator/releases):
 
 - **Android:** `Debate-Adjudicator-<version>.apk`. Open it on the phone and
   allow installs from your browser or file manager when Android asks.
