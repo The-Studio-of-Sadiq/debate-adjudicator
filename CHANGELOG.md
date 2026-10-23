@@ -5,9 +5,10 @@ Notable changes, newest first. The project follows the phases in
 
 ## Unreleased
 
-- The interface in **Bangla (বাংলা)**: every screen, ballot and report, using
-  Bangladeshi debate terms (সরকারি দল / বিরোধী দল, পক্ষ / বিপক্ষ, চেয়ার).
-  Phones and PCs set to Bangla switch automatically.
+- The interface in **15 languages**: English, Bangla, Spanish, French, Portuguese, German, Russian, Turkish, Hindi, Chinese (Simplified), Japanese, Korean, Indonesian, Malay and Vietnamese. Every screen, ballot and report;
+  devices set to one of them switch automatically. Bangla uses Bangladeshi
+  debate terms (সরকারি দল / বিরোধী দল, পক্ষ / বিপক্ষ, চেয়ার). Translations other
+  than English are AI-drafted and await native review.
 
 ## [0.6.0] – 2026-10-23: first public release
 
