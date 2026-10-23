@@ -3,7 +3,15 @@ import type en from './en';
 /** The shape of every dictionary: English is the reference. */
 export type Translation = typeof en;
 
-type DeepPartial<T> = { [K in keyof T]?: T[K] extends string ? string : DeepPartial<T[K]> };
+/**
+ * English only has "x_one" / "x_other"; other languages may add the plural
+ * forms their CLDR rules use, e.g. Russian "x_few" and "x_many".
+ */
+type ExtraPlurals<T> = {
+  [K in keyof T as K extends `${infer Base}_other` ? `${Base}_${'zero' | 'two' | 'few' | 'many'}` : never]?: string;
+};
+
+type DeepPartial<T> = { [K in keyof T]?: T[K] extends string ? string : DeepPartial<T[K]> } & ExtraPlurals<T>;
 
 /**
  * A translation may be incomplete: any missing key falls back to English.

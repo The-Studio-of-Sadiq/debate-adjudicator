@@ -5,6 +5,19 @@ import type { Interruption, SpeechTemplate } from '@debate/core';
 import en from './en';
 import type { LanguageEntry } from './types';
 import bn from './bn';
+import es from './es';
+import fr from './fr';
+import pt from './pt';
+import de from './de';
+import ru from './ru';
+import tr from './tr';
+import hi from './hi';
+import zh from './zh';
+import ja from './ja';
+import ko from './ko';
+import id from './id';
+import ms from './ms';
+import vi from './vi';
 // i18n:new adds imports above this line.
 
 /**
@@ -14,6 +27,19 @@ import bn from './bn';
 export const LANGUAGES: Record<string, LanguageEntry> = {
   en: { name: 'English', englishName: 'English', translation: en },
   bn: { name: 'বাংলা', englishName: 'Bangla', translation: bn },
+  es: { name: 'Español', englishName: 'Spanish', translation: es },
+  fr: { name: 'Français', englishName: 'French', translation: fr },
+  pt: { name: 'Português', englishName: 'Portuguese', translation: pt },
+  de: { name: 'Deutsch', englishName: 'German', translation: de },
+  ru: { name: 'Русский', englishName: 'Russian', translation: ru },
+  tr: { name: 'Türkçe', englishName: 'Turkish', translation: tr },
+  hi: { name: 'हिन्दी', englishName: 'Hindi', translation: hi },
+  zh: { name: '中文（简体）', englishName: 'Chinese (Simplified)', translation: zh },
+  ja: { name: '日本語', englishName: 'Japanese', translation: ja },
+  ko: { name: '한국어', englishName: 'Korean', translation: ko },
+  id: { name: 'Bahasa Indonesia', englishName: 'Indonesian', translation: id },
+  ms: { name: 'Bahasa Melayu', englishName: 'Malay', translation: ms },
+  vi: { name: 'Tiếng Việt', englishName: 'Vietnamese', translation: vi },
   // i18n:new adds entries above this line.
 };
 export type Language = string;

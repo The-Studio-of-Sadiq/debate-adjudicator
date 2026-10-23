@@ -4,9 +4,18 @@ Every word in the app comes from a dictionary file, so adding a language
 needs no programming. English is the reference; a translation can be partial,
 and anything not yet translated shows in English.
 
-Available today: **English** and **Bangla (বাংলা)**. Under Home → **Language**,
-"Device language" picks whichever of these matches the phone or PC, and falls
-back to English.
+Available today: English, Bangla, Spanish, French, Portuguese, German, Russian, Turkish, Hindi, Chinese (Simplified), Japanese, Korean, Indonesian, Malay and Vietnamese. Under Home → **Language**, "Device
+language" picks whichever of these matches the phone or PC, and falls back to
+English.
+
+Apart from English, the translations were drafted with AI help and haven't all
+been reviewed by native speakers yet. If a word reads wrong, especially a
+debate term your circuit says differently, edit that line in
+`apps/app/src/i18n/<code>.ts` and open a pull request, or
+[open a translation issue](https://github.com/The-Studio-of-Sadiq/debate-adjudicator/issues/new?template=translation.yml).
+
+Right-to-left languages (Arabic, Urdu, Hebrew, Persian) aren't available yet:
+they also need the layout mirrored, not just the words translated.
 
 ## Start a new language
 
