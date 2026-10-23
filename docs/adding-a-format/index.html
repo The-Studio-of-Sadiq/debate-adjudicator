@@ -39,7 +39,7 @@
     <nav class="nav" aria-label="Main">
       <a href="../../#features">Features</a>
       <a href="../../#how-it-works">How it works</a>
-      <a href="../../#formats">Formats</a>
+      <a href="../../formats/">Formats</a>
       <a href="../../docs/" aria-current="page">Docs</a>
       <a href="../../#get-the-app">Get the app</a>
     </nav>
@@ -56,15 +56,19 @@
 the teams and how speakers are scored. Bells and POI windows are worked out
 from the timing, and the ballot uses the teams and scoring, so a new format
 works everywhere in the app with no other changes.</p>
-<p>Built in today: <strong>British Parliamentary</strong>, <strong>UADC (Asian Parliamentary)</strong> and
-<strong>World Schools (WSDC)</strong>.</p>
+<p>Our own formats are <strong>British Parliamentary</strong>, <strong>UADC 7-7-7-4</strong>, <strong>UADC 5-5-5-3</strong>
+and <strong>World Schools (WSDC)</strong>. The app also ships 45 formats converted from the
+<a href="https://github.com/czlee/debatekeeper-formats">Debatekeeper format library</a>
+(see <a href="#formats-from-debatekeeper">below</a>); the
+<a href="https://the-studio-of-sadiq.github.io/debate-adjudicator/formats/">website lists them all</a>.</p>
 <h2>Steps</h2>
 <ol>
 <li>In <code>packages/core/src/formats/</code>, copy <code>_template.ts</code> to a new file, for
 example <code>australs.ts</code>.</li>
 <li>Fill it in (see below).</li>
 <li>Register it in <code>packages/core/src/formats/index.ts</code>: import it and add it to
-<code>PRESETS</code>. The order there is the order shown in the app.</li>
+<code>FEATURED</code>. Featured formats are shown as buttons on the home screen, in
+that order; every format is in the searchable list.</li>
 <li>Run <code>npm test</code>. Every format is checked, and anything wrong is explained in
 plain English, e.g. <code>role &quot;PM&quot; is used twice</code> or
 <code>team GOV is gov but LO speaks for opp</code>.</li>
@@ -99,7 +103,7 @@ plain English, e.g. <code>role &quot;PM&quot; is used twice</code> or
 </tr>
 <tr>
 <td><code>speeches</code></td>
-<td>Speeches in speaking order: a short <code>role</code> code (1–4 capitals or digits), its English <code>name</code>, its <code>side</code>, and <code>reply: true</code> for reply speeches. A speech can override <code>durationSec</code>, <code>graceSec</code>, <code>poiWindow</code> or <code>bells</code>.</td>
+<td>Speeches in speaking order: a short <code>role</code> code (1–4 capitals or digits), its English <code>name</code>, its <code>side</code>, and <code>reply: true</code> for reply speeches. A speech can override <code>durationSec</code>, <code>graceSec</code>, <code>poiWindow</code> or <code>bells</code>, and give a <code>kind</code> (e.g. <code>&#39;Rebuttal&#39;</code>) when the format has more than substantives and replies: Bell settings edits each kind together.</td>
 </tr>
 <tr>
 <td><code>teams</code></td>
@@ -112,6 +116,10 @@ plain English, e.g. <code>role &quot;PM&quot; is used twice</code> or
 <tr>
 <td><code>scoring.speech</code>, <code>scoring.reply</code></td>
 <td>Score range and step, e.g. <code>{ min: 70, max: 80, step: 1 }</code>; replies can have their own.</td>
+</tr>
+<tr>
+<td><code>info</code></td>
+<td>Optional: <code>region</code>, <code>level</code>, <code>usedAt</code>, a one-line <code>description</code> and <code>prepSec</code>. Shown in the format list and on the website.</td>
 </tr>
 <tr>
 <td><code>source</code></td>
@@ -146,6 +154,34 @@ plain English, e.g. <code>role &quot;PM&quot; is used twice</code> or
 them: add the role codes under <code>roles</code>, team ids under <code>teams</code> and the format
 id under <code>formats</code> in <code>apps/app/src/i18n/en.ts</code> (and in other languages), as
 the built-in formats do. See <a href="../translating/">Translating the app</a>.</p>
+<h2>Formats from Debatekeeper</h2>
+<p><code>packages/core/src/formats/debatekeeper.ts</code> is generated from the
+<a href="https://github.com/czlee/debatekeeper-formats">Debatekeeper format library</a>
+(MIT License, © Chuan-Zheng Lee and contributors). Don&#39;t edit it by hand; run</p>
+<pre><code class="language-bash">npm run formats:import
+</code></pre>
+<p>to download the library again and rewrite it, then <code>npm test</code>. The script
+(<code>scripts/import-debatekeeper.mjs</code>) converts each format like this:</p>
+<ul>
+<li><strong>Sides</strong> come from the speech names (Affirmative/Negative, Proposition/
+Opposition, Government/Opposition, Pro/Contra, In favour/Against).</li>
+<li><strong>Role codes</strong> are made from the names: &quot;1st Affirmative&quot; → <code>A1</code>,
+&quot;Prime Minister&#39;s Rebuttal&quot; → <code>PMR</code>.</li>
+<li><strong>Bells and POIs</strong> are copied; the POI window runs from the bell that allows
+POIs to the next bell. NSW-style allowances (a double bell at time, a long
+ring when the allowance ends) become grace time.</li>
+<li><strong>Scoring:</strong> Debatekeeper has none, so two teams with a 0–100 range, or four
+ranked teams for BP variants. Edit the scoring in a copy of the format if
+your tournament needs a narrower range.</li>
+</ul>
+<p>Left out: formats the built-ins already cover (BP, Asian Parliamentary, World
+Schools), German Jugend Debattiert (a free-debate segment that belongs to
+neither side), Open Parliamentary Debate (nonaligned speakers) and World
+Schools with prep times (preparation breaks between speeches). The generated
+file lists them with the reason.</p>
+<p>To improve one of these formats, fix it in Debatekeeper&#39;s library and
+re-import, or copy it into its own definition file and add that to <code>FEATURED</code>
+(with a new <code>id</code>).</p>
 <h2>Don&#39;t code? Request it</h2>
 <p>Open a <a href="https://github.com/The-Studio-of-Sadiq/debate-adjudicator/issues/new?template=format_request.yml">format request</a>
 with the speaking order, times, POI rules and scoring, ideally with a link to
@@ -160,6 +196,7 @@ the rulebook.</p>
     <span>© 2026 The Studio of Sadiq · MIT License</span>
     <nav aria-label="Footer">
       <a href="../../docs/">Docs</a>
+      <a href="../../formats/">Formats</a>
       <a href="https://github.com/The-Studio-of-Sadiq/debate-adjudicator">Source code</a>
       <a href="https://github.com/The-Studio-of-Sadiq/debate-adjudicator/blob/main/CONTRIBUTING.md">Contribute</a>
       <a href="https://github.com/The-Studio-of-Sadiq/debate-adjudicator/blob/main/SECURITY.md">Security</a>
