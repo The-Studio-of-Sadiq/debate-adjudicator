@@ -11,7 +11,7 @@ handling, recordings, transcription, ballots and a PDF report.
 - [Debater and timekeeper guide](Joining-a-round.md): join from your phone, raise
   POIs and points, keep time.
 - [Transcription](Transcription.md): offline models, cloud providers, what to expect.
-- [Ballots and reports](Ballots-and-reports.md): scoring rules for BP, UADC and WSDC,
+- [Ballots and reports](Ballots-and-reports.md): scoring rules for BP, UADC, WSDC and the imported formats,
   and what goes in the PDF.
 - [Troubleshooting](Troubleshooting.md): devices can't connect, bells are late,
   recording or scanning problems.

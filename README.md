@@ -15,8 +15,11 @@ laptop runs the room: a synced timer and bells on every device over local
 Wi-Fi, POIs and points of order raised from debaters' phones, recordings,
 offline transcription, ballots and a PDF report. No accounts, no cloud needed.
 
-Built for **British Parliamentary**, **UADC (Asian Parliamentary)** and **World Schools (WSDC)**; every
-time, bell and range is editable.
+Built for **British Parliamentary**, **UADC 7-7-7-4 and 5-5-5-3 (Asian Parliamentary)** and
+**World Schools (WSDC)**, plus 45 more formats from the
+[Debatekeeper format library](https://github.com/czlee/debatekeeper-formats)
+(Australs, Canadian, American Parliamentary, and school and league formats).
+Every time, bell and range is editable.
 
 <p align="center">
   <img src="docs/screenshots/timer-dark.png" alt="Chair's timer in dark mode with a pending POI" width="62%">
@@ -25,7 +28,7 @@ time, bell and range is editable.
 
 ## Features
 
-- **Timekeeping:** BP, UADC and WSDC presets (and more via [format definitions](docs/wiki/Adding-a-format.md)), phase display (protected, POIs open,
+- **Timekeeping:** 49 formats with a searchable picker ([full list](https://the-studio-of-sadiq.github.io/debate-adjudicator/formats/); add more with a [format definition](docs/wiki/Adding-a-format.md)), phase display (protected, POIs open,
   wrap up, grace, overtime), scheduled and manual bells, editable bell plans.
 - **Local multi-device rooms:** join by QR code or typed code over the room's
   Wi-Fi or a phone hotspot; the chair approves each device and assigns roles
@@ -137,3 +140,10 @@ described in [SECURITY.md](SECURITY.md).
 ## License
 
 [MIT](LICENSE) © The Studio of Sadiq
+
+### Credits
+
+Timings for the imported formats come from the
+[Debatekeeper format library](https://github.com/czlee/debatekeeper-formats),
+© 2021 Chuan-Zheng Lee and other contributors, used under the MIT License (its
+full notice is in `packages/core/src/formats/debatekeeper.ts`).

@@ -3,7 +3,7 @@ import { ballotSpecFor, evaluateBallot, rangeFor } from '../ballot';
 import { createSession, reduceSession } from '../session';
 import type { DebateFormat } from '../types';
 import { TEMPLATE } from './_template';
-import { BP, PRESETS, UADC, WSDC, defineFormat, validateFormat, type FormatDefinition } from './index';
+import { BP, DEBATEKEEPER, FEATURED, PRESETS, UADC, UADC_5553, WSDC, defineFormat, validateFormat, type FormatDefinition } from './index';
 
 const minimal = (): FormatDefinition => ({
   id: 'test',
@@ -23,7 +23,8 @@ const minimal = (): FormatDefinition => ({
 
 describe('format definitions', () => {
   it('builds every preset and the template without problems', () => {
-    expect(PRESETS.map((f) => f.id)).toEqual(['bp', 'uadc', 'wsdc']);
+    expect(FEATURED.map((f) => f.id)).toEqual(['bp', 'uadc', 'uadc-5553', 'wsdc']);
+    expect(PRESETS).toHaveLength(FEATURED.length + DEBATEKEEPER.length);
     expect(new Set(PRESETS.map((f) => f.id)).size).toBe(PRESETS.length);
     expect(TEMPLATE.speeches.length).toBeGreaterThan(0);
   });
@@ -61,6 +62,24 @@ describe('format definitions', () => {
     expect(rangeFor(ballotSpecFor(WSDC), WSDC, 'pr')).toEqual({ min: 30, max: 40, step: 0.5 });
   });
 
+  it('defines UADC 5-5-5-3 next to 7-7-7-4', () => {
+    expect(UADC.name).toBe('UADC 7-7-7-4');
+    expect(UADC_5553.name).toBe('UADC 5-5-5-3');
+    expect(UADC_5553.speeches.map((s) => s.role)).toEqual(UADC.speeches.map((s) => s.role));
+    const pm = UADC_5553.speeches[0]!;
+    expect(pm).toMatchObject({ durationSec: 300, graceSec: 20, poiWindow: { from: 60, to: 240 } });
+    expect(pm.bells.map((b) => [b.at, b.pattern])).toEqual([
+      [60, 'single'],
+      [240, 'single'],
+      [300, 'double'],
+      [320, 'continuous'],
+    ]);
+    const gr = UADC_5553.speeches.at(-1)!;
+    expect(gr).toMatchObject({ role: 'GR', durationSec: 180, poiWindow: null, reply: true });
+    expect(gr.bells.map((b) => b.at)).toEqual([120, 180, 200]);
+    expect(ballotSpecFor(UADC_5553)).toEqual(ballotSpecFor(UADC));
+  });
+
   it('scores a WSDC ballot with its own teams and ranges', () => {
     let s = createSession(WSDC, { id: 'w', now: 0 });
     const scores: Record<string, number> = { p1: 72, p2: 71, p3: 73, pr: 36, o1: 70, o2: 70, o3: 71, or: 35.5 };
@@ -89,6 +108,58 @@ describe('format definitions', () => {
     };
     expect(ballotSpecFor(legacy).teams.map((t) => t.id)).toEqual(['GOV', 'OPP']);
     expect(rangeFor(ballotSpecFor(legacy), legacy, 'gr')).toEqual({ min: 35, max: 40, step: 0.5 });
+  });
+});
+
+describe('Debatekeeper formats', () => {
+  const byId = (id: string) => DEBATEKEEPER.find((f) => f.id === id)!;
+
+  it('converts the library with sides, teams and source for every format', () => {
+    expect(DEBATEKEEPER.length).toBeGreaterThanOrEqual(40);
+    for (const f of DEBATEKEEPER) {
+      expect(f.sides, f.id).toBeDefined();
+      expect(f.speeches.some((s) => s.side === 'gov') && f.speeches.some((s) => s.side === 'opp'), f.id).toBe(true);
+      expect(f.source, f.id).toMatch(/^Debatekeeper format library: https:/);
+    }
+    // Ours already cover these.
+    expect(DEBATEKEEPER.map((f) => f.id)).not.toContain('bp');
+    expect(DEBATEKEEPER.map((f) => f.id)).not.toContain('worldschools');
+  });
+
+  it('reads Australs: no POIs, warning at 6:00, opposition reply first', () => {
+    const f = byId('australs');
+    expect(f.sides).toEqual({ gov: 'Affirmative', opp: 'Negative' });
+    expect(f.speeches.map((s) => s.role)).toEqual(['A1', 'N1', 'A2', 'N2', 'A3', 'N3', 'NR', 'AR']);
+    expect(f.speeches[0]).toMatchObject({ durationSec: 480, graceSec: 0, poiWindow: null });
+    expect(f.speeches[0]!.bells).toEqual([
+      { at: 360, pattern: 'single', label: '2 minutes left' },
+      { at: 480, pattern: 'double', label: 'Time' },
+    ]);
+    expect(f.speeches.at(-1)).toMatchObject({ durationSec: 240, reply: true });
+    expect(f.info).toMatchObject({ region: 'Australasia', level: 'University', prepSec: 1800 });
+  });
+
+  it('turns NSW-style allowances into grace time', () => {
+    // 6:00 speech, double bell at time, a long ring when the 30-second allowance ends.
+    const s = byId('archdale-juniors').speeches[0]!;
+    expect(s).toMatchObject({ durationSec: 360, graceSec: 30 });
+    expect(s.bells.map((b) => [b.at, b.pattern])).toEqual([
+      [240, 'single'],
+      [360, 'double'],
+      [390, 'continuous'],
+    ]);
+  });
+
+  it('gives BP variants four ranked teams', () => {
+    const f = byId('bp5');
+    expect(ballotSpecFor(f)).toMatchObject({ kind: 'ranked', teams: [{ id: 'OG' }, { id: 'OO' }, { id: 'CG' }, { id: 'CO' }] });
+    expect(f.speeches[0]).toMatchObject({ durationSec: 300, poiWindow: { from: 60, to: 240 } });
+  });
+
+  it('groups speeches of different kinds for Bell settings', () => {
+    const f = byId('spanish');
+    expect(new Set(f.speeches.map((s) => s.kind))).toEqual(new Set(['Introduction', 'Refutation', 'Conclusion']));
+    expect(f.speeches.find((s) => s.kind === 'Refutation')!.poiWindow).toEqual({ from: 60, to: 240 });
   });
 });
 

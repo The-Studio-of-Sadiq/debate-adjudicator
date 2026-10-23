@@ -11,7 +11,7 @@ ballot can never contradict itself.
 - Speaker scores 50–100 in whole points.
 - Teams are ranked 1st–4th by total and get 3 / 2 / 1 / 0 points.
 
-## UADC (Asian Parliamentary)
+## UADC 7-7-7-4 and 5-5-5-3 (Asian Parliamentary)
 
 - Government: PM, DPM, GW and the Government Reply; Opposition: LO, DLO, OW and
   the Opposition Reply.
@@ -23,6 +23,13 @@ ballot can never contradict itself.
 - Proposition: three speakers and the Proposition Reply; Opposition likewise.
 - Substantive speeches 60–80; reply speeches 30–40 in 0.5 steps.
 - The team with the higher total wins; the margin is shown.
+
+## Formats from the Debatekeeper library
+
+- Two teams (Affirmative and Negative, or as the format names them); the
+  higher total wins. BP variants (5 and 6 minutes) are ranked like BP.
+- Any score from 0 to 100 in 0.5 steps, because the library doesn't record
+  scoring rules.
 
 Ranges reflect common practice; tournaments vary, so tell us if yours differ.
 Each format's scoring lives in its definition file (see

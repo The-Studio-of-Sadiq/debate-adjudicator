@@ -22,5 +22,6 @@ export const BP = defineFormat({
     { id: 'CO', name: 'Closing Opposition', side: 'opp', roles: ['MO', 'OW'] },
   ],
   scoring: { kind: 'ranked', speech: { min: 50, max: 100, step: 1 } },
+  info: { region: 'World', level: 'University', usedAt: 'World Universities Debating Championship', description: 'Four teams of two, 7-minute speeches, POIs allowed', prepSec: 900 },
   source: 'World Universities Debating Championship (WUDC) rules',
 });

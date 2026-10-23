@@ -13,7 +13,7 @@ import { marked } from 'marked';
 // The core package uses extensionless TypeScript imports, as bundlers allow;
 // teach Node to resolve them so the site reads the app's own format presets.
 register('./resolve-ts.mjs', import.meta.url);
-const { PRESETS } = await import('../packages/core/src/formats/index.ts');
+const { DEBATEKEEPER, FEATURED, PRESETS, formatRegion } = await import('../packages/core/src/formats/index.ts');
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const at = (...p) => join(root, ...p);
@@ -75,7 +75,7 @@ ${(p.jsonLd ?? []).map((j) => `<script type="application/ld+json">${JSON.stringi
     <nav class="nav" aria-label="Main">
       ${navLink('#features', 'Features', 'features')}
       ${navLink('#how-it-works', 'How it works', 'how')}
-      ${navLink('#formats', 'Formats', 'formats')}
+      ${navLink('formats/', 'Formats', 'formats')}
       ${navLink('docs/', 'Docs', 'docs')}
       ${navLink('#get-the-app', 'Get the app', 'get')}
     </nav>
@@ -89,6 +89,7 @@ ${p.body}
     <span>© ${new Date().getFullYear()} The Studio of Sadiq · MIT License</span>
     <nav aria-label="Footer">
       <a href="${rel}docs/">Docs</a>
+      <a href="${rel}formats/">Formats</a>
       <a href="${REPO_URL}">Source code</a>
       <a href="${REPO_URL}/blob/main/CONTRIBUTING.md">Contribute</a>
       <a href="${REPO_URL}/blob/main/SECURITY.md">Security</a>
@@ -109,7 +110,7 @@ function write(path, html) {
 // ── Landing page ────────────────────────────────────────────────────────────
 
 const FEATURES = [
-  ['Timekeeping that just works', 'British Parliamentary, UADC and World Schools presets with protected time, POI window, grace period and overtime, plus bells you can retime.'],
+  ['Timekeeping that just works', `${PRESETS.length} formats: British Parliamentary, UADC 7-7-7-4 and 5-5-5-3, World Schools, Australs, Canadian, American and dozens of school and league formats. Protected time, POI windows, grace and bells you can retime.`],
   ['One room, many devices', 'Debaters, the timekeeper and wing adjudicators join by QR code over the room’s Wi-Fi or a phone hotspot. Every screen shows the same second.'],
   ['POIs and points of order', 'Debaters offer POIs from their phones; the speaker accepts or declines. Points of order pause the clock until the chair rules.'],
   ['Recordings', 'The chair records every speech. A debater’s phone records their own accepted POI or point and sends it to the chair.'],
@@ -121,7 +122,7 @@ const FEATURES = [
 
 const FAQ = [
   ['Does it need the internet?', 'No. Rounds, joining, bells, recording and transcription all work offline. Devices only need to be on the same Wi-Fi network or the chair’s phone hotspot. The internet is used only if you choose a cloud transcription provider.'],
-  ['Which debate formats are supported?', 'British Parliamentary (BP), UADC (Asian Parliamentary) and World Schools (WSDC). Speech lengths, grace periods, POI windows and bells can be changed in Bell settings, and new formats can be added with a short definition file.'],
+  ['Which debate formats are supported?', `${PRESETS.length} of them: British Parliamentary (BP), UADC 7-7-7-4 and 5-5-5-3 (Asian Parliamentary), World Schools (WSDC), and ${DEBATEKEEPER.length} more from the Debatekeeper format library, including Australs, Canadian and American Parliamentary, and school and league formats from Australia, New Zealand, Europe and beyond. Speech lengths, grace periods, POI windows and bells can be changed in Bell settings, and new formats can be added with a short definition file.`],
   ['Is it available in my language?', 'The app is in English today and is built to be translated: adding a language takes one command and one file to translate. Translations are welcome.'],
   ['Do debaters have to install the app?', 'Only to take part from their own phone, to offer POIs or see the synced timer. The chair can run a whole round alone and raise points on anyone’s behalf.'],
   ['What happens if the Wi-Fi drops?', 'Joined devices reconnect automatically and keep their role. Recordings waiting to be sent to the chair are retried until they arrive.'],
@@ -136,24 +137,25 @@ function formatTable(format) {
     .map((s) => {
       const poi = s.poiWindow ? `${clock(s.poiWindow.from)}–${clock(s.poiWindow.to)}` : 'None';
       const bells = s.bells.map((b) => `${clock(b.at)} ${esc(b.pattern)}`).join('<br>');
-      return `<tr><td><b>${esc(s.role)}</b> ${esc(s.name)}</td><td>${esc(sideName(s.side))}${s.reply ? ' (reply)' : ''}</td><td class="num">${clock(s.durationSec)}</td><td class="num">${poi}</td><td class="bells">${bells}</td></tr>`;
+      const length = s.graceSec ? `${clock(s.durationSec)} + ${clock(s.graceSec)}` : clock(s.durationSec);
+      return `<tr><td><b>${esc(s.role)}</b> ${esc(s.name)}</td><td>${esc(sideName(s.side))}${s.reply ? ' (reply)' : ''}</td><td class="num">${length}</td><td class="num">${poi}</td><td class="bells">${bells}</td></tr>`;
     })
     .join('');
   return `<div class="table-wrap"><table>
-    <thead><tr><th>Speech</th><th>Side</th><th>Length</th><th>POIs</th><th>Bells</th></tr></thead>
+    <thead><tr><th>Speech</th><th>Side</th><th>Length + grace</th><th>POIs</th><th>Bells</th></tr></thead>
     <tbody>${rows}</tbody></table></div>`;
 }
 
 function landing() {
   const description =
-    'Free, offline-first app for debate adjudicators: synced timer and bells over local Wi-Fi, POIs and points of order from debaters’ phones, recordings, offline transcription, ballots and PDF reports for BP, UADC and WSDC. Android and Windows.';
+    `Free, offline-first app for debate adjudicators: synced timer and bells over local Wi-Fi, POIs and points of order from debaters’ phones, recordings, offline transcription, ballots and PDF reports for BP, UADC, WSDC and ${PRESETS.length - 4} more formats. Android and Windows.`;
   const body = `
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
       <span class="eyebrow">For debate adjudicators</span>
       <h1>Run the debate room from one phone.</h1>
-      <p class="lede">${NAME} keeps time, rings the bells on every device, takes POIs and points of order from debaters’ phones, records and transcribes the speeches, and fills in the ballot. Offline, for British Parliamentary, UADC and World Schools.</p>
+      <p class="lede">${NAME} keeps time, rings the bells on every device, takes POIs and points of order from debaters’ phones, records and transcribes the speeches, and fills in the ballot. Offline, for British Parliamentary, UADC, World Schools and <a href="formats/">${PRESETS.length - 4} more formats</a>.</p>
       <div class="actions">
         <a class="btn primary" href="#get-the-app">Get the app</a>
         <a class="btn" href="docs/">Read the docs</a>
@@ -181,7 +183,7 @@ function landing() {
     <span class="eyebrow">How it works</span>
     <h2>From motion to ballot in four steps.</h2>
     <ol class="steps">
-      <li><h3>Start the round</h3><p>The chair picks BP or UADC, enters the motion and taps <b>Invite devices</b> to show a QR code.</p></li>
+      <li><h3>Start the round</h3><p>The chair picks the format, enters the motion and taps <b>Invite devices</b> to show a QR code.</p></li>
       <li><h3>Join from any phone</h3><p>Debaters, the timekeeper and wings scan the code and pick their seat or role. The chair approves each one.</p></li>
       <li><h3>Run the speeches</h3><p>One clock for the whole room. Bells ring everywhere at once; POIs and points arrive on the chair’s screen.</p></li>
       <li><h3>Decide and report</h3><p>Transcribe the recordings, score the speakers, mark the ballot final and export a PDF report.</p></li>
@@ -199,7 +201,10 @@ function landing() {
     <span class="eyebrow">Formats</span>
     <h2>${PRESETS.length} formats, ready to go.</h2>
     <p class="lede">These are the default timings. Every length, grace period, POI window and bell can be changed on the device, and new formats can be <a href="docs/adding-a-format/">added with a short definition file</a>.</p>
-    ${PRESETS.map((f) => `<h3 style="margin-top:32px">${esc(f.name)}</h3>${f.source ? `<p class="lede" style="font-size:15px">Rules: ${esc(f.source)}</p>` : ''}${formatTable(f)}`).join('\n    ')}
+    ${FEATURED.map((f) => `<h3 style="margin-top:32px"><a href="formats/${f.id}/">${esc(f.name)}</a></h3>${f.info?.description ? `<p>${esc(f.info.description)}</p>` : ''}${formatTable(f)}`).join('\n    ')}
+    <h3 style="margin-top:40px">And ${DEBATEKEEPER.length} more</h3>
+    <p>${DEBATEKEEPER.slice(0, 12).map((f) => `<a href="formats/${f.id}/">${esc(f.name)}</a>`).join(' · ')} …</p>
+    <div class="actions"><a class="btn" href="formats/">Browse all ${PRESETS.length} formats</a></div>
   </div>
 </section>
 
@@ -292,6 +297,107 @@ function landing() {
     { '@context': 'https://schema.org', '@type': 'WebSite', name: NAME, url: `${SITE_URL}/` },
   ];
   write('', page({ path: '', title: 'Run the debate room from one phone', description, body, jsonLd }));
+}
+
+// ── Format library: an index and a page per format ──────────────────────────
+
+const regionOf = (f) => formatRegion(f) ?? 'Other';
+const DK_CREDIT = 'Timings from the <a href="https://github.com/czlee/debatekeeper-formats">Debatekeeper format library</a> by Chuan-Zheng Lee and contributors, used under the MIT License.';
+
+const crumbsLd = (crumbs) => ({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: crumbs.map(([name, item], n) => ({ '@type': 'ListItem', position: n + 1, name, item })),
+});
+
+function formatPages() {
+  const regions = new Map();
+  for (const f of PRESETS) regions.set(regionOf(f), [...(regions.get(regionOf(f)) ?? []), f]);
+  const ordered = [...regions].sort(([a], [b]) => (a === 'World' ? -1 : b === 'World' ? 1 : a.localeCompare(b)));
+  const rows = (list) =>
+    list.map((f) => `<tr><td><a href="${f.id}/"><b>${esc(f.name)}</b></a></td><td>${esc(f.info?.level ?? '')}</td><td>${esc(f.info?.description ?? '')}</td></tr>`).join('');
+
+  const indexBody = `
+<section>
+  <div class="wrap">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="../">Home</a></li><li aria-current="page">Formats</li></ol></nav>
+    <span class="eyebrow">Format library</span>
+    <h1>${PRESETS.length} debate formats</h1>
+    <p class="lede">Every format ${NAME} knows, with its speeches, POI windows and bells. Pick one on the home screen (search by name, country or level) and adjust the timings in Bell settings if your tournament differs.</p>
+    <p>Missing one? <a href="../docs/adding-a-format/">Add it with a short definition file</a> or <a href="${REPO_URL}/issues/new?template=format_request.yml">request it</a>.</p>
+    ${ordered.map(([region, list]) => `<h2 style="margin-top:40px">${esc(region)}</h2><div class="table-wrap"><table><thead><tr><th>Format</th><th>Level</th><th>Summary</th></tr></thead><tbody>${rows(list)}</tbody></table></div>`).join('\n    ')}
+    <p style="margin-top:32px">${DK_CREDIT}</p>
+  </div>
+</section>`;
+  write(
+    'formats/',
+    page({
+      path: 'formats/',
+      title: 'Debate formats',
+      description: `Speech times, POI windows and bells for ${PRESETS.length} debate formats: BP, UADC, World Schools, Australs, Canadian, American Parliamentary and more.`,
+      body: indexBody,
+      nav: 'formats',
+      jsonLd: [
+        crumbsLd([
+          ['Home', `${SITE_URL}/`],
+          ['Formats', `${SITE_URL}/formats/`],
+        ]),
+        {
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          itemListElement: PRESETS.map((f, n) => ({ '@type': 'ListItem', position: n + 1, name: f.name, url: `${SITE_URL}/formats/${f.id}/` })),
+        },
+      ],
+    }),
+  );
+
+  for (const f of PRESETS) {
+    const imported = DEBATEKEEPER.includes(f);
+    const summary = f.info?.description ?? `${f.speeches.length} speeches`;
+    const facts = [
+      ['Region', f.info?.region],
+      ['Level', f.info?.level],
+      ['Used at', f.info?.usedAt],
+      ['Sides', f.sides && `${f.sides.gov} and ${f.sides.opp}`],
+      ['Speeches', String(f.speeches.length)],
+      ['Preparation', f.info?.prepSec && `${Math.round(f.info.prepSec / 60)} minutes`],
+      ['Result', f.ballot?.kind === 'ranked' ? `${f.ballot.teams.length} teams ranked` : 'One winning team'],
+    ].filter(([, v]) => v);
+    const body = `
+<section>
+  <div class="wrap">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="../../">Home</a></li><li><a href="../">Formats</a></li><li aria-current="page">${esc(f.name)}</li></ol></nav>
+    <span class="eyebrow">Debate format</span>
+    <h1>${esc(f.name)}</h1>
+    <p class="lede">${esc(summary)}.</p>
+    <div class="table-wrap"><table style="min-width:0"><tbody>${facts.map(([k, v]) => `<tr><th scope="row">${k}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div>
+    <h2 style="margin-top:40px">Speeches and bells</h2>
+    <p>Times are minutes:seconds from the start of each speech.</p>
+    ${formatTable(f)}
+    <p style="margin-top:24px">In ${NAME}, choose <b>${esc(f.name)}</b> on the home screen. Bell settings change any of these timings on your device.</p>
+    ${imported ? `<p>${DK_CREDIT} Debatekeeper has no scoring rules, so the ballot accepts scores from ${f.ballot.range.min} to ${f.ballot.range.max}.</p>` : f.source ? `<p>Rules: ${esc(f.source)}.</p>` : ''}
+    <p><a href="../">← All formats</a></p>
+  </div>
+</section>`;
+    write(
+      `formats/${f.id}/`,
+      page({
+        path: `formats/${f.id}/`,
+        title: `${f.name} timings`,
+        description: `${f.name}: ${summary}. Speech order, POI windows and bell times, ready to use in ${NAME}.`,
+        body,
+        nav: 'formats',
+        jsonLd: [
+          crumbsLd([
+            ['Home', `${SITE_URL}/`],
+            ['Formats', `${SITE_URL}/formats/`],
+            [f.name, `${SITE_URL}/formats/${f.id}/`],
+          ]),
+        ],
+      }),
+    );
+  }
+  return ['formats/', ...PRESETS.map((f) => `formats/${f.id}/`)];
 }
 
 // ── Docs pages from docs/wiki ───────────────────────────────────────────────
@@ -406,6 +512,7 @@ for (const [pkg, file] of [
 
 landing();
 const docPaths = docs();
+const formatPaths = formatPages();
 
 write(
   '404.html',
@@ -418,12 +525,12 @@ write(
   }).replace(/(href|src)="\.\.\//g, `$1="${SITE_URL}/`),
 );
 
-const urls = ['', ...docPaths];
+const urls = ['', ...docPaths, ...formatPaths];
 write(
   'sitemap.xml',
   `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((u) => `  <url><loc>${SITE_URL}/${u}</loc><lastmod>${TODAY}</lastmod><priority>${u === '' ? '1.0' : u === 'docs/' ? '0.8' : '0.7'}</priority></url>`).join('\n')}
+${urls.map((u) => `  <url><loc>${SITE_URL}/${u}</loc><lastmod>${TODAY}</lastmod><priority>${u === '' ? '1.0' : u === 'docs/' || u === 'formats/' ? '0.8' : u.startsWith('formats/') ? '0.6' : '0.7'}</priority></url>`).join('\n')}
 </urlset>
 `,
 );

@@ -93,7 +93,9 @@ are fine: anything missing shows in English. Full guide:
 
 Copy `packages/core/src/formats/_template.ts`, fill in the speeches, timing,
 teams and scoring, and register it in `packages/core/src/formats/index.ts`.
-`npm test` validates every format and explains any mistakes. Full guide:
+`npm test` validates every format and explains any mistakes. Formats from
+the Debatekeeper library are generated: update them with
+`npm run formats:import`, not by hand. Full guide:
 [Adding a debate format](docs/wiki/Adding-a-format.md).
 
 ## Reporting bugs and ideas

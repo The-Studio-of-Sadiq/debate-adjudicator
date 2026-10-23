@@ -1,6 +1,6 @@
 // Template for a new debate format. To add one:
 //   1. Copy this file to e.g. `australs.ts` and fill it in.
-//   2. Register it in `index.ts` (import it and add it to PRESETS).
+//   2. Register it in `index.ts` (import it and add it to FEATURED).
 //   3. Run `npm test`: every registered format is validated, and the test
 //      lists anything that's wrong in plain English.
 // Times are in seconds. See docs/wiki/Adding-a-format.md for the details.

@@ -52,13 +52,22 @@ export type T = TFunction;
 
 // Helpers for values that come from data rather than from the UI.
 
-/** "Prime Minister" for a speech, falling back to the format's own name for custom roles. */
-export const roleName = (t: T, s: Pick<SpeechTemplate, 'role' | 'name'>) => t(`roles.${s.role}`, { defaultValue: s.name });
+/**
+ * A dictionary entry for data from a format, used only when its English matches
+ * the format's own English name: imported formats reuse codes such as "LO" for
+ * differently worded speeches ("Leader of the Opposition's Rebuttal").
+ */
+const fromDictionary = (t: T, key: string, english: string) =>
+  i18n.getResource('en', 'translation', key) === english ? t(key) : english;
+
+/** "Prime Minister" for a speech, falling back to the format's own name. */
+export const roleName = (t: T, s: Pick<SpeechTemplate, 'role' | 'name'>) => fromDictionary(t, `roles.${s.role}`, s.name);
 
 export const formatName = (t: T, f: { id: string; name: string }) => t(`formats.${f.id}`, { defaultValue: f.name });
 
 /** Team name: translated if the dictionary has it, else the format's own English name. */
-export const teamName = (t: T, id: string, fallback?: string) => t(`teams.${id}`, { defaultValue: fallback ?? id });
+export const teamName = (t: T, id: string, fallback?: string) =>
+  fallback === undefined ? t(`teams.${id}`, { defaultValue: id }) : fromDictionary(t, `teams.${id}`, fallback);
 
 /** Server reason codes → sentence; unknown text (e.g. from an older device) passes through. */
 export const netReason = (t: T, code: string | undefined) => (code ? t(`net.${code}`, { defaultValue: code }) : '');

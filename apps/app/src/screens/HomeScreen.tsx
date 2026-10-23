@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput } from 'react-native';
 import { PRESETS, type DebateFormat } from '@debate/core';
-import { formatName, LANGUAGES, useT, type LanguagePreference } from '../i18n';
+import { LANGUAGES, useT, type LanguagePreference } from '../i18n';
 import { transport } from '../net/transport';
 import { listSessions, loadCustomFormats, type SessionSummary } from '../storage';
 import { Lockup } from '../Logo';
 import { useTheme, type ThemePreference } from '../theme';
 import { Btn, Card, Chip, Row } from '../ui';
+import { FormatPicker } from './FormatPicker';
 
 // Remembered while the app runs, so visiting Bell settings doesn't reset the choice.
 let lastFormatId = PRESETS[0]!.id;
@@ -43,7 +44,7 @@ export function HomeScreen(props: {
     void refresh();
   }, [refresh]);
 
-  const format = formats.find((f) => f.id === formatId)!;
+  const format = formats.find((f) => f.id === formatId) ?? formats[0]!;
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
@@ -51,11 +52,8 @@ export function HomeScreen(props: {
 
       <Card>
         <Text style={styles.h2}>{t('home.newRound')}</Text>
-        <Row>
-          {formats.map((f) => (
-            <Chip key={f.id} label={formatName(t, f)} active={f.id === formatId} onPress={() => setFormatId(f.id)} />
-          ))}
-        </Row>
+        <FormatPicker formats={formats} selectedId={formatId} onSelect={setFormatId} />
+        {!!format.info?.description && <Text style={styles.text}>{format.info.description}</Text>}
         <Text style={styles.muted}>{format.speeches.map((s) => s.role).join(' → ')}</Text>
         <TextInput
           style={styles.input}
