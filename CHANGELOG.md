@@ -3,8 +3,13 @@
 Notable changes, newest first. The project follows the phases in
 [PLAN.md](PLAN.md); versions map to phases until the first public release.
 
-## Unreleased
+## [0.6.0] – 2026-10-23: first public release
 
+Downloads: Android APK, and a Windows installer and portable app.
+
+- Windows installer and portable app (`npm run dist -w desktop`), with
+  offline transcription included. The app now keeps its data in
+  `%APPDATA%\Debate Adjudicator`.
 - Debate formats are definition files (`packages/core/src/formats/`):
   speeches, timing, teams and scoring in one place, validated by the tests,
   with a template to copy. Ballots read their scoring from the format.
