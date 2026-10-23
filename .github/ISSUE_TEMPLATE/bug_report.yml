@@ -1,0 +1,51 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting! For security problems, please follow SECURITY.md instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start a BP round on the chair's phone
+        2. Join from a second phone as DLO
+        3. …
+  - type: dropdown
+    id: role
+    attributes:
+      label: Which device had the problem?
+      options:
+        - Chair (host)
+        - Timekeeper
+        - Debater
+        - Wing adjudicator / viewer
+        - Not in a shared room
+  - type: input
+    id: platform
+    attributes:
+      label: Device and version
+      placeholder: e.g. Android 15 on Pixel 8; Windows 11 app
+    validations:
+      required: true
+  - type: dropdown
+    id: network
+    attributes:
+      label: Network
+      options:
+        - Venue / home Wi-Fi
+        - Phone hotspot
+        - Not relevant
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or anything else
