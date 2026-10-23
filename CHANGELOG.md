@@ -3,6 +3,12 @@
 Notable changes, newest first. The project follows the phases in
 [PLAN.md](PLAN.md); versions map to phases until the first public release.
 
+## Unreleased
+
+- The interface in **Bangla (বাংলা)**: every screen, ballot and report, using
+  Bangladeshi debate terms (সরকারি দল / বিরোধী দল, পক্ষ / বিপক্ষ, চেয়ার).
+  Phones and PCs set to Bangla switch automatically.
+
 ## [0.6.0] – 2026-10-23: first public release
 
 Downloads: Android APK, and a Windows installer and portable app.

@@ -4,6 +4,7 @@ import { getLocales } from 'expo-localization';
 import type { Interruption, SpeechTemplate } from '@debate/core';
 import en from './en';
 import type { LanguageEntry } from './types';
+import bn from './bn';
 // i18n:new adds imports above this line.
 
 /**
@@ -12,6 +13,7 @@ import type { LanguageEntry } from './types';
  */
 export const LANGUAGES: Record<string, LanguageEntry> = {
   en: { name: 'English', englishName: 'English', translation: en },
+  bn: { name: 'বাংলা', englishName: 'Bangla', translation: bn },
   // i18n:new adds entries above this line.
 };
 export type Language = string;

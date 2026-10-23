@@ -4,6 +4,10 @@ Every word in the app comes from a dictionary file, so adding a language
 needs no programming. English is the reference; a translation can be partial,
 and anything not yet translated shows in English.
 
+Available today: **English** and **Bangla (বাংলা)**. Under Home → **Language**,
+"Device language" picks whichever of these matches the phone or PC, and falls
+back to English.
+
 ## Start a new language
 
 You need [Node.js](https://nodejs.org/) and a copy of the

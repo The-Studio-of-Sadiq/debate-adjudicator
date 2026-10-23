@@ -45,7 +45,8 @@ Every time, bell and range is editable.
 - **Adjudication:** timestamped flow notes, ballots for every format with ranks or
   winner computed from speaker scores, and a printable PDF report.
 - **Private by design:** notes, ballots and transcripts never leave the chair's device.
-- **Light and dark** monochrome themes; all text translatable.
+- **Light and dark** monochrome themes. The interface is in **English and
+  Bangla (বাংলা)** and follows the device's language; more languages welcome.
 
 | Lobby | Ballot | Transcript |
 |---|---|---|
