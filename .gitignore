@@ -6,3 +6,8 @@ out/
 *.log
 .DS_Store
 site-dist/
+
+# Local secrets (API keys). Copy .env.example to .env.
+.env
+.env.*
+!.env.example

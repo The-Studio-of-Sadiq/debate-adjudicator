@@ -26,6 +26,21 @@ npm run android      # Expo dev server; needs a development build on the phone
 To test hosting and joining on one PC, see "Testing host + client on one PC"
 in the [README](README.md#testing-host--client-on-one-pc).
 
+### API keys for trying cloud transcription
+
+Copy [.env.example](.env.example) to `.env` and add your key. `.env` is
+ignored by git; never commit a key.
+
+```bash
+cp .env.example .env
+npm run transcribe:try -- path/to/speech.m4a
+```
+
+`transcribe:try` sends one recording to Groq (free account at
+[console.groq.com](https://console.groq.com/keys)) and prints the transcript,
+in Bangla by default (`TRANSCRIBE_LANGUAGE` in `.env`). The app doesn't read
+`.env`: in the app, keys go in Transcription settings and stay on the device.
+
 ## Project layout
 
 | Path | What lives there |
