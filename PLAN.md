@@ -131,5 +131,20 @@ Rules vary by tournament year, so everything is editable.
    - Cloud (optional): any OpenAI-compatible `/audio/transcriptions` API (OpenAI,
      Groq). "Auto" mode uses it when online with a key and falls back to offline.
    - Models download once from settings (tiny / base / small, English).
-5. **Adjudicator tools**: timestamped flow notes, ballots (BP ranks, UADC scores), PDF export.
-   Speakers recording their own speech on their phone can reuse the Phase 3 clip upload.
+5. ✅ **Adjudicator tools**
+   - Flow notes on the chair's timer, stamped with the speech time.
+   - Speaker names per seat (filled in automatically when a seated debater is approved).
+   - Ballots: BP speaker scores 50–100 with team ranks and 3/2/1/0 points derived from
+     totals; UADC substantive 70–80 and replies 35–40 (0.5 steps) with winner and margin.
+     Missing, out-of-range, off-step scores and tied totals block "Mark final".
+   - PDF round report (ballot, timings, interruptions, notes, optional transcripts):
+     Android via expo-print + share sheet, Windows via a hidden window + save dialog.
+   - Notes, ballot and transcripts are private: joined devices receive `publicView(session)`.
+   - Black-and-white theme; all UI text in `apps/app/src/i18n/en.ts` (i18next) with a
+     language picker; `npm run check:i18n` fails on any key missing from the dictionary.
+     Network reasons travel as codes so each device shows them in its own language.
+
+### Ideas after Phase 5
+- More languages (copy `en.ts`), e.g. Bangla.
+- Speakers recording their own speech on their phone (reuses the Phase 3 clip upload).
+- Move navigation to Expo Router.

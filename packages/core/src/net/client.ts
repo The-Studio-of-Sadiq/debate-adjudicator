@@ -111,7 +111,7 @@ export class ClientController {
 
   stop() {
     this.stopped = true;
-    for (const item of this.outbox.values()) item.reject(new Error('Left the room'));
+    for (const item of this.outbox.values()) item.reject(new Error('left'));
     this.outbox.clear();
     this.clearTimers();
     this.socket?.destroy();
@@ -147,7 +147,7 @@ export class ClientController {
     try {
       socket = await this.opts.connect();
     } catch (e) {
-      this.scheduleRetry(e instanceof Error ? e.message : 'Cannot reach host');
+      this.scheduleRetry('unreachable');
       return;
     }
     if (this.stopped) {
@@ -166,7 +166,7 @@ export class ClientController {
       this.socket = null;
       this.clearTimers();
       if (this.status === 'rejected' || this.stopped) return;
-      this.scheduleRetry('Connection lost');
+      this.scheduleRetry('connectionLost');
     });
 
     this.send({ t: 'hello', v: PROTOCOL_VERSION, ...this.opts.hello });

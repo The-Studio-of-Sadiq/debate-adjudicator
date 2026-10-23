@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { ScrollView, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useKeepAwake } from 'expo-keep-awake';
 import {
   canRaise,
@@ -7,7 +7,6 @@ import {
   currentTemplate,
   elapsedMs,
   formatClock,
-  INTERRUPTION_NAMES,
   liveInterruptionFor,
   POI_EXPIRE_SEC,
   POI_MAX_SEC,
@@ -18,15 +17,18 @@ import {
   type ClipRef,
   type Interruption,
   type InterruptionKind,
+  type Ruling,
   type Session,
   type SessionAction,
 } from '@debate/core';
 import { useBells, useNow, useSpeechRecorder } from '../hooks';
+import { errorText, formatName, outcomeText, roleName, useT } from '../i18n';
 import { makeId } from '../storage';
-import { colors, phaseColor, phaseLabel } from '../theme';
+import { colors, phaseColor, phaseText } from '../theme';
 import { Btn, Card, Chip, Row, styles } from '../ui';
 
 const KINDS: InterruptionKind[] = ['POI', 'POO', 'POP'];
+const RULINGS: Ruling[] = ['well-taken', 'not-well-taken', 'under-consideration'];
 
 export function TimerScreen(props: {
   session: Session;
@@ -49,6 +51,7 @@ export function TimerScreen(props: {
   onInterruptionClip?: (clip: ClipRef, target: { speechIndex: number; interruptionId: string }) => Promise<void>;
 }) {
   useKeepAwake();
+  const t = useT();
   const { session, dispatch, caps } = props;
   const clock = props.clock ?? Date.now;
   const { width } = useWindowDimensions();
@@ -60,6 +63,7 @@ export function TimerScreen(props: {
   const phase = speechPhase(template, elapsedSec);
   const [autoRecord, setAutoRecord] = useState(true);
   const [picking, setPicking] = useState<InterruptionKind | null>(null);
+  const [noteText, setNoteText] = useState('');
   const recorder = useSpeechRecorder(props.deviceId, clock);
 
   // Every device rings its own scheduled bells from the shared, synced clock.
@@ -70,29 +74,32 @@ export function TimerScreen(props: {
   const myLive = props.mySeat ? liveInterruptionFor(session, props.mySeat) : null;
   const liveKey = myLive ? `${myLive.speechIndex}:${myLive.interruption.id}` : null;
   const recordingFor = useRef<{ speechIndex: number; id: string; kind: InterruptionKind } | null>(null);
-  const [clipStatus, setClipStatus] = useState<{ text: string; ok?: boolean } | null>(null);
+  const [clipStatus, setClipStatus] = useState<{ text: string; alert?: boolean } | null>(null);
   const deliverClip = props.onInterruptionClip;
   useEffect(() => {
     if (!deliverClip) return;
     const current = recordingFor.current;
     if (myLive && !current) {
-      recordingFor.current = { speechIndex: myLive.speechIndex, id: myLive.interruption.id, kind: myLive.interruption.kind };
-      setClipStatus({ text: `Recording your ${myLive.interruption.kind}…` });
+      const kind = myLive.interruption.kind;
+      recordingFor.current = { speechIndex: myLive.speechIndex, id: myLive.interruption.id, kind };
+      setClipStatus({ text: t('interruptions.recordingYours', { kind }) });
       void recorder.start();
     } else if (!myLive && current) {
       recordingFor.current = null;
+      const kind = current.kind;
       void (async () => {
         const clip = await recorder.stop();
         if (!clip) {
-          setClipStatus({ text: `Your ${current.kind} wasn't recorded`, ok: false });
+          setClipStatus({ text: t('interruptions.notRecorded', { kind }), alert: true });
           return;
         }
-        setClipStatus({ text: `Sending your ${current.kind} audio to the chair…` });
+        setClipStatus({ text: t('interruptions.sending', { kind }) });
         try {
           await deliverClip(clip, { speechIndex: current.speechIndex, interruptionId: current.id });
-          setClipStatus({ text: `${current.kind} audio sent to the chair ✓`, ok: true });
+          setClipStatus({ text: t('interruptions.sent', { kind }) });
         } catch (e) {
-          setClipStatus({ text: `Couldn't send ${current.kind} audio: ${e instanceof Error ? e.message : String(e)}`, ok: false });
+          const reason = e instanceof Error ? e.message : String(e);
+          setClipStatus({ text: t('interruptions.sendFailed', { kind, reason: t(`net.${reason}`, { defaultValue: reason }) }), alert: true });
         }
       })();
     }
@@ -140,6 +147,12 @@ export function TimerScreen(props: {
     setPicking(null);
   }
 
+  function addNote() {
+    if (!noteText.trim()) return;
+    dispatch({ type: 'addNote', note: { id: makeId(), speechIndex: session.currentIndex, atSec: Math.floor(elapsedSec), text: noteText } });
+    setNoteText('');
+  }
+
   // POIs come from the other side; POO/POP can come from anyone.
   const eligibleRoles = (kind: InterruptionKind) =>
     session.format.speeches.filter((s) => (kind === 'POI' ? s.side !== template.side : s.id !== template.id)).map((s) => s.role);
@@ -158,19 +171,25 @@ export function TimerScreen(props: {
   const livePoi = speech.interruptions.find(isLivePoi);
   const isLast = session.currentIndex === session.speeches.length - 1;
   const showInterruptions = caps.rule || caps.raiseAs !== null || caps.decidePoi || speech.interruptions.length > 0;
+  const speechNotes = (session.notes ?? []).filter((n) => n.speechIndex === session.currentIndex).sort((a, b) => a.atSec - b.atSec);
+  // Overtime flashes between white and black once a second.
+  const flashOff = phase === 'overtime' && status === 'running' && Math.floor(elapsedSec) % 2 === 1;
+  const cardBg = flashOff ? '#000000' : phaseColor[phase];
+  const cardText = flashOff ? '#ffffff' : phaseText[phase];
+  const speaker = session.speakers?.[template.role];
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
       <Row style={{ justifyContent: 'space-between' }}>
         <Btn
-          title={props.exitLabel ?? '← Rounds'}
+          title={props.exitLabel ?? t('timer.rounds')}
           onPress={async () => {
             await finishRecording(session.currentIndex);
             props.onExit();
           }}
         />
         <Text style={styles.muted}>
-          {session.format.name} · Speech {session.currentIndex + 1}/{session.speeches.length}
+          {formatName(t, session.format)} · {t('timer.speechOf', { n: session.currentIndex + 1, total: session.speeches.length })}
         </Text>
       </Row>
       {props.banner}
@@ -182,70 +201,77 @@ export function TimerScreen(props: {
             key={s.id}
             label={s.role}
             active={i === session.currentIndex}
-            color={s.side === 'gov' ? colors.gov : colors.opp}
+            dim={s.side === 'opp'}
             onPress={() => caps.controlTimer && void goto(i)}
           />
         ))}
       </Row>
 
-      <View style={{ backgroundColor: phaseColor[phase], borderRadius: 20, padding: 20, alignItems: 'center', gap: 4 }}>
-        <Text style={[styles.h2, { color: template.side === 'gov' ? '#cfe0ff' : '#ffd9cf' }]}>
-          {template.role} · {template.name}
-          {caps.decidePoi && !caps.rule ? ' · You have the floor' : ''}
+      <View
+        style={{ backgroundColor: cardBg, borderRadius: 20, padding: 20, alignItems: 'center', gap: 4, borderWidth: 1, borderColor: colors.border }}
+      >
+        <Text style={[styles.h2, { color: cardText }]}>
+          {template.role} · {roleName(t, template)}
+          {speaker ? ` · ${speaker}` : ''}
+          {caps.decidePoi && !caps.rule ? ` · ${t('timer.youHaveFloor')}` : ''}
         </Text>
-        <Text style={{ color: '#fff', fontSize: clockSize, fontWeight: '700', fontVariant: ['tabular-nums'] }}>
+        <Text style={{ color: cardText, fontSize: clockSize, fontWeight: '700', fontVariant: ['tabular-nums'] }}>
           {formatClock(elapsedSec)}
         </Text>
-        <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>
-          {status === 'paused' ? 'Paused' : status === 'stopped' ? 'Finished' : phaseLabel[phase]} ·{' '}
-          {remaining >= 0 ? `${formatClock(remaining)} left` : `${formatClock(-remaining)} over`}
+        <Text style={{ color: cardText, fontSize: 18, fontWeight: '600' }}>
+          {status === 'paused' ? t('timer.paused') : status === 'stopped' ? t('timer.finished') : t(`phases.${phase}`)} ·{' '}
+          {remaining >= 0 ? t('timer.timeLeft', { time: formatClock(remaining) }) : t('timer.timeOver', { time: formatClock(-remaining) })}
         </Text>
-        {recorder.recording && <Text style={{ color: '#fff' }}>● Recording</Text>}
-        {clipStatus && (
-          <Text style={{ color: clipStatus.ok === false ? '#ffd0d0' : '#fff', fontWeight: '600' }}>{clipStatus.text}</Text>
-        )}
-        {recorder.error && <Text style={{ color: '#ffd0d0' }}>Recorder: {recorder.error}</Text>}
+        {recorder.recording && <Text style={{ color: cardText }}>{t('timer.recording')}</Text>}
+        {clipStatus && <Text style={{ color: cardText, fontWeight: clipStatus.alert ? '700' : '600' }}>{clipStatus.text}</Text>}
+        {recorder.error && <Text style={{ color: cardText, fontWeight: '700' }}>{t('timer.recorderError', { error: errorText(t, recorder.error) })}</Text>}
       </View>
 
       {caps.controlTimer && (
         <Row style={{ justifyContent: 'center' }}>
-          {status === 'idle' && <Btn big title="Start" color={colors.ok} onPress={() => void start()} />}
-          {status === 'running' && <Btn big title="Pause" color={colors.warn} onPress={() => dispatch({ type: 'timer', event: 'pause', at: clock() })} />}
+          {status === 'idle' && <Btn big variant="primary" title={t('timer.start')} onPress={() => void start()} />}
+          {status === 'running' && (
+            <Btn big variant="primary" title={t('timer.pause')} onPress={() => dispatch({ type: 'timer', event: 'pause', at: clock() })} />
+          )}
           {status === 'paused' && (
             <Btn
               big
-              title="Resume"
-              color={colors.ok}
+              variant="primary"
+              title={t('timer.resume')}
               disabled={pending.some((i) => i.kind !== 'POI')}
               onPress={() => dispatch({ type: 'timer', event: 'resume', at: clock() })}
             />
           )}
-          {(status === 'running' || status === 'paused') && <Btn big title="Stop" color={colors.danger} onPress={() => void stop()} />}
-          {!isLast && <Btn big title="Next →" onPress={() => void goto(session.currentIndex + 1)} />}
+          {(status === 'running' || status === 'paused') && <Btn big variant="outline" title={t('timer.stop')} onPress={() => void stop()} />}
+          {!isLast && <Btn big title={t('timer.next')} onPress={() => void goto(session.currentIndex + 1)} />}
         </Row>
       )}
       {(caps.ringBell || props.record) && (
         <Row style={{ justifyContent: 'center' }}>
-          {caps.ringBell && <Btn title="🔔 Ring" onPress={() => props.onRing('single')} />}
-          {caps.ringBell && <Btn title="🔔🔔" onPress={() => props.onRing('double')} />}
+          {caps.ringBell && <Btn title={t('timer.ring')} onPress={() => props.onRing('single')} />}
+          {caps.ringBell && <Btn title={t('timer.ringDouble')} onPress={() => props.onRing('double')} />}
           {props.record && (
-            <Chip label={autoRecord ? 'Auto-record: on' : 'Auto-record: off'} active={autoRecord} onPress={() => setAutoRecord((v) => !v)} />
+            <Chip
+              label={t(autoRecord ? 'timer.autoRecordOn' : 'timer.autoRecordOff')}
+              active={autoRecord}
+              onPress={() => setAutoRecord((v) => !v)}
+            />
           )}
         </Row>
       )}
 
       {showInterruptions && (
         <Card>
-          <Text style={styles.h2}>Interruptions</Text>
+          <Text style={styles.h2}>{t('interruptions.title')}</Text>
           {(caps.rule || caps.raiseAs) && (
             <Row>
               {KINDS.map((k) => (
                 <Btn
                   key={k}
                   big={!caps.rule}
-                  title={caps.rule ? k : `${k} as ${caps.raiseAs}`}
+                  title={caps.rule ? k : t('interruptions.raiseAs', { kind: k, seat: caps.raiseAs })}
                   disabled={!canRaiseKind(k)}
-                  color={picking === k ? colors.accent : undefined}
+                  variant={picking === k ? 'primary' : 'default'}
                   onPress={() => (caps.rule ? setPicking(picking === k ? null : k) : raise(k, caps.raiseAs!))}
                 />
               ))}
@@ -253,7 +279,7 @@ export function TimerScreen(props: {
           )}
           {caps.rule && picking && (
             <View style={{ gap: 6 }}>
-              <Text style={styles.muted}>{INTERRUPTION_NAMES[picking]} from:</Text>
+              <Text style={styles.muted}>{t('interruptions.pickRaiser', { name: t(`interruptions.names.${picking}`) })}</Text>
               <Row>
                 {eligibleRoles(picking).map((r) => (
                   <Chip key={r} label={r} onPress={() => raise(picking, r)} />
@@ -265,10 +291,13 @@ export function TimerScreen(props: {
           {livePoi && (
             <Row style={{ backgroundColor: colors.surfaceHi, padding: 10, borderRadius: 10 }}>
               <Text style={styles.text}>
-                POI from {livePoi.raisedBy} · {Math.max(0, Math.ceil(POI_MAX_SEC - (elapsedSec - (livePoi.resolvedAtSec ?? 0))))}s
+                {t('interruptions.livePoi', {
+                  seat: livePoi.raisedBy,
+                  seconds: Math.max(0, Math.ceil(POI_MAX_SEC - (elapsedSec - (livePoi.resolvedAtSec ?? 0)))),
+                })}
               </Text>
               {(caps.decidePoi || livePoi.raisedBy === caps.raiseAs) && (
-                <Btn title="End POI" onPress={() => dispatch({ type: 'endPoi', id: livePoi.id, at: clock() })} />
+                <Btn title={t('interruptions.endPoi')} onPress={() => dispatch({ type: 'endPoi', id: livePoi.id, at: clock() })} />
               )}
             </Row>
           )}
@@ -276,27 +305,43 @@ export function TimerScreen(props: {
           {pending.map((i) => (
             <View key={i.id} style={{ gap: 6, backgroundColor: colors.surfaceHi, padding: 10, borderRadius: 10 }}>
               <Text style={styles.text}>
-                {i.kind} from {i.raisedBy} at {formatClock(i.raisedAtSec)}
                 {i.kind === 'POI'
-                  ? ` — speaker decides (${Math.max(0, Math.ceil(POI_EXPIRE_SEC - (elapsedSec - i.raisedAtSec)))}s)`
-                  : ' — clock paused, chair rules'}
+                  ? t('interruptions.pendingPoi', {
+                      kind: i.kind,
+                      seat: i.raisedBy,
+                      time: formatClock(i.raisedAtSec),
+                      seconds: Math.max(0, Math.ceil(POI_EXPIRE_SEC - (elapsedSec - i.raisedAtSec))),
+                    })
+                  : t('interruptions.pendingChair', { kind: i.kind, seat: i.raisedBy, time: formatClock(i.raisedAtSec) })}
               </Text>
               <Row>
                 {i.kind === 'POI' && caps.decidePoi && (
                   <>
-                    <Btn big={!caps.rule} title="Accept" color={colors.ok} onPress={() => dispatch({ type: 'decidePoi', id: i.id, accept: true, at: clock() })} />
-                    <Btn big={!caps.rule} title="Decline" onPress={() => dispatch({ type: 'decidePoi', id: i.id, accept: false, at: clock() })} />
+                    <Btn
+                      big={!caps.rule}
+                      variant="primary"
+                      title={t('interruptions.accept')}
+                      onPress={() => dispatch({ type: 'decidePoi', id: i.id, accept: true, at: clock() })}
+                    />
+                    <Btn
+                      big={!caps.rule}
+                      title={t('interruptions.decline')}
+                      onPress={() => dispatch({ type: 'decidePoi', id: i.id, accept: false, at: clock() })}
+                    />
                   </>
                 )}
-                {i.kind !== 'POI' && caps.rule && (
-                  <>
-                    <Btn title="Well taken" color={colors.ok} onPress={() => dispatch({ type: 'rule', id: i.id, ruling: 'well-taken', at: clock() })} />
-                    <Btn title="Not well taken" onPress={() => dispatch({ type: 'rule', id: i.id, ruling: 'not-well-taken', at: clock() })} />
-                    <Btn title="Under consideration" onPress={() => dispatch({ type: 'rule', id: i.id, ruling: 'under-consideration', at: clock() })} />
-                  </>
-                )}
+                {i.kind !== 'POI' &&
+                  caps.rule &&
+                  RULINGS.map((ruling, n) => (
+                    <Btn
+                      key={ruling}
+                      variant={n === 0 ? 'primary' : 'default'}
+                      title={t(`interruptions.rulings.${ruling}`)}
+                      onPress={() => dispatch({ type: 'rule', id: i.id, ruling, at: clock() })}
+                    />
+                  ))}
                 {(caps.rule || i.raisedBy === caps.raiseAs) && (
-                  <Btn title="Withdraw" onPress={() => dispatch({ type: 'withdraw', id: i.id, at: clock() })} />
+                  <Btn variant="outline" title={t('interruptions.withdraw')} onPress={() => dispatch({ type: 'withdraw', id: i.id, at: clock() })} />
                 )}
               </Row>
             </View>
@@ -306,10 +351,39 @@ export function TimerScreen(props: {
             .filter((i) => i.status !== 'pending')
             .map((i) => (
               <Text key={i.id} style={styles.muted}>
-                {formatClock(i.raisedAtSec)} · {i.kind} from {i.raisedBy} · {describeOutcome(i)}
-                {speech.clips.some((c) => c.interruptionId === i.id) ? ' · 🎙 audio' : ''}
+                {t('interruptions.logLine', { time: formatClock(i.raisedAtSec), kind: i.kind, seat: i.raisedBy, outcome: outcomeText(t, i) })}
+                {speech.clips.some((c) => c.interruptionId === i.id) ? ` · ${t('interruptions.hasAudio')}` : ''}
               </Text>
             ))}
+        </Card>
+      )}
+
+      {caps.rule && (
+        <Card>
+          <Text style={styles.h2}>{t('notes.title')}</Text>
+          <Row>
+            <TextInput
+              style={[styles.input, { flex: 1, minWidth: 200 }]}
+              placeholder={t('notes.placeholder', { time: formatClock(elapsedSec) })}
+              placeholderTextColor={colors.muted}
+              value={noteText}
+              onChangeText={setNoteText}
+              onSubmitEditing={addNote}
+              blurOnSubmit={false}
+              returnKeyType="done"
+            />
+            <Btn title={t('notes.add')} variant="primary" disabled={!noteText.trim()} onPress={addNote} />
+          </Row>
+          {speechNotes.length === 0 && <Text style={styles.muted}>{t('notes.empty')}</Text>}
+          {speechNotes.map((n) => (
+            <Row key={n.id} style={{ justifyContent: 'space-between' }}>
+              <Text style={[styles.text, { flex: 1 }]}>
+                <Text style={styles.muted}>{formatClock(n.atSec)} </Text>
+                {n.text}
+              </Text>
+              <Btn title="✕" variant="outline" onPress={() => dispatch({ type: 'deleteNote', id: n.id })} />
+            </Row>
+          ))}
         </Card>
       )}
     </ScrollView>
@@ -318,12 +392,4 @@ export function TimerScreen(props: {
 
 function isLivePoi(i: Interruption) {
   return i.kind === 'POI' && i.status === 'accepted' && i.endedAtSec === undefined;
-}
-
-export function describeOutcome(i: Interruption): string {
-  if (i.status === 'ruled') return i.ruling!.replace(/-/g, ' ');
-  if (i.status === 'accepted' && i.endedAtSec !== undefined && i.resolvedAtSec !== undefined) {
-    return `accepted (${Math.round(i.endedAtSec - i.resolvedAtSec)}s)`;
-  }
-  return i.status;
 }

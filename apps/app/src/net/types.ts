@@ -9,6 +9,7 @@ export interface ListeningServer {
 export interface Transport {
   /** False in a plain browser, where raw sockets aren't possible. */
   available: boolean;
+  /** i18n key explaining why it's unavailable. */
   unavailableReason?: string;
   /** Listen on all interfaces; falls back to a free port if `port` is taken. */
   listen(port: number, onSocket: (s: SocketLike) => void): Promise<ListeningServer>;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput } from 'react-native';
 import { PRESETS, type DebateFormat } from '@debate/core';
+import { formatName, LANGUAGES, useT, type LanguagePreference } from '../i18n';
 import { transport } from '../net/transport';
 import { listSessions, loadCustomFormats, type SessionSummary } from '../storage';
 import { colors } from '../theme';
@@ -12,7 +13,10 @@ export function HomeScreen(props: {
   onOpen: (id: string) => void;
   onJoin: () => void;
   onTranscriptionSettings: () => void;
+  language: LanguagePreference;
+  onLanguage: (pref: LanguagePreference) => void;
 }) {
+  const t = useT();
   const [formats, setFormats] = useState<DebateFormat[]>(PRESETS);
   const [formatId, setFormatId] = useState(PRESETS[0]!.id);
   const [motion, setMotion] = useState('');
@@ -32,52 +36,65 @@ export function HomeScreen(props: {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
-      <Text style={styles.h1}>Debate Adjudicator</Text>
+      <Text style={styles.h1}>{t('app.title')}</Text>
 
       <Card>
-        <Text style={styles.h2}>New round</Text>
+        <Text style={styles.h2}>{t('home.newRound')}</Text>
         <Row>
           {formats.map((f) => (
-            <Chip key={f.id} label={f.name} active={f.id === formatId} onPress={() => setFormatId(f.id)} />
+            <Chip key={f.id} label={formatName(t, f)} active={f.id === formatId} onPress={() => setFormatId(f.id)} />
           ))}
         </Row>
-        <Text style={styles.muted}>
-          {format.speeches.map((s) => s.role).join(' → ')}
-        </Text>
+        <Text style={styles.muted}>{format.speeches.map((s) => s.role).join(' → ')}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Motion (optional)"
+          placeholder={t('home.motionPlaceholder')}
           placeholderTextColor={colors.muted}
           value={motion}
           onChangeText={setMotion}
         />
         <Row>
-          <Btn title="Start round" color={colors.accent} big onPress={() => props.onStart(format, motion.trim())} />
-          <Btn title="Bell settings" onPress={() => props.onEditBells(format)} />
+          <Btn title={t('home.startRound')} variant="primary" big onPress={() => props.onStart(format, motion.trim())} />
+          <Btn title={t('home.bellSettings')} onPress={() => props.onEditBells(format)} />
         </Row>
       </Card>
 
       <Card>
-        <Text style={styles.h2}>Join a round</Text>
-        <Text style={styles.muted}>Debaters, timekeepers and wing adjudicators: scan the chair's QR code.</Text>
-        <Btn title="Join" big disabled={!transport.available} onPress={props.onJoin} style={{ alignSelf: 'flex-start' }} />
-        {!transport.available && <Text style={styles.muted}>{transport.unavailableReason}</Text>}
+        <Text style={styles.h2}>{t('home.joinTitle')}</Text>
+        <Text style={styles.muted}>{t('home.joinHint')}</Text>
+        <Btn title={t('common.join')} big disabled={!transport.available} onPress={props.onJoin} style={{ alignSelf: 'flex-start' }} />
+        {!transport.available && <Text style={styles.muted}>{t(transport.unavailableReason!)}</Text>}
       </Card>
 
       <Card>
         <Row style={{ justifyContent: 'space-between' }}>
-          <Text style={styles.h2}>History</Text>
-          <Btn title="Transcription settings" onPress={props.onTranscriptionSettings} />
+          <Text style={styles.h2}>{t('home.history')}</Text>
+          <Btn title={t('home.transcriptionSettings')} onPress={props.onTranscriptionSettings} />
         </Row>
-        {history.length === 0 && <Text style={styles.muted}>No rounds yet.</Text>}
+        {history.length === 0 && <Text style={styles.muted}>{t('home.noRounds')}</Text>}
         {history.map((h) => (
           <Pressable key={h.id} onPress={() => props.onOpen(h.id)} style={{ paddingVertical: 8, borderTopWidth: 1, borderColor: colors.border }}>
-            <Text style={styles.text}>{h.motion || 'Untitled motion'}</Text>
+            <Text style={styles.text}>{h.motion || t('common.untitledMotion')}</Text>
             <Text style={styles.muted}>
               {h.formatName} · {new Date(h.createdAt).toLocaleString()}
             </Text>
           </Pressable>
         ))}
+      </Card>
+
+      <Card>
+        <Text style={styles.h2}>{t('language.title')}</Text>
+        <Row>
+          <Chip label={t('language.system')} active={props.language === 'system'} onPress={() => props.onLanguage('system')} />
+          {Object.keys(LANGUAGES).map((code) => (
+            <Chip
+              key={code}
+              label={t(`language.${code}`, { defaultValue: code })}
+              active={props.language === code}
+              onPress={() => props.onLanguage(code as LanguagePreference)}
+            />
+          ))}
+        </Row>
       </Card>
     </ScrollView>
   );

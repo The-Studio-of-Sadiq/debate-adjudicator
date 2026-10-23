@@ -3,22 +3,13 @@ import { ScrollView, Text } from 'react-native';
 import { AudioModule } from 'expo-audio';
 import { capabilitiesFor, type ClipRef } from '@debate/core';
 import { extensionOf, readAsBase64 } from '../files';
+import { netReason, useT } from '../i18n';
 import { useClient, type JoinRequest } from '../net/useClient';
-import { colors } from '../theme';
 import { Btn, Card, Row, styles } from '../ui';
-import { ROLE_LABEL } from './LobbyScreen';
 import { TimerScreen } from './TimerScreen';
 
-const STATUS_TEXT = {
-  connecting: 'Connecting…',
-  pending: 'Waiting for the chair to approve you…',
-  joined: 'Joined',
-  reconnecting: 'Connection lost, reconnecting…',
-  rejected: 'Not admitted',
-  closed: 'Left the room',
-};
-
 export function ClientScreen({ req, onLeave }: { req: JoinRequest; onLeave: () => void }) {
+  const t = useT();
   const c = useClient(req);
   const session = c.client?.session;
   const member = c.client?.member;
@@ -33,7 +24,7 @@ export function ClientScreen({ req, onLeave }: { req: JoinRequest; onLeave: () =
 
   const sendClip = useCallback(
     async (clip: ClipRef, target: { speechIndex: number; interruptionId: string }) => {
-      if (!client) throw new Error('Not connected');
+      if (!client) throw new Error('notConnected');
       const base64 = await readAsBase64(clip.uri);
       await client.uploadClip(
         `${target.interruptionId}-${deviceId}`,
@@ -50,12 +41,13 @@ export function ClientScreen({ req, onLeave }: { req: JoinRequest; onLeave: () =
       <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
         <Card>
           <Text style={styles.h2}>{room}</Text>
-          <Text style={[styles.text, { color: c.status === 'rejected' ? colors.danger : colors.text }]}>{STATUS_TEXT[c.status]}</Text>
-          {!!c.detail && <Text style={styles.muted}>{c.detail}</Text>}
-          {c.status === 'connecting' && (
-            <Text style={styles.muted}>Make sure you're on the same Wi-Fi or hotspot as the chair. Trying {req.info.hosts.join(', ')}.</Text>
-          )}
-          <Btn title={c.status === 'rejected' ? 'Back' : 'Cancel'} onPress={onLeave} />
+          <Text style={c.status === 'rejected' ? styles.alert : styles.text}>
+            {c.status === 'rejected' ? '⚠ ' : ''}
+            {t(`client.status.${c.status}`)}
+          </Text>
+          {!!c.detail && <Text style={styles.muted}>{netReason(t, c.detail)}</Text>}
+          {c.status === 'connecting' && <Text style={styles.muted}>{t('client.sameNetwork', { hosts: req.info.hosts.join(', ') })}</Text>}
+          <Btn title={c.status === 'rejected' ? t('common.back') : t('common.cancel')} onPress={onLeave} />
         </Card>
       </ScrollView>
     );
@@ -73,20 +65,24 @@ export function ClientScreen({ req, onLeave }: { req: JoinRequest; onLeave: () =
       deviceId={deviceId}
       mySeat={member.role === 'debater' ? member.seat : undefined}
       onInterruptionClip={sendClip}
-      exitLabel="Leave"
+      exitLabel={t('timer.leave')}
       onExit={onLeave}
       banner={
         <Card style={{ paddingVertical: 10 }}>
           <Row style={{ justifyContent: 'space-between' }}>
             <Text style={styles.text}>
-              {c.client?.hostName} · you: {ROLE_LABEL[member.role]}
+              {t('client.you', { host: c.client?.hostName, role: t(`memberRoles.${member.role}`) })}
               {member.seat ? ` ${member.seat}` : ''}
             </Text>
-            <Text style={[styles.muted, c.status === 'reconnecting' && { color: colors.warn }]}>
-              {c.status === 'reconnecting' ? STATUS_TEXT.reconnecting : rtt != null ? `synced · ${Math.round(rtt)} ms` : 'syncing…'}
+            <Text style={c.status === 'reconnecting' ? styles.alert : styles.muted}>
+              {c.status === 'reconnecting'
+                ? `⚠ ${t('client.status.reconnecting')}`
+                : rtt != null
+                  ? t('client.synced', { ms: Math.round(rtt) })
+                  : t('client.syncing')}
             </Text>
           </Row>
-          {c.denied && <Text style={{ color: colors.warn }}>{c.denied}</Text>}
+          {c.denied && <Text style={styles.alert}>⚠ {netReason(t, c.denied)}</Text>}
         </Card>
       }
     />

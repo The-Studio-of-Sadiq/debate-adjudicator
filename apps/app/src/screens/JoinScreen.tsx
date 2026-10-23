@@ -2,17 +2,18 @@ import { useRef, useState } from 'react';
 import { Platform, ScrollView, Text, TextInput, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { BP, parseJoin, UADC, type MemberRole } from '@debate/core';
+import { useT } from '../i18n';
 import type { JoinRequest } from '../net/useClient';
 import { saveIdentity, type Identity } from '../storage';
 import { colors } from '../theme';
 import { Btn, Card, Chip, Row, styles } from '../ui';
-import { ROLE_LABEL } from './LobbyScreen';
+import { ROLES } from './LobbyScreen';
 
 // Every seat across the presets; the chair confirms or corrects it on approval.
-const SEATS = [...new Set([...BP.speeches, ...UADC.speeches].map((s) => s.role))];
-const ROLES: MemberRole[] = ['debater', 'timekeeper', 'wing', 'viewer'];
+const SEATS = [...new Map([...BP.speeches, ...UADC.speeches].map((s) => [s.role, s])).values()];
 
 function Scanner({ onCode, onClose }: { onCode: (text: string) => void; onClose: () => void }) {
+  const t = useT();
   const [permission, requestPermission] = useCameraPermissions();
   // The camera reports the same code many times a second; act on the first.
   const done = useRef(false);
@@ -20,9 +21,9 @@ function Scanner({ onCode, onClose }: { onCode: (text: string) => void; onClose:
   if (!permission.granted) {
     return (
       <Row>
-        <Text style={styles.text}>Camera access is needed to scan.</Text>
-        <Btn title="Allow camera" onPress={() => void requestPermission()} />
-        <Btn title="Cancel" onPress={onClose} />
+        <Text style={styles.text}>{t('join.cameraNeeded')}</Text>
+        <Btn title={t('join.allowCamera')} variant="primary" onPress={() => void requestPermission()} />
+        <Btn title={t('common.cancel')} variant="outline" onPress={onClose} />
       </Row>
     );
   }
@@ -40,7 +41,7 @@ function Scanner({ onCode, onClose }: { onCode: (text: string) => void; onClose:
           }}
         />
       </View>
-      <Btn title="Cancel scan" onPress={onClose} />
+      <Btn title={t('join.cancelScan')} variant="outline" onPress={onClose} />
     </View>
   );
 }
@@ -87,6 +88,7 @@ export function JoinScreen(props: {
   onJoin: (req: JoinRequest) => void;
   onBack: () => void;
 }) {
+  const t = useT();
   const [name, setName] = useState(props.identity.name);
   const [role, setRole] = useState<MemberRole>('debater');
   const [seat, setSeat] = useState<string | undefined>();
@@ -110,11 +112,11 @@ export function JoinScreen(props: {
   function join(text: string) {
     const info = parseJoin(text);
     if (!info) {
-      setError(text.startsWith('WIFI:') ? "That's the Wi-Fi QR. Scan it with your camera app, then scan the join QR here." : 'Not a valid join code');
+      setError(t(text.startsWith('WIFI:') ? 'join.wifiQrScanned' : 'join.invalidCode'));
       return;
     }
     if (!name.trim()) {
-      setError('Enter your name first');
+      setError(t('join.nameFirst'));
       return;
     }
     const identity = { ...props.identity, name: name.trim() };
@@ -124,23 +126,23 @@ export function JoinScreen(props: {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
-      <Btn title="← Back" onPress={props.onBack} style={{ alignSelf: 'flex-start' }} />
-      <Text style={styles.h1}>Join a round</Text>
+      <Btn title={t('common.back')} onPress={props.onBack} style={{ alignSelf: 'flex-start' }} />
+      <Text style={styles.h1}>{t('join.title')}</Text>
 
       <Card>
-        <Text style={styles.h2}>You</Text>
-        <TextInput style={styles.input} placeholder="Your name" placeholderTextColor={colors.muted} value={name} onChangeText={setName} />
+        <Text style={styles.h2}>{t('join.you')}</Text>
+        <TextInput style={styles.input} placeholder={t('join.namePlaceholder')} placeholderTextColor={colors.muted} value={name} onChangeText={setName} />
         <Row>
           {ROLES.map((r) => (
-            <Chip key={r} label={ROLE_LABEL[r]} active={role === r} onPress={() => setRole(r)} />
+            <Chip key={r} label={t(`memberRoles.${r}`)} active={role === r} onPress={() => setRole(r)} />
           ))}
         </Row>
         {role === 'debater' && (
           <>
-            <Text style={styles.muted}>Your seat (the chair can change it):</Text>
+            <Text style={styles.muted}>{t('join.seatHint')}</Text>
             <Row>
               {SEATS.map((s) => (
-                <Chip key={s} label={s} active={seat === s} onPress={() => setSeat(seat === s ? undefined : s)} />
+                <Chip key={s.role} label={s.role} dim={s.side === 'opp'} active={seat === s.role} onPress={() => setSeat(seat === s.role ? undefined : s.role)} />
               ))}
             </Row>
           </>
@@ -148,7 +150,7 @@ export function JoinScreen(props: {
       </Card>
 
       <Card>
-        <Text style={styles.h2}>Room</Text>
+        <Text style={styles.h2}>{t('join.room')}</Text>
         {scanning ? (
           <Scanner
             onCode={(text) => {
@@ -159,10 +161,10 @@ export function JoinScreen(props: {
             onClose={() => setScanning(false)}
           />
         ) : (
-          <Btn title="Scan QR code" color={colors.accent} big onPress={() => void startScan()} />
+          <Btn title={t('join.scan')} variant="primary" big onPress={() => void startScan()} />
         )}
-        {!!props.initialCode && <Text style={styles.muted}>Code from the QR you scanned is filled in below. Pick your role, then Join.</Text>}
-        <Text style={styles.muted}>Or type what's under the chair's QR code:</Text>
+        {!!props.initialCode && <Text style={styles.muted}>{t('join.fromLink')}</Text>}
+        <Text style={styles.muted}>{t('join.typeHint')}</Text>
         <Row>
           <TextInput
             style={[styles.input, { flex: 1, minWidth: 200 }]}
@@ -173,9 +175,9 @@ export function JoinScreen(props: {
             onChangeText={setCode}
             onSubmitEditing={() => join(code)}
           />
-          <Btn title="Join" color={colors.accent} onPress={() => join(code)} />
+          <Btn title={t('common.join')} variant="primary" onPress={() => join(code)} />
         </Row>
-        {error && <Text style={{ color: colors.danger }}>{error}</Text>}
+        {error && <Text style={styles.alert}>⚠ {error}</Text>}
       </Card>
     </ScrollView>
   );

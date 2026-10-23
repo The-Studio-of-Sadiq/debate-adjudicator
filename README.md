@@ -15,6 +15,7 @@ debates. Android + Windows. See [PLAN.md](PLAN.md) for the design and roadmap.
 npm install            # also downloads the Electron binary
 npm test               # core unit tests
 npm run typecheck
+npm run check:i18n     # every t('…') key exists in the English dictionary
 npm run web            # UI in a browser at http://localhost:8081
 npm run desktop:dev    # Electron window on top of the running `npm run web`
 npm run desktop        # build the web bundle and open it in Electron

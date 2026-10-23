@@ -71,6 +71,12 @@ export function useHosting(session: Session | null, dispatch: (a: SessionAction)
   // A different round means a different room.
   useEffect(() => stop, [session?.id, stop]);
 
+  /** A seated debater's name becomes that seat's speaker name (ballot and report). */
+  const nameSeat = (deviceId: string) => {
+    const m = hostRef.current?.list().find((x) => x.deviceId === deviceId);
+    if (m?.role === 'debater' && m.seat && m.name) dispatch({ type: 'setSpeaker', role: m.seat, name: m.name });
+  };
+
   const ring = useCallback((p: BellPattern) => {
     if (hostRef.current) hostRef.current.ring(p);
     else ringBell(p);
@@ -85,8 +91,14 @@ export function useHosting(session: Session | null, dispatch: (a: SessionAction)
     stop,
     ring,
     addAddress: (ip: string) => setInfo((i) => (i && !i.addresses.includes(ip) ? { ...i, addresses: [ip, ...i.addresses] } : i)),
-    approve: (id: string, role?: MemberRole, seat?: string) => hostRef.current?.approve(id, role, seat),
-    setRole: (id: string, role: MemberRole, seat?: string) => hostRef.current?.setRole(id, role, seat),
+    approve: (id: string, role?: MemberRole, seat?: string) => {
+      hostRef.current?.approve(id, role, seat);
+      nameSeat(id);
+    },
+    setRole: (id: string, role: MemberRole, seat?: string) => {
+      hostRef.current?.setRole(id, role, seat);
+      nameSeat(id);
+    },
     remove: (id: string) => hostRef.current?.remove(id),
   };
 }

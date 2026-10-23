@@ -1,32 +1,39 @@
 import type { SpeechPhase } from '@debate/core';
 
+/**
+ * Black-and-white theme. With no colour to lean on, meaning is carried by
+ * brightness, filled-vs-outlined controls and words (every phase is also
+ * named in text), which also keeps the app readable for colour-blind users.
+ */
 export const colors = {
-  bg: '#0f1115',
-  surface: '#1a1d24',
-  surfaceHi: '#252a33',
-  border: '#2f3540',
-  text: '#f2f4f8',
-  muted: '#9aa3b2',
-  accent: '#4f8cff',
-  gov: '#4f8cff',
-  opp: '#ff7a59',
-  danger: '#ff4d4f',
-  ok: '#2ecc71',
-  warn: '#f5a623',
+  bg: '#000000',
+  surface: '#0f0f0f',
+  surfaceHi: '#1d1d1d',
+  border: '#3a3a3a',
+  text: '#ffffff',
+  muted: '#a3a3a3',
+  /** Filled primary controls: white with black text. */
+  primary: '#ffffff',
+  onPrimary: '#000000',
+  /** Opposition is a step dimmer than Government wherever sides are shown. */
+  gov: '#ffffff',
+  opp: '#b8b8b8',
 };
 
+/** Timer card background per phase: gets brighter as time runs out. */
 export const phaseColor: Record<SpeechPhase, string> = {
-  protected: '#3a4252',
-  'poi-open': '#1f8a4c',
-  closing: '#c27c0e',
-  grace: '#c0392b',
-  overtime: '#8e1b1b',
+  protected: '#141414',
+  'poi-open': '#2a2a2a',
+  closing: '#5a5a5a',
+  grace: '#e8e8e8',
+  overtime: '#ffffff',
 };
 
-export const phaseLabel: Record<SpeechPhase, string> = {
-  protected: 'Protected time',
-  'poi-open': 'POIs open',
-  closing: 'Wrap up',
-  grace: 'Grace period',
-  overtime: 'Overtime',
+/** Text colour on top of each phase background. */
+export const phaseText: Record<SpeechPhase, string> = {
+  protected: '#ffffff',
+  'poi-open': '#ffffff',
+  closing: '#ffffff',
+  grace: '#000000',
+  overtime: '#000000',
 };

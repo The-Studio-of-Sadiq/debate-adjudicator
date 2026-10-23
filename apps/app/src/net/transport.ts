@@ -91,7 +91,7 @@ export const transport: Transport = bridge
     }
   : {
       available: false,
-      unavailableReason: 'Hosting and joining need the Android or Windows app (browsers cannot open local network sockets).',
+      unavailableReason: 'net.browserNoSockets',
       listen: () => Promise.reject(new Error('Not available in a browser')),
       connect: () => Promise.reject(new Error('Not available in a browser')),
       localAddresses: async () => [],

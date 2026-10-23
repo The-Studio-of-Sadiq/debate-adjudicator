@@ -13,6 +13,7 @@
     "android": "npm run android -w app",
     "desktop": "npm run start -w desktop",
     "desktop:dev": "npm run dev -w desktop",
-    "postinstall": "node -e \"try{require.resolve('electron/install.js')&&require('electron/install.js')}catch{}\""
+    "postinstall": "node -e \"try{require.resolve('electron/install.js')&&require('electron/install.js')}catch{}\"",
+    "check:i18n": "npm run check:i18n -w app"
   }
 }

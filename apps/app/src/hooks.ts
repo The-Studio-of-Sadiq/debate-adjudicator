@@ -80,7 +80,7 @@ export function useSpeechRecorder(deviceId: string, clock: () => number = Date.n
     try {
       const perm = await AudioModule.requestRecordingPermissionsAsync();
       if (!perm.granted) {
-        setError('Microphone permission denied');
+        setError('timer.micDenied');
         return false;
       }
       await recorder.prepareToRecordAsync();

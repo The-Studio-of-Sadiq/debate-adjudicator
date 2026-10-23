@@ -34,7 +34,7 @@ async function download(model: ModelName, onProgress: (p: Progress) => void) {
     onProgress: ({ bytesWritten, totalBytes }) => onProgress({ stage: 'download', loaded: bytesWritten, total: totalBytes }),
   });
   const done = await task.downloadAsync();
-  if (!done || done.size < MIN_MODEL_BYTES) throw new Error('Model download failed');
+  if (!done || done.size < MIN_MODEL_BYTES) throw new Error('transcription.downloadFailed');
   if (target.exists) target.delete();
   done.move(target);
 }
@@ -97,10 +97,10 @@ export const localEngine: LocalEngine = AudioDecoder
     }
   : {
       available: false,
-      unavailableReason: 'This build has no offline transcription module.',
+      unavailableReason: 'transcription.unavailableBuild',
       models: [],
       isDownloaded: async () => false,
-      prepare: () => Promise.reject(new Error('Not available')),
+      prepare: () => Promise.reject(new Error('transcription.unavailableBuild')),
       deleteModel: async () => {},
-      transcribe: () => Promise.reject(new Error('Not available')),
+      transcribe: () => Promise.reject(new Error('transcription.unavailableBuild')),
     };
