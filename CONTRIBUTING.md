@@ -34,6 +34,8 @@ in the [README](README.md#testing-host--client-on-one-pc).
 | `apps/app` | The Expo app: screens, platform adapters (`*.native.ts` for Android, plain `.ts` for the Windows app/web), i18n, theme. |
 | `apps/app/modules/audio-decoder` | Local Expo module (Kotlin) that decodes recordings for Whisper on Android. |
 | `apps/desktop` | Electron shell for Windows: serves the web build and provides LAN sockets, file storage, Whisper and PDF export over IPC. |
+| `site/`, `scripts/build-site.mjs` | The website: static HTML generated from `docs/wiki` and the format presets (`npm run site`), published by `.github/workflows/pages.yml`. |
+| `scripts/brand-assets.mjs` | Logo files, app icons and the social preview image (`npm run brand`). |
 
 [PLAN.md](PLAN.md) explains the design: how the timer stays in sync, the
 roles, the protocol, and the phase history.
@@ -70,7 +72,7 @@ And keep to these conventions:
 
 ## Pull requests
 
-1. Branch from `master` (`feature/…`, `fix/…`).
+1. Branch from `main` (`feature/…`, `fix/…`).
 2. Keep the change focused; explain what and why in the description, and how
    you tested it (devices, platforms).
 3. Make sure CI is green.

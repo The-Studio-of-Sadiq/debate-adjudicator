@@ -23,9 +23,11 @@
     "desktop:dev": "npm run dev -w desktop",
     "postinstall": "node -e \"try{require.resolve('electron/install.js')&&require('electron/install.js')}catch{}\"",
     "check:i18n": "npm run check:i18n -w app",
-    "brand": "node scripts/brand-assets.mjs"
+    "brand": "node scripts/brand-assets.mjs",
+    "site": "node scripts/build-site.mjs"
   },
   "devDependencies": {
+    "marked": "^18.1.1",
     "opentype.js": "^2.0.0",
     "sharp": "^0.35.5"
   }

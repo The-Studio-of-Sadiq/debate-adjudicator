@@ -12,7 +12,7 @@ to acknowledge reports within a week.
 
 ## Supported versions
 
-Only the latest code on `master` is supported.
+Only the latest code on `main` is supported.
 
 ## Security model, in brief
 

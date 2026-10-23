@@ -68,6 +68,32 @@ function lockup(color) {
   return svgDoc(width * 4, height * 4, body, `0 0 ${width} ${height}`);
 }
 
+// ── Social preview (GitHub, link unfurls): 1280×640, safe margins of 80 ──
+const interMedium = font('inter/500Medium/Inter_500Medium.ttf');
+function socialPreview() {
+  const W = 1280;
+  const H = 640;
+  // Large lockup, left-aligned at the safe margin.
+  const markH = 120;
+  const scale = markH / BOX.h;
+  const x = 96;
+  const y = 170;
+  const tx = x + BOX.w * scale + 44;
+  const eyebrow = textPath(inter, 'DEBATE', tx + 3, y + 28, 26, 0.32);
+  const name = textPath(serif, 'Adjudicator', tx, y + markH, 116);
+  const tag1 = textPath(interMedium, 'Run the debate room from one phone.', x, 448, 40);
+  const tag2 = textPath(interMedium, 'Offline-first  ·  BP & UADC  ·  Android & Windows  ·  Open source', x, 512, 26);
+  return svgDoc(
+    W,
+    H,
+    `<rect width="${W}" height="${H}" fill="#000"/>
+    <g transform="translate(${x} ${y}) scale(${scale}) translate(${-BOX.x} ${-BOX.y})">${markShapes('#ffffff')}</g>
+    <path d="${eyebrow.d}" fill="#fff"/><path d="${name.d}" fill="#fff"/>
+    <path d="${tag1.d}" fill="#fff"/><path d="${tag2.d}" fill="#9a9a9a"/>
+    <rect x="${x}" y="560" width="${W - 2 * x}" height="2" fill="#333"/>`,
+  );
+}
+
 // ── Icons ──
 const markOnly = (color, size, fraction) => {
   // Place the mark's bounding box so its larger side fills `fraction` of the canvas.
@@ -114,3 +140,9 @@ await png(square(48, '#000000', '#ffffff', 0.62, 10), at('apps/app/assets/favico
 
 console.log('Windows icon');
 await png(square(512, '#000000', '#ffffff', 0.56, 96), at('apps/desktop/icon.png'));
+
+console.log('Social preview and website icons');
+await png(socialPreview(), at('docs/brand/social-preview.png'));
+await png(square(180, '#000000', '#ffffff', 0.56, 0), at('site/static/apple-touch-icon.png'));
+await png(square(512, '#000000', '#ffffff', 0.56, 0), at('site/static/icon-512.png'));
+write(at('site/static/favicon.svg'), svgDoc(64, 64, `<rect width="64" height="64" rx="14" fill="#000"/>${markOnly('#ffffff', 64, 0.62)}`));

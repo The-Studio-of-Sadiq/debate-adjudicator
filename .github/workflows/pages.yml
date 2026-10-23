@@ -1,0 +1,73 @@
+name: Website
+
+# Rebuilds the static site (scripts/build-site.mjs) and commits the output to
+# the gh-pages branch, which GitHub Pages serves. gh-pages holds only the
+# generated site; nothing from the app is copied there.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'docs/**'
+      - 'scripts/build-site.mjs'
+      - 'packages/core/src/formats.ts'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      SITE_URL: https://the-studio-of-sadiq.github.io/debate-adjudicator
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build site
+        run: npm run site
+
+      - name: Commit to gh-pages
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch --depth=1 origin gh-pages; then
+            git worktree add -B gh-pages "$RUNNER_TEMP/pages" FETCH_HEAD
+          else
+            git worktree add --orphan -b gh-pages "$RUNNER_TEMP/pages"
+          fi
+          cd "$RUNNER_TEMP/pages"
+          # Replace everything with the fresh build (keep the .git link).
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -r "$GITHUB_WORKSPACE/site-dist/." .
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Website unchanged; nothing to publish."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "Rebuild website from ${GITHUB_SHA::7}"
+          git push origin gh-pages
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # Pushes made with the workflow token don't always start a Pages build,
+      # so ask for one explicitly.
+      - name: Request a Pages build
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds"
