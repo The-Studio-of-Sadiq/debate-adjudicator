@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Translating the app · Debate Adjudicator</title>
+<meta name="description" content="Translate Debate Adjudicator into your language: create a dictionary with one command, translate one file, and check coverage and mistakes.">
+<link rel="canonical" href="https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/translating/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<link rel="manifest" href="../../site.webmanifest">
+<link rel="stylesheet" href="../../style.css">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Debate Adjudicator">
+<meta property="og:title" content="Translating the app · Debate Adjudicator">
+<meta property="og:description" content="Translate Debate Adjudicator into your language: create a dictionary with one command, translate one file, and check coverage and mistakes.">
+<meta property="og:url" content="https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/translating/">
+<meta property="og:image" content="https://the-studio-of-sadiq.github.io/debate-adjudicator/img/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="Debate Adjudicator: run the debate room from one phone.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Translating the app · Debate Adjudicator">
+<meta name="twitter:description" content="Translate Debate Adjudicator into your language: create a dictionary with one command, translate one file, and check coverage and mistakes.">
+<meta name="twitter:image" content="https://the-studio-of-sadiq.github.io/debate-adjudicator/img/social-preview.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Translating the app","description":"Translate Debate Adjudicator into your language: create a dictionary with one command, translate one file, and check coverage and mistakes.","url":"https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/translating/","dateModified":"2026-10-23","image":"https://the-studio-of-sadiq.github.io/debate-adjudicator/img/social-preview.png","isPartOf":{"@type":"WebSite","name":"Debate Adjudicator","url":"https://the-studio-of-sadiq.github.io/debate-adjudicator/"},"about":{"@type":"SoftwareApplication","name":"Debate Adjudicator"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://the-studio-of-sadiq.github.io/debate-adjudicator/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/"},{"@type":"ListItem","position":3,"name":"Translating the app","item":"https://the-studio-of-sadiq.github.io/debate-adjudicator/docs/translating/"}]}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../../" aria-label="Debate Adjudicator home">
+      <img class="on-light" src="../../img/lockup.svg" alt="Debate Adjudicator" width="168" height="34">
+      <img class="on-dark" src="../../img/lockup-white.svg" alt="Debate Adjudicator" width="168" height="34">
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="../../#features">Features</a>
+      <a href="../../#how-it-works">How it works</a>
+      <a href="../../#formats">Formats</a>
+      <a href="../../docs/" aria-current="page">Docs</a>
+      <a href="../../#get-the-app">Get the app</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+
+<div class="wrap docs">
+  <nav class="docs-nav" aria-label="Docs"><ul><li><a href="../">Overview</a></li><li><a href="../chair-guide/">Chair guide</a></li><li><a href="../joining-a-round/">Debater and timekeeper guide</a></li><li><a href="../transcription/">Transcription</a></li><li><a href="../ballots-and-reports/">Ballots and reports</a></li><li><a href="../troubleshooting/">Troubleshooting</a></li><li><a href="../translating/" aria-current="page">Translating the app</a></li><li><a href="../adding-a-format/">Adding a debate format</a></li></ul></nav>
+  <article class="prose">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="../../">Home</a></li><li><a href="../">Docs</a></li><li aria-current="page">Translating the app</li></ol></nav>
+    <h1>Translating the app</h1>
+<p>Every word in the app comes from a dictionary file, so adding a language
+needs no programming. English is the reference; a translation can be partial,
+and anything not yet translated shows in English.</p>
+<h2>Start a new language</h2>
+<p>You need <a href="https://nodejs.org/">Node.js</a> and a copy of the
+<a href="https://github.com/The-Studio-of-Sadiq/debate-adjudicator">source code</a>.
+From the project folder, run:</p>
+<pre><code class="language-bash">npm install
+npm run i18n:new -- bn &quot;বাংলা&quot; &quot;Bangla&quot;
+</code></pre>
+<p>The three values are the language code, the language&#39;s name in itself (shown
+in the app&#39;s language picker) and its English name. Use a
+<a href="https://en.wikipedia.org/wiki/IETF_language_tag">BCP 47 code</a>: a two- or
+three-letter code like <code>bn</code>, <code>es</code> or <code>fil</code>, plus a region or script when it
+matters, like <code>pt-BR</code> or <code>zh-Hant</code>.</p>
+<p>This creates <code>apps/app/src/i18n/bn.ts</code>, a copy of the English dictionary,
+and adds the language to the picker.</p>
+<h2>Translate</h2>
+<p>Open the new file and replace each English text with your translation:</p>
+<pre><code class="language-ts">home: {
+  newRound: &#39;নতুন রাউন্ড&#39;,
+  startRound: &#39;রাউন্ড শুরু করুন&#39;,
+</code></pre>
+<ul>
+<li><strong>Keep the keys</strong> (the part before the colon) exactly as they are.</li>
+<li><strong>Keep placeholders</strong> like <code>{{time}}</code>, <code>{{seat}}</code> or <code>{{count}}</code>. You can
+move them within the sentence: <code>&#39;{{time}} বাকি&#39;</code>.</li>
+<li><strong>Plurals:</strong> keys ending in <code>_one</code> and <code>_other</code> are picked by the number.
+Languages with more plural forms can add <code>_zero</code>, <code>_two</code>, <code>_few</code> or <code>_many</code>;
+see the <a href="https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html">CLDR plural rules</a>.</li>
+<li><strong>Skip anything</strong> by deleting its line; it will show in English.</li>
+<li>Debate terms (POI, BP, Prime Minister…) can stay in English if that&#39;s what
+debaters in your language use.</li>
+</ul>
+<h2>Check your work</h2>
+<pre><code class="language-bash">npm run check:i18n
+</code></pre>
+<p>It reports how much is translated, and stops on mistakes such as a mistyped
+key or a placeholder English doesn&#39;t have:</p>
+<pre><code>Languages:
+  bn: 120/297 strings translated (40%)
+</code></pre>
+<p>To see it in the app, run it (<code>npm run web</code> in a browser, or <code>npm run desktop</code>
+on Windows) and choose your language under <strong>Home → Language</strong>.</p>
+<h2>Send it in</h2>
+<p>Open a pull request with your file (see
+<a href="https://github.com/The-Studio-of-Sadiq/debate-adjudicator/blob/main/CONTRIBUTING.md">CONTRIBUTING</a>).
+Partial translations are welcome. Not comfortable with Git? Open a
+<a href="https://github.com/The-Studio-of-Sadiq/debate-adjudicator/issues/new?template=translation.yml">translation issue</a>
+and we&#39;ll help.</p>
+
+    <div class="pager"><a href="../troubleshooting/">← Troubleshooting</a><a href="../adding-a-format/">Adding a debate format →</a></div>
+  </article>
+</div>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <span>© 2026 The Studio of Sadiq · MIT License</span>
+    <nav aria-label="Footer">
+      <a href="../../docs/">Docs</a>
+      <a href="https://github.com/The-Studio-of-Sadiq/debate-adjudicator">Source code</a>
+      <a href="https://github.com/The-Studio-of-Sadiq/debate-adjudicator/blob/main/CONTRIBUTING.md">Contribute</a>
+      <a href="https://github.com/The-Studio-of-Sadiq/debate-adjudicator/blob/main/SECURITY.md">Security</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>
