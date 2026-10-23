@@ -99,6 +99,23 @@ export interface Transcript {
   segments: TranscriptSegment[];
 }
 
+/** An adjudicator's flow note, pinned to a moment in a speech. */
+export interface Note {
+  id: string;
+  speechIndex: number;
+  /** Speech time in seconds when the note was taken. */
+  atSec: number;
+  text: string;
+}
+
+export interface Ballot {
+  /** Speaker score per speech template id. */
+  scores: Record<string, number>;
+  comments?: string;
+  /** Set when the chair marks the ballot final. */
+  finalizedAt?: number;
+}
+
 export interface Session {
   id: string;
   createdAt: number;
@@ -108,4 +125,8 @@ export interface Session {
   speeches: SpeechRecord[];
   /** Transcripts keyed by clip id. Missing on sessions saved before Phase 4. */
   transcripts?: Record<string, Transcript>;
+  /** Speaker names keyed by speech role code (PM, LO, …). */
+  speakers?: Record<string, string>;
+  notes?: Note[];
+  ballot?: Ballot;
 }

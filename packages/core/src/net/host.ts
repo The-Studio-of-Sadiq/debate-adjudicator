@@ -1,4 +1,4 @@
-import type { SessionAction } from '../session';
+import { publicView, type SessionAction } from '../session';
 import type { BellPattern, Session } from '../types';
 import { authorize, mayUploadClip } from './permissions';
 import {
@@ -8,6 +8,8 @@ import {
   MAX_CLIP_CHARS,
   PROTOCOL_VERSION,
   type ClipMeta,
+  type ClipRejectReason,
+  type RejectReason,
   type ClientMsg,
   type HostMsg,
   type Member,
@@ -100,11 +102,11 @@ export class HostController {
 
   private onHello(socket: SocketLike, msg: Extract<ClientMsg, { t: 'hello' }>): string | null {
     if (msg.v !== PROTOCOL_VERSION) {
-      this.sendAndClose(socket, { t: 'rejected', reason: 'App version mismatch; update both devices' });
+      this.sendAndClose(socket, { t: 'rejected', reason: 'versionMismatch' });
       return null;
     }
     if (msg.token.toUpperCase() !== this.opts.token) {
-      this.sendAndClose(socket, { t: 'rejected', reason: 'Wrong join code' });
+      this.sendAndClose(socket, { t: 'rejected', reason: 'wrongCode' });
       return null;
     }
     const id = msg.deviceId;
@@ -143,7 +145,7 @@ export class HostController {
 
     if (msg.t === 'ring') {
       if (member.role === 'timekeeper') this.ring(msg.pattern);
-      else this.send(socket, { t: 'denied', reason: 'Only the timekeeper can ring the bell' });
+      else this.send(socket, { t: 'denied', reason: 'onlyTimekeeperRings' });
       return;
     }
     if (msg.t === 'clip') {
@@ -153,7 +155,7 @@ export class HostController {
     if (msg.t === 'act') {
       const session = this.opts.getSession();
       if (!authorize(member, msg.action, session)) {
-        this.send(socket, { t: 'denied', reason: 'Not allowed for your role' });
+        this.send(socket, { t: 'denied', reason: 'notAllowed' });
         return;
       }
       // The host's clock is the only clock: re-stamp every timed action.
@@ -163,7 +165,7 @@ export class HostController {
   }
 
   private async onClipChunk(socket: SocketLike, member: Member, msg: Extract<ClientMsg, { t: 'clip' }>) {
-    const reject = (reason: string) => {
+    const reject = (reason: ClipRejectReason) => {
       this.uploads.delete(msg.id);
       this.send(socket, { t: 'clipRejected', id: msg.id, reason });
     };
@@ -171,7 +173,7 @@ export class HostController {
     if (msg.seq === 0) {
       const meta = msg.meta;
       // The id and extension become a file name on the host, so keep them plain.
-      if (!meta || !/^[\w-]{1,80}$/.test(msg.id) || !/^[a-z0-9]{1,5}$/.test(meta.ext)) return reject('Bad clip metadata');
+      if (!meta || !/^[\w-]{1,80}$/.test(msg.id) || !/^[a-z0-9]{1,5}$/.test(meta.ext)) return reject('badClip');
       const session = this.opts.getSession();
       // Already stored (a retry after a reconnect): just confirm.
       if (session.speeches[meta.speechIndex]?.clips.some((c) => c.id === msg.id)) {
@@ -179,18 +181,18 @@ export class HostController {
         this.send(socket, { t: 'clipAck', id: msg.id });
         return;
       }
-      if (!this.opts.saveClip) return reject('This device cannot store clips');
-      if (!mayUploadClip(member, session, meta.speechIndex, meta.interruptionId)) return reject('Not your interruption');
+      if (!this.opts.saveClip) return reject('cannotStoreClips');
+      if (!mayUploadClip(member, session, meta.speechIndex, meta.interruptionId)) return reject('notYourInterruption');
       this.uploads.set(msg.id, { meta, parts: [], chars: 0, nextSeq: 0 });
     }
 
     const up = this.uploads.get(msg.id);
     if (!up) return; // Remainder of an upload we already answered.
-    if (msg.seq !== up.nextSeq) return reject('Clip chunks out of order');
+    if (msg.seq !== up.nextSeq) return reject('clipOutOfOrder');
     up.parts.push(msg.data);
     up.chars += msg.data.length;
     up.nextSeq++;
-    if (up.chars > MAX_CLIP_CHARS) return reject('Clip too large');
+    if (up.chars > MAX_CLIP_CHARS) return reject('clipTooLarge');
     if (!msg.last) return;
 
     this.uploads.delete(msg.id);
@@ -198,7 +200,7 @@ export class HostController {
     try {
       uri = await this.opts.saveClip!(`${msg.id}.${up.meta.ext}`, up.parts.join(''));
     } catch (e) {
-      return reject(`Could not save clip: ${e instanceof Error ? e.message : String(e)}`);
+      return reject('clipSaveFailed');
     }
     this.opts.dispatch({
       type: 'addClip',
@@ -216,7 +218,7 @@ export class HostController {
   }
 
   private sendWelcome(m: Member) {
-    this.sendTo(m.deviceId, { t: 'welcome', hostName: this.opts.hostName, member: { ...m }, session: this.opts.getSession(), rev: this.rev });
+    this.sendTo(m.deviceId, { t: 'welcome', hostName: this.opts.hostName, member: { ...m }, session: publicView(this.opts.getSession()), rev: this.rev });
   }
 
   private emitMembers() {
@@ -247,7 +249,7 @@ export class HostController {
   }
 
   /** Reject a pending request or remove an approved member. */
-  remove(deviceId: string, reason = 'Removed by the chair') {
+  remove(deviceId: string, reason: RejectReason = 'removed') {
     const socket = this.sockets.get(deviceId);
     if (socket) this.sendAndClose(socket, { t: 'rejected', reason });
     this.sockets.delete(deviceId);
@@ -257,9 +259,10 @@ export class HostController {
 
   /** Push the latest session to every approved, connected device. */
   publish(session: Session) {
+    const shared = publicView(session);
     this.rev++;
     for (const m of this.members.values()) {
-      if (m.status === 'approved' && m.connected) this.sendTo(m.deviceId, { t: 'state', session, rev: this.rev });
+      if (m.status === 'approved' && m.connected) this.sendTo(m.deviceId, { t: 'state', session: shared, rev: this.rev });
     }
   }
 

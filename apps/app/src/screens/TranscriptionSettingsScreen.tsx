@@ -1,25 +1,25 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
+import { errorText, useT, type T } from '../i18n';
 import { CLOUD_PRESETS, localEngine, type ModelName, type Progress, type TranscriptionSettings } from '../transcription';
 import { loadTranscriptionSettings, saveTranscriptionSettings } from '../storage';
 import { colors } from '../theme';
 import { Btn, Card, Chip, Row, styles } from '../ui';
 
-const MODES: { mode: TranscriptionSettings['mode']; label: string; hint: string }[] = [
-  { mode: 'auto', label: 'Auto', hint: 'Cloud when online and a key is set, otherwise offline. Falls back to offline if the cloud fails.' },
-  { mode: 'local', label: 'Offline only', hint: 'Audio never leaves this device.' },
-  { mode: 'cloud', label: 'Cloud only', hint: 'Fastest and most accurate, but needs internet and sends audio to the provider.' },
-];
+const MODES: TranscriptionSettings['mode'][] = ['auto', 'local', 'cloud'];
 
-export function progressText(p: Progress | undefined): string {
-  if (!p) return 'Starting…';
-  if (p.stage === 'download') return `Downloading model ${p.total ? Math.round((p.loaded / p.total) * 100) : 0}%`;
-  if (p.stage === 'decode') return 'Preparing audio…';
-  if (p.stage === 'upload') return 'Uploading to cloud…';
-  return p.percent != null ? `Transcribing ${Math.round(p.percent)}%` : 'Transcribing…';
+export function progressText(t: T, p: Progress | undefined): string {
+  if (!p) return t('transcription.progress.starting');
+  if (p.stage === 'download') return t('transcription.progress.download', { percent: p.total ? Math.round((p.loaded / p.total) * 100) : 0 });
+  if (p.stage === 'decode') return t('transcription.progress.decode');
+  if (p.stage === 'upload') return t('transcription.progress.upload');
+  return p.percent != null
+    ? t('transcription.progress.transcribePercent', { percent: Math.round(p.percent) })
+    : t('transcription.progress.transcribe');
 }
 
 export function TranscriptionSettingsScreen({ onBack }: { onBack: () => void }) {
+  const t = useT();
   const [settings, setSettings] = useState<TranscriptionSettings | null>(null);
   const [downloaded, setDownloaded] = useState<Partial<Record<ModelName, boolean>>>({});
   const [busy, setBusy] = useState<{ model: ModelName; progress?: Progress } | null>(null);
@@ -60,43 +60,48 @@ export function TranscriptionSettingsScreen({ onBack }: { onBack: () => void }) 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
       <Row style={{ justifyContent: 'space-between' }}>
-        <Btn title="← Back" onPress={onBack} />
+        <Btn title={t('common.back')} onPress={onBack} />
         <Btn
-          title={saved ? 'Saved ✓' : 'Save'}
-          color={colors.accent}
+          title={saved ? t('common.saved') : t('common.save')}
+          variant="primary"
           onPress={async () => {
             await saveTranscriptionSettings(settings);
             setSaved(true);
           }}
         />
       </Row>
-      <Text style={styles.h1}>Transcription</Text>
+      <Text style={styles.h1}>{t('transcription.title')}</Text>
 
       <Card>
-        <Text style={styles.h2}>When to use the cloud</Text>
+        <Text style={styles.h2}>{t('transcription.whenCloud')}</Text>
         <Row>
           {MODES.map((m) => (
-            <Chip key={m.mode} label={m.label} active={settings.mode === m.mode} onPress={() => update({ mode: m.mode })} />
+            <Chip key={m} label={t(`transcription.modes.${m}`)} active={settings.mode === m} onPress={() => update({ mode: m })} />
           ))}
         </Row>
-        <Text style={styles.muted}>{MODES.find((m) => m.mode === settings.mode)!.hint}</Text>
+        <Text style={styles.muted}>{t(`transcription.modes.${settings.mode}Hint`)}</Text>
       </Card>
 
       <Card>
-        <Text style={styles.h2}>Offline model</Text>
-        {!localEngine.available && <Text style={[styles.text, { color: colors.warn }]}>{localEngine.unavailableReason}</Text>}
-        <Text style={styles.muted}>Download once on Wi-Fi; after that transcription works with no internet. English only.</Text>
+        <Text style={styles.h2}>{t('transcription.offlineModel')}</Text>
+        {!localEngine.available && <Text style={styles.alert}>⚠ {t(localEngine.unavailableReason!)}</Text>}
+        <Text style={styles.muted}>{t('transcription.offlineHint')}</Text>
         {localEngine.models.map((m) => (
           <View key={m.name} style={{ gap: 6, paddingVertical: 8, borderTopWidth: 1, borderColor: colors.border }}>
             <Row style={{ justifyContent: 'space-between' }}>
-              <Chip label={`${m.label} · ${m.sizeMb} MB`} active={settings.model === m.name} onPress={() => update({ model: m.name })} />
+              <Chip
+                label={t('transcription.modelSize', { label: t(`transcription.models.${m.name}`), size: m.sizeMb })}
+                active={settings.model === m.name}
+                onPress={() => update({ model: m.name })}
+              />
               {busy?.model === m.name ? (
-                <Text style={styles.muted}>{progressText(busy.progress)}</Text>
+                <Text style={styles.muted}>{progressText(t, busy.progress)}</Text>
               ) : downloaded[m.name] ? (
                 <Row>
-                  <Text style={{ color: colors.ok }}>Downloaded ✓</Text>
+                  <Text style={styles.text}>{t('transcription.downloaded')}</Text>
                   <Btn
-                    title="Delete"
+                    title={t('common.delete')}
+                    variant="outline"
                     disabled={!!busy}
                     onPress={async () => {
                       await localEngine.deleteModel(m.name);
@@ -105,17 +110,17 @@ export function TranscriptionSettingsScreen({ onBack }: { onBack: () => void }) 
                   />
                 </Row>
               ) : (
-                <Btn title="Download" disabled={!!busy} onPress={() => void download(m.name)} />
+                <Btn title={t('transcription.download')} disabled={!!busy} onPress={() => void download(m.name)} />
               )}
             </Row>
           </View>
         ))}
-        {error && <Text style={{ color: colors.danger }}>{error}</Text>}
+        {error && <Text style={styles.alert}>⚠ {errorText(t, error)}</Text>}
       </Card>
 
       <Card>
-        <Text style={styles.h2}>Cloud provider (optional)</Text>
-        <Text style={styles.muted}>Any OpenAI-compatible transcription API. Audio is sent to the provider; the key stays on this device.</Text>
+        <Text style={styles.h2}>{t('transcription.cloudTitle')}</Text>
+        <Text style={styles.muted}>{t('transcription.cloudHint')}</Text>
         <Row>
           {CLOUD_PRESETS.map((p) => (
             <Chip
@@ -128,7 +133,7 @@ export function TranscriptionSettingsScreen({ onBack }: { onBack: () => void }) 
         </Row>
         <TextInput
           style={styles.input}
-          placeholder="API base URL"
+          placeholder={t('transcription.baseUrl')}
           placeholderTextColor={colors.muted}
           autoCapitalize="none"
           value={settings.cloud.baseUrl}
@@ -136,7 +141,7 @@ export function TranscriptionSettingsScreen({ onBack }: { onBack: () => void }) 
         />
         <TextInput
           style={styles.input}
-          placeholder="Model, e.g. whisper-1"
+          placeholder={t('transcription.model')}
           placeholderTextColor={colors.muted}
           autoCapitalize="none"
           value={settings.cloud.model}
@@ -144,7 +149,7 @@ export function TranscriptionSettingsScreen({ onBack }: { onBack: () => void }) 
         />
         <TextInput
           style={styles.input}
-          placeholder="API key"
+          placeholder={t('transcription.apiKey')}
           placeholderTextColor={colors.muted}
           autoCapitalize="none"
           secureTextEntry

@@ -23,6 +23,11 @@ contextBridge.exposeInMainWorld('debateWhisper', {
   },
 });
 
+contextBridge.exposeInMainWorld('debatePdf', {
+  // Renders the report to PDF and asks where to save it; resolves with the path, or null if cancelled.
+  save: (html, fileName) => ipcRenderer.invoke('pdf:save', html, fileName),
+});
+
 contextBridge.exposeInMainWorld('debateFiles', {
   // Writes a clip to disk and returns an app:// URL that plays it.
   saveClip: (fileName, base64) => ipcRenderer.invoke('files:saveClip', fileName, base64),

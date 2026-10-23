@@ -55,6 +55,22 @@ export type ClientMsg =
   /** One piece of a clip upload; the first chunk (seq 0) carries the metadata. */
   | { t: 'clip'; id: string; seq: number; last: boolean; data: string; meta?: ClipMeta };
 
+/**
+ * Reasons are codes, not sentences, so each device shows them in its own
+ * language (the app's i18n has a `net.*` entry for every one).
+ */
+export type RejectReason = 'versionMismatch' | 'wrongCode' | 'removed';
+export type DenyReason = 'notAllowed' | 'onlyTimekeeperRings';
+export type ClipRejectReason =
+  | 'badClip'
+  | 'cannotStoreClips'
+  | 'notYourInterruption'
+  | 'clipOutOfOrder'
+  | 'clipTooLarge'
+  | 'clipSaveFailed';
+/** Why a client is (re)connecting, passed as the status detail. */
+export type ConnectDetail = 'unreachable' | 'connectionLost';
+
 export type HostMsg =
   | { t: 'pending'; hostName: string }
   | { t: 'welcome'; hostName: string; member: Member; session: Session; rev: number }
@@ -62,10 +78,10 @@ export type HostMsg =
   | { t: 'you'; member: Member }
   | { t: 'pong'; c0: number; h: number }
   | { t: 'ring'; pattern: BellPattern }
-  | { t: 'denied'; reason: string }
-  | { t: 'rejected'; reason: string }
+  | { t: 'denied'; reason: DenyReason }
+  | { t: 'rejected'; reason: RejectReason }
   | { t: 'clipAck'; id: string }
-  | { t: 'clipRejected'; id: string; reason: string };
+  | { t: 'clipRejected'; id: string; reason: ClipRejectReason };
 
 /**
  * The minimal socket surface both Node's `net.Socket` and

@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { BP, UADC } from './formats';
 import { bellsBetween, CONTINUOUS_REPEAT_SEC } from './bells';
 import { applyTimerEvent, elapsedMs, formatClock, speechPhase, timerStatus } from './timer';
-import { createSession, currentSpeech, reduceSession, type SessionAction } from './session';
+import { createSession, currentSpeech, publicView, reduceSession, type SessionAction } from './session';
+import { evaluateBallot } from './ballot';
 import type { TimerEvent } from './types';
 import { cleanSegments, segmentIndexAt, segmentsFromVerboseJson, transcriptText } from './transcript';
 
@@ -186,5 +187,86 @@ describe('transcripts', () => {
   it('reads OpenAI-style verbose_json', () => {
     expect(segmentsFromVerboseJson({ segments: [{ start: 1.5, end: 3, text: ' Hello ' }] })).toEqual([{ startMs: 1500, endMs: 3000, text: 'Hello' }]);
     expect(segmentsFromVerboseJson({ text: 'Only text', duration: 4 })).toEqual([{ startMs: 0, endMs: 4000, text: 'Only text' }]);
+  });
+});
+
+describe('ballots', () => {
+  const scored = (format: typeof BP, scores: Record<string, number>) =>
+    Object.entries(scores).reduce(
+      (s, [speechId, score]) => reduceSession(s, { type: 'setScore', speechId, score }),
+      createSession(format, { id: 'b', now: T0 }),
+    );
+
+  it('ranks BP teams from speaker totals and awards 3/2/1/0', () => {
+    const s = scored(BP, { pm: 76, dpm: 75, lo: 78, dlo: 77, mg: 74, gw: 73, mo: 72, ow: 71 });
+    const r = evaluateBallot(BP, s.ballot);
+    expect(r.issues).toEqual([]);
+    expect(r.order).toEqual(['OO', 'OG', 'CG', 'CO']);
+    expect(r.totals).toEqual({ OG: 151, OO: 155, CG: 147, CO: 143 });
+    expect(r.points).toEqual({ OO: 3, OG: 2, CG: 1, CO: 0 });
+  });
+
+  it('flags missing scores, out-of-range scores and tied team totals', () => {
+    const partial = evaluateBallot(BP, scored(BP, { pm: 76 }).ballot);
+    expect(partial.complete).toBe(false);
+    expect(partial.issues.filter((i) => i.code === 'missingScore')).toHaveLength(7);
+
+    const bad = evaluateBallot(BP, scored(BP, { pm: 120, dpm: 75, lo: 75, dlo: 75, mg: 74, gw: 73, mo: 72, ow: 71 }).ballot);
+    expect(bad.issues).toContainEqual({ code: 'outOfRange', speechId: 'pm', range: { min: 50, max: 100, step: 1 } });
+
+    const tied = evaluateBallot(BP, scored(BP, { pm: 75, dpm: 75, lo: 76, dlo: 74, mg: 74, gw: 73, mo: 72, ow: 71 }).ballot);
+    expect(tied.issues).toEqual([{ code: 'tiedTotals', teamIds: ['OG', 'OO'] }]);
+  });
+
+  it('scores UADC replies on the half scale and reports the margin', () => {
+    const s = scored(UADC, { pm: 76, dpm: 75, gw: 74, gr: 37.5, lo: 75, dlo: 75, ow: 74, or: 38 });
+    const r = evaluateBallot(UADC, s.ballot);
+    expect(r.issues).toEqual([]);
+    expect(r.order).toEqual(['GOV', 'OPP']);
+    expect(r.margin).toBe(0.5);
+    expect(evaluateBallot(UADC, scored(UADC, { gr: 75 }).ballot).issues).toContainEqual({
+      code: 'outOfRange',
+      speechId: 'gr',
+      range: { min: 35, max: 40, step: 0.5 },
+    });
+    expect(evaluateBallot(UADC, scored(UADC, { gr: 37.25 }).ballot).issues).toContainEqual({ code: 'offStep', speechId: 'gr', step: 0.5 });
+  });
+
+  it('reopens a finalised ballot when a score changes', () => {
+    let s = scored(BP, { pm: 75 });
+    s = reduceSession(s, { type: 'finalizeBallot', at: T0 });
+    expect(s.ballot?.finalizedAt).toBe(T0);
+    s = reduceSession(s, { type: 'setScore', speechId: 'pm', score: 76 });
+    expect(s.ballot?.finalizedAt).toBeUndefined();
+  });
+});
+
+describe('notes, speakers and privacy', () => {
+  it('keeps notes, ballot and transcripts off joined devices', () => {
+    let s = createSession(BP, { id: 'p', now: T0 });
+    s = reduceSession(s, { type: 'addNote', note: { id: 'n1', speechIndex: 0, atSec: 42, text: '  weak mechanism ' } });
+    s = reduceSession(s, { type: 'setScore', speechId: 'pm', score: 75 });
+    s = reduceSession(s, { type: 'setSpeaker', role: 'PM', name: 'Rafi' });
+    expect(s.notes).toEqual([{ id: 'n1', speechIndex: 0, atSec: 42, text: 'weak mechanism' }]);
+
+    const shared = publicView(s);
+    expect(shared.notes).toBeUndefined();
+    expect(shared.ballot).toBeUndefined();
+    expect(shared.transcripts).toBeUndefined();
+    expect(shared.speakers).toEqual({ PM: 'Rafi' });
+  });
+
+  it('edits, empties and deletes notes', () => {
+    let s = reduceSession(createSession(BP, { id: 'p', now: T0 }), { type: 'addNote', note: { id: 'n1', speechIndex: 0, atSec: 1, text: 'a' } });
+    s = reduceSession(s, { type: 'editNote', id: 'n1', text: 'b' });
+    expect(s.notes?.[0]?.text).toBe('b');
+    s = reduceSession(s, { type: 'editNote', id: 'n1', text: '   ' });
+    expect(s.notes).toEqual([]);
+    expect(reduceSession(s, { type: 'addNote', note: { id: 'x', speechIndex: 99, atSec: 1, text: 'a' } }).notes).toEqual([]);
+  });
+
+  it('ignores speakers for seats the format does not have', () => {
+    const s = reduceSession(createSession(UADC, { id: 'u', now: T0 }), { type: 'setSpeaker', role: 'MG', name: 'X' });
+    expect(s.speakers).toBeUndefined();
   });
 });

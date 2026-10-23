@@ -46,7 +46,9 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to scan join QR codes.",
           "recordAudioAndroid": false
         }
-      ]
+      ],
+      "expo-localization",
+      "expo-sharing"
     ],
     "extra": {
       "eas": {

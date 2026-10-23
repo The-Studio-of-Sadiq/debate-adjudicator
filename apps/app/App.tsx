@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { Linking, SafeAreaView, StatusBar as RNStatusBar, Platform, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { CHAIR_CAPS, createSession, parseJoin, PRESETS, reduceSession, type DebateFormat, type Session, type SessionAction } from '@debate/core';
+import { applyLanguage, useT, type LanguagePreference } from './src/i18n';
 import type { JoinRequest } from './src/net/useClient';
 import { useHosting } from './src/net/useHosting';
+import { BallotScreen } from './src/screens/BallotScreen';
 import { BellEditor } from './src/screens/BellEditor';
 import { ClientScreen } from './src/screens/ClientScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -16,10 +18,12 @@ import { useTranscriptionJobs } from './src/transcription/useTranscriptionJobs';
 import {
   deleteSession,
   loadIdentity,
+  loadLanguagePreference,
   loadSession,
   makeId,
   resetCustomFormat,
   saveCustomFormat,
+  saveLanguagePreference,
   saveSession,
   type Identity,
 } from './src/storage';
@@ -32,14 +36,17 @@ type Screen =
   | { name: 'timer' }
   | { name: 'lobby' }
   | { name: 'review' }
+  | { name: 'ballot' }
   | { name: 'join'; initialCode?: string }
   | { name: 'transcription' }
   | { name: 'client'; req: JoinRequest };
 
 export default function App() {
+  const t = useT();
   const [screen, setScreen] = useState<Screen>({ name: 'home' });
   const [session, setSession] = useState<Session | null>(null);
   const [identity, setIdentity] = useState<Identity | null>(null);
+  const [language, setLanguage] = useState<LanguagePreference>('system');
 
   const dispatch = useCallback((a: SessionAction) => setSession((s) => (s ? reduceSession(s, a) : s)), []);
   const hosting = useHosting(session, dispatch, identity?.name || 'Chair');
@@ -47,6 +54,10 @@ export default function App() {
 
   useEffect(() => {
     void loadIdentity().then(setIdentity);
+    void loadLanguagePreference().then((pref) => {
+      setLanguage(pref);
+      void applyLanguage(pref);
+    });
   }, []);
 
   // The join QR is a debate:// link, so the phone's own camera app can open it here.
@@ -103,23 +114,30 @@ export default function App() {
         banner={
           <Row>
             <Btn
-              title={hosting.active ? `Devices: ${joined}${waiting ? ` · ${waiting} waiting` : ''}` : 'Invite devices'}
-              color={waiting ? colors.warn : undefined}
+              title={
+                hosting.active
+                  ? [t('timer.devices', { count: joined }), waiting ? t('timer.waiting', { count: waiting }) : ''].filter(Boolean).join(' · ')
+                  : t('timer.inviteDevices')
+              }
+              variant={waiting ? 'primary' : 'default'}
               onPress={() => setScreen({ name: 'lobby' })}
             />
-            {hosting.active && <Text style={{ color: colors.muted }}>Code {hosting.info?.token}</Text>}
+            {hosting.active && <Text style={{ color: colors.muted }}>{t('timer.code', { code: hosting.info?.token })}</Text>}
           </Row>
         }
       />
     );
   } else if (screen.name === 'lobby' && session) {
     body = <LobbyScreen hosting={hosting} session={session} hostName={identity?.name || 'Chair'} onBack={() => setScreen({ name: 'timer' })} />;
+  } else if (screen.name === 'ballot' && session) {
+    body = <BallotScreen session={session} dispatch={dispatch} onBack={() => setScreen({ name: 'review' })} />;
   } else if (screen.name === 'review' && session) {
     body = (
       <ReviewScreen
         session={session}
         jobs={transcription.jobs}
         onTranscribe={(clips) => transcription.enqueue(session.id, clips)}
+        onBallot={() => setScreen({ name: 'ballot' })}
         onBack={() => setScreen({ name: 'home' })}
         onResume={() => setScreen({ name: 'timer' })}
         onDelete={async () => {
@@ -161,6 +179,12 @@ export default function App() {
           if (!s) return;
           setSession(s);
           setScreen({ name: 'review' });
+        }}
+        language={language}
+        onLanguage={(pref) => {
+          setLanguage(pref);
+          void applyLanguage(pref);
+          void saveLanguagePreference(pref);
         }}
       />
     );

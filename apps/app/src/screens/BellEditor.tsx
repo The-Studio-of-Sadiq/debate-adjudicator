@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
 import { formatClock, normalizeBells, type BellPattern, type BellRule, type DebateFormat, type SpeechTemplate } from '@debate/core';
 import { ringBell } from '../hooks';
+import { formatName, useT } from '../i18n';
 import { colors } from '../theme';
 import { Btn, Card, Chip, Row, styles } from '../ui';
 
@@ -39,41 +40,42 @@ function ClockInput({ value, onChange }: { value: number; onChange: (sec: number
 }
 
 export function BellEditor(props: { format: DebateFormat; onSave: (f: DebateFormat) => void; onReset: () => void; onClose: () => void }) {
+  const t = useT();
   const [format, setFormat] = useState(props.format);
   const groups = (['substantive', 'reply'] as Group[]).filter((g) => format.speeches.some((s) => groupOf(s) === g));
 
-  function updateGroup(g: Group, fn: (t: SpeechTemplate) => SpeechTemplate) {
+  function updateGroup(g: Group, fn: (s: SpeechTemplate) => SpeechTemplate) {
     setFormat((f) => ({ ...f, speeches: f.speeches.map((s) => (groupOf(s) === g ? fn(s) : s)) }));
   }
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
-      <Text style={styles.h1}>Bells · {format.name}</Text>
+      <Text style={styles.h1}>{t('bells.title', { format: formatName(t, format) })}</Text>
       {groups.map((g) => {
         const sample = format.speeches.find((s) => groupOf(s) === g)!;
-        const setBells = (bells: BellRule[]) => updateGroup(g, (t) => ({ ...t, bells }));
+        const setBells = (bells: BellRule[]) => updateGroup(g, (s) => ({ ...s, bells }));
         return (
           <Card key={g}>
-            <Text style={styles.h2}>{g === 'substantive' ? 'Substantive speeches' : 'Reply speeches'}</Text>
+            <Text style={styles.h2}>{t(g === 'substantive' ? 'bells.substantive' : 'bells.reply')}</Text>
             <Text style={styles.muted}>{format.speeches.filter((s) => groupOf(s) === g).map((s) => s.role).join(' · ')}</Text>
 
             <Row>
-              <Text style={styles.text}>Length</Text>
-              <ClockInput value={sample.durationSec} onChange={(v) => updateGroup(g, (t) => ({ ...t, durationSec: v }))} />
-              <Text style={styles.text}>Grace</Text>
-              <ClockInput value={sample.graceSec} onChange={(v) => updateGroup(g, (t) => ({ ...t, graceSec: v }))} />
+              <Text style={styles.text}>{t('bells.length')}</Text>
+              <ClockInput value={sample.durationSec} onChange={(v) => updateGroup(g, (s) => ({ ...s, durationSec: v }))} />
+              <Text style={styles.text}>{t('bells.grace')}</Text>
+              <ClockInput value={sample.graceSec} onChange={(v) => updateGroup(g, (s) => ({ ...s, graceSec: v }))} />
             </Row>
             {sample.poiWindow && (
               <Row>
-                <Text style={styles.text}>POIs from</Text>
+                <Text style={styles.text}>{t('bells.poisFrom')}</Text>
                 <ClockInput
                   value={sample.poiWindow.from}
-                  onChange={(v) => updateGroup(g, (t) => ({ ...t, poiWindow: { from: v, to: t.poiWindow!.to } }))}
+                  onChange={(v) => updateGroup(g, (s) => ({ ...s, poiWindow: { from: v, to: s.poiWindow!.to } }))}
                 />
-                <Text style={styles.text}>to</Text>
+                <Text style={styles.text}>{t('bells.to')}</Text>
                 <ClockInput
                   value={sample.poiWindow.to}
-                  onChange={(v) => updateGroup(g, (t) => ({ ...t, poiWindow: { from: t.poiWindow!.from, to: v } }))}
+                  onChange={(v) => updateGroup(g, (s) => ({ ...s, poiWindow: { from: s.poiWindow!.from, to: v } }))}
                 />
               </Row>
             )}
@@ -88,18 +90,18 @@ export function BellEditor(props: { format: DebateFormat; onSave: (f: DebateForm
                   <TextInput
                     style={[styles.input, { flex: 1, minWidth: 120 }]}
                     value={b.label ?? ''}
-                    placeholder="Label"
+                    placeholder={t('bells.label')}
                     placeholderTextColor={colors.muted}
                     onChangeText={(label) => setBells(sample.bells.map((x, j) => (j === i ? { ...x, label } : x)))}
                   />
                   <Btn title="▶" onPress={() => ringBell(b.pattern)} />
-                  <Btn title="✕" color={colors.danger} onPress={() => setBells(sample.bells.filter((_, j) => j !== i))} />
+                  <Btn title="✕" variant="outline" onPress={() => setBells(sample.bells.filter((_, j) => j !== i))} />
                 </Row>
                 <Row>
                   {PATTERNS.map((p) => (
                     <Chip
                       key={p}
-                      label={p}
+                      label={t(`bells.patterns.${p}`)}
                       active={b.pattern === p}
                       onPress={() => setBells(sample.bells.map((x, j) => (j === i ? { ...x, pattern: p } : x)))}
                     />
@@ -108,16 +110,16 @@ export function BellEditor(props: { format: DebateFormat; onSave: (f: DebateForm
               </View>
             ))}
             <Btn
-              title="+ Add bell"
+              title={t('bells.addBell')}
               onPress={() => setBells(normalizeBells([...sample.bells, { at: (sample.bells.at(-1)?.at ?? 0) + 30, pattern: 'single' }]))}
             />
           </Card>
         );
       })}
       <Row>
-        <Btn title="Save" color={colors.accent} onPress={() => props.onSave(format)} />
-        <Btn title="Reset to default" onPress={props.onReset} />
-        <Btn title="Cancel" onPress={props.onClose} />
+        <Btn title={t('common.save')} variant="primary" onPress={() => props.onSave(format)} />
+        <Btn title={t('bells.reset')} onPress={props.onReset} />
+        <Btn title={t('common.cancel')} variant="outline" onPress={props.onClose} />
       </Row>
     </ScrollView>
   );

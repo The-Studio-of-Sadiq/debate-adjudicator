@@ -11,6 +11,7 @@ export type Progress =
 /** Offline Whisper on this device. `local.native.ts` = Android, `local.ts` = Windows app. */
 export interface LocalEngine {
   available: boolean;
+  /** i18n key explaining why it's unavailable. */
   unavailableReason?: string;
   models: { name: ModelName; label: string; sizeMb: number }[];
   isDownloaded(model: ModelName): Promise<boolean>;

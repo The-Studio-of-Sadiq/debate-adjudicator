@@ -9,7 +9,7 @@ const MIME: Record<string, string> = { m4a: 'audio/mp4', mp4: 'audio/mp4', webm:
  * segment timestamps so the transcript can be synced to playback.
  */
 export async function transcribeCloud(uri: string, settings: CloudSettings, onProgress: (p: Progress) => void): Promise<TranscriptSegment[]> {
-  if (!settings.apiKey) throw new Error('No API key set');
+  if (!settings.apiKey) throw new Error('transcription.noApiKey');
   const ext = extensionOf(uri);
   const form = new FormData();
   form.append('file', await formDataFile(uri, `clip.${ext}`, MIME[ext] ?? 'application/octet-stream'));

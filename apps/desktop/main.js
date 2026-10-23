@@ -1,7 +1,8 @@
 // Windows shell: hosts the shared Expo web UI and gives it Node services over
 // IPC: LAN sockets (net.js), clip storage and offline Whisper (whisper.js).
-const { app, BrowserWindow, ipcMain, net, protocol, session } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, net, protocol, session } = require('electron');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const lanNet = require('./net');
@@ -96,6 +97,36 @@ ipcMain.handle('store:set', async (_e, key, value) => {
 
 ipcMain.handle('store:remove', async (_e, key) => {
   await fs.promises.rm(storeFile(key), { force: true });
+});
+
+// Round report → PDF. The HTML is rendered in a hidden window with scripts off.
+ipcMain.handle('pdf:save', async (e, html, fileName) => {
+  const name = typeof fileName === 'string' && /^[\w.-]{1,120}\.pdf$/.test(fileName) ? fileName : 'round.pdf';
+  let target;
+  if (process.env.DEBATE_PDF_OUT_DIR) {
+    // For automated tests: no dialog, write straight to this folder.
+    target = path.join(process.env.DEBATE_PDF_OUT_DIR, name);
+  } else {
+    const res = await dialog.showSaveDialog(BrowserWindow.fromWebContents(e.sender), {
+      defaultPath: path.join(app.getPath('documents'), name),
+      filters: [{ name: 'PDF', extensions: ['pdf'] }],
+    });
+    if (res.canceled || !res.filePath) return null;
+    target = res.filePath;
+  }
+  // A temp file rather than a data: URL, which caps out on long transcripts.
+  const htmlFile = path.join(os.tmpdir(), `debate-report-${process.pid}-${Date.now()}.html`);
+  await fs.promises.writeFile(htmlFile, html, 'utf8');
+  const win = new BrowserWindow({ show: false, webPreferences: { javascript: false, sandbox: true } });
+  try {
+    await win.loadFile(htmlFile);
+    const pdf = await win.webContents.printToPDF({ pageSize: 'A4', printBackground: true });
+    await fs.promises.writeFile(target, pdf);
+    return target;
+  } finally {
+    win.destroy();
+    await fs.promises.rm(htmlFile, { force: true });
+  }
 });
 
 app.whenReady().then(() => {

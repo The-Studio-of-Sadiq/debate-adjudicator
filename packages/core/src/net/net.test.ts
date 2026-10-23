@@ -112,7 +112,7 @@ describe('host/client over TCP', () => {
     const h = await startHost();
     const j = join(h.port, { id: 'x', role: 'viewer', token: 'WRONG1' });
     await waitFor(() => j.client.status === 'rejected');
-    expect(j.detail).toBe('Wrong join code');
+    expect(j.detail).toBe('wrongCode');
   });
 
   it('syncs the clock so a skewed client shows the host time', async () => {
@@ -243,13 +243,13 @@ describe('interruption clips', () => {
 
   it("refuses audio for someone else's interruption", async () => {
     const { h, lo } = await roomWithAcceptedPoi();
-    await expect(lo.client.uploadClip('poi1-lo', meta, 'AAAA')).rejects.toThrow('Not your interruption');
+    await expect(lo.client.uploadClip('poi1-lo', meta, 'AAAA')).rejects.toThrow('notYourInterruption');
     expect(h.saved).toHaveLength(0);
   });
 
   it('refuses ids that are unsafe as file names', async () => {
     const { dlo } = await roomWithAcceptedPoi();
-    await expect(dlo.client.uploadClip('../evil', meta, 'AAAA')).rejects.toThrow('Bad clip metadata');
+    await expect(dlo.client.uploadClip('../evil', meta, 'AAAA')).rejects.toThrow('badClip');
   });
 
   it('sends a clip queued while offline once it reconnects', async () => {
@@ -259,5 +259,23 @@ describe('interruption clips', () => {
     const upload = dlo.client.uploadClip('poi1-dlo', meta, 'AAAA');
     await upload;
     expect(h.saved.map((s) => s.name)).toEqual(['poi1-dlo.m4a']);
+  });
+});
+
+describe('privacy over the wire', () => {
+  it("never sends the chair's notes or ballot to joined devices", async () => {
+    const h = await startHost();
+    h.act({ type: 'addNote', note: { id: 'n1', speechIndex: 0, atSec: 5, text: 'secret flow note' } });
+    h.act({ type: 'setScore', speechId: 'pm', score: 75 });
+    const j = join(h.port, { id: 'dlo', role: 'debater', seat: 'DLO' });
+    await waitFor(() => h.host.list().length === 1);
+    h.host.approve('dlo');
+    await waitFor(() => j.client.status === 'joined');
+    h.act({ type: 'addNote', note: { id: 'n2', speechIndex: 0, atSec: 9, text: 'another' } });
+    h.act({ type: 'setSpeaker', role: 'PM', name: 'Rafi' });
+    await waitFor(() => j.client.session?.speakers?.PM === 'Rafi');
+    expect(JSON.stringify(j.client.session)).not.toContain('secret flow note');
+    expect(j.client.session?.notes).toBeUndefined();
+    expect(j.client.session?.ballot).toBeUndefined();
   });
 });

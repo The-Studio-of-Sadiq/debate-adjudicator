@@ -66,10 +66,10 @@ export const localEngine: LocalEngine = bridge
     }
   : {
       available: false,
-      unavailableReason: 'Offline transcription needs the Android or Windows app.',
+      unavailableReason: 'transcription.unavailableBrowser',
       models: [],
       isDownloaded: async () => false,
-      prepare: () => Promise.reject(new Error('Not available in a browser')),
+      prepare: () => Promise.reject(new Error('transcription.unavailableBrowser')),
       deleteModel: async () => {},
-      transcribe: () => Promise.reject(new Error('Not available in a browser')),
+      transcribe: () => Promise.reject(new Error('transcription.unavailableBrowser')),
     };
