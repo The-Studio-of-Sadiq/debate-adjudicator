@@ -112,6 +112,7 @@ const TRANSCRIPTION_KEY = 'settings:transcription';
 /** Stored as-is; the API key is kept on this device only. */
 export async function loadTranscriptionSettings(): Promise<TranscriptionSettings> {
   const saved = await readJson<Partial<TranscriptionSettings> | null>(TRANSCRIPTION_KEY, null);
+  // Settings saved before language and provider existed get the defaults (English, OpenAI-compatible).
   return { ...DEFAULT_SETTINGS, ...saved, cloud: { ...DEFAULT_SETTINGS.cloud, ...saved?.cloud } };
 }
 

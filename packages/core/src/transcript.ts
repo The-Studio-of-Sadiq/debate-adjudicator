@@ -34,3 +34,44 @@ export function segmentsFromVerboseJson(json: unknown): TranscriptSegment[] {
   // Models that return plain text only: one segment for the whole clip.
   return body.text ? cleanSegments([{ startMs: 0, endMs: (body.duration ?? 0) * 1000, text: body.text }]) : [];
 }
+
+export interface TimedWord {
+  text: string;
+  /** Seconds. */
+  start: number;
+  end: number;
+  /** "word", "spacing" or "audio_event" (ElevenLabs); events aren't speech. */
+  type?: string;
+}
+
+/** Longest line before a break is forced, and the pause that ends a line. */
+const MAX_LINE_SEC = 15;
+const PAUSE_SEC = 1;
+
+/**
+ * Word timestamps (ElevenLabs Scribe) → transcript lines, broken at the end of
+ * a sentence (". ? ! ।"), at a pause, or when a line gets too long, so each
+ * line can be tapped to play from there.
+ */
+export function segmentsFromWords(words: TimedWord[]): TranscriptSegment[] {
+  const lines: TranscriptSegment[] = [];
+  let line: { start: number; end: number; text: string } | null = null;
+  const close = () => {
+    if (line) lines.push({ startMs: line.start * 1000, endMs: line.end * 1000, text: line.text });
+    line = null;
+  };
+  for (const w of words) {
+    if (w.type === 'audio_event') continue;
+    if (w.type === 'spacing') {
+      if (line) line.text += w.text;
+      continue;
+    }
+    if (line && (w.start - line.end > PAUSE_SEC || w.end - line.start > MAX_LINE_SEC)) close();
+    if (!line) line = { start: w.start, end: w.end, text: '' };
+    line.text += w.text;
+    line.end = w.end;
+    if (/[.?!।]["”’)]*$/.test(w.text)) close();
+  }
+  close();
+  return cleanSegments(lines);
+}

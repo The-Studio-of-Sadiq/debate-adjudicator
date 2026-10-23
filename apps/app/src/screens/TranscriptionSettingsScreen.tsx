@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
 import { errorText, useT, type T } from '../i18n';
-import { CLOUD_PRESETS, localEngine, type ModelName, type Progress, type TranscriptionSettings } from '../transcription';
+import { CLOUD_PRESETS, localEngine, offlineSupports, SPEECH_LANGUAGES, type ModelName, type Progress, type TranscriptionSettings } from '../transcription';
 import { loadTranscriptionSettings, saveTranscriptionSettings } from '../storage';
 import { useTheme } from '../theme';
 import { Btn, Card, Chip, Row } from '../ui';
@@ -74,6 +74,17 @@ export function TranscriptionSettingsScreen({ onBack }: { onBack: () => void }) 
       <Text style={styles.h1}>{t('transcription.title')}</Text>
 
       <Card>
+        <Text style={styles.h2}>{t('transcription.speechLanguage')}</Text>
+        <Row>
+          {SPEECH_LANGUAGES.map((l) => (
+            <Chip key={l} label={t(`transcription.languages.${l}`)} active={settings.language === l} onPress={() => update({ language: l })} />
+          ))}
+        </Row>
+        {!offlineSupports(settings) && <Text style={styles.muted}>{t('transcription.cloudOnlyLanguage')}</Text>}
+        {!offlineSupports(settings) && settings.mode === 'local' && <Text style={styles.alert}>⚠ {t('transcription.offlineEnglishOnly')}</Text>}
+      </Card>
+
+      <Card>
         <Text style={styles.h2}>{t('transcription.whenCloud')}</Text>
         <Row>
           {MODES.map((m) => (
@@ -127,8 +138,8 @@ export function TranscriptionSettingsScreen({ onBack }: { onBack: () => void }) 
             <Chip
               key={p.label}
               label={p.label}
-              active={settings.cloud.baseUrl === p.baseUrl}
-              onPress={() => updateCloud({ baseUrl: p.baseUrl, model: p.model })}
+              active={settings.cloud.provider === p.provider && settings.cloud.baseUrl === p.baseUrl}
+              onPress={() => updateCloud({ provider: p.provider, baseUrl: p.baseUrl, model: p.model })}
             />
           ))}
         </Row>

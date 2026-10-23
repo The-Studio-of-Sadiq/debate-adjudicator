@@ -20,6 +20,12 @@ Notable changes, newest first. The project follows the phases in
 - Bell settings group speeches by kind in formats that have more than
   substantives and replies (e.g. Canadian rebuttals).
 - Website: a format library with a page for each format.
+- Transcription in Bangla: a **Language spoken** setting (English, Bangla)
+  and ElevenLabs Scribe as a cloud provider, with word timestamps grouped
+  into tappable lines. Bangla goes to the cloud only (the offline models are
+  English-only) and never falls back to the offline model.
+- `.env.example` and `npm run transcribe:try` for trying ElevenLabs or Groq
+  on a recording.
 - Translations: `npm run i18n:new` starts a language from the English
   dictionary and registers it; `npm run check:i18n` reports each language's
   coverage and catches wrong keys and placeholders. The language picker shows

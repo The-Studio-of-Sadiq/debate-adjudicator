@@ -26,7 +26,8 @@
     "brand": "node scripts/brand-assets.mjs",
     "site": "node scripts/build-site.mjs",
     "i18n:new": "node scripts/new-language.mjs",
-    "formats:import": "node scripts/import-debatekeeper.mjs"
+    "formats:import": "node scripts/import-debatekeeper.mjs",
+    "transcribe:try": "node --env-file-if-exists=.env scripts/try-transcribe.mjs"
   },
   "devDependencies": {
     "fast-xml-parser": "^5.11.2",
