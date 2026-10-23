@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://the-studio-of-sadiq.github.io/debate-adjudicator/sitemap.xml
