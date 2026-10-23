@@ -53,7 +53,20 @@ Every time, bell and range is editable.
 
 ## Install
 
-**Android:** build an installable APK in the cloud (free Expo account):
+Download from the [latest release](https://github.com/The-Studio-of-Sadiq/debate-adjudicator/releases/latest):
+
+- **Android:** `Debate-Adjudicator-<version>.apk`. Open it on the phone and
+  allow installs from your browser or file manager when Android asks.
+- **Windows:** `Debate-Adjudicator-Setup-<version>.exe` installs the app;
+  `Debate-Adjudicator-<version>-portable.exe` runs without installing. The
+  files aren't code-signed yet, so Windows SmartScreen may warn: choose
+  **More info → Run anyway**.
+
+`SHA256SUMS.txt` in each release lets you check the downloads.
+
+### Building it yourself
+
+**Android:** build an APK in the cloud (free Expo account):
 
 ```bash
 cd apps/app
@@ -61,14 +74,13 @@ npx eas-cli@latest login
 npx eas-cli@latest build -p android --profile preview
 ```
 
-Open the link EAS prints on the phone, download the `.apk` and allow installs
-from your browser when Android asks.
-
-**Windows:** from a clone of this repository:
+**Windows:** run from a clone, or build the installer into
+`apps/desktop/release/`:
 
 ```bash
 npm install
 npm run desktop
+npm run dist -w desktop
 ```
 
 ## Using it

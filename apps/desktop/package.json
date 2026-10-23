@@ -1,16 +1,62 @@
 {
   "name": "desktop",
-  "version": "0.1.0",
+  "productName": "Debate Adjudicator",
+  "version": "0.6.0",
   "private": true,
   "main": "main.js",
   "scripts": {
     "dev": "electron . --dev",
-    "start": "npm run export:web -w app && electron ."
+    "start": "npm run export:web -w app && electron .",
+    "dist": "npm run export:web -w app && electron-builder --win --publish never"
   },
   "devDependencies": {
-    "electron": "^45.0.0"
+    "electron": "^45.0.0",
+    "electron-builder": "^26.15.3"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.1"
+  },
+  "description": "Debate Adjudicator for Windows",
+  "author": "The Studio of Sadiq",
+  "build": {
+    "appId": "com.debate.adjudicator",
+    "productName": "Debate Adjudicator",
+    "copyright": "© The Studio of Sadiq. MIT License.",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "net.js",
+      "preload.js",
+      "whisper.js",
+      "icon.png"
+    ],
+    "extraResources": [
+      {
+        "from": "../app/dist",
+        "to": "web"
+      }
+    ],
+    "asarUnpack": [
+      "**/*.node"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "icon.png",
+      "artifactName": "Debate-Adjudicator-${version}-${arch}-${target}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Debate-Adjudicator-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Debate-Adjudicator-${version}-portable.${ext}"
+    },
+    "electronVersion": "45.0.0"
   }
 }

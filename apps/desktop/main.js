@@ -15,7 +15,8 @@ const DEV = process.argv.includes('--dev');
 const profile = process.argv.find((a) => a.startsWith('--profile='))?.slice('--profile='.length);
 if (profile) app.setPath('userData', path.join(app.getPath('userData'), `profile-${profile}`));
 const DEV_URL = process.env.EXPO_WEB_URL || 'http://localhost:8081';
-const WEB_ROOT = path.resolve(__dirname, '../app/dist');
+// The web build: beside the app in the repo, in resources/web when installed.
+const WEB_ROOT = app.isPackaged ? path.join(process.resourcesPath, 'web') : path.resolve(__dirname, '../app/dist');
 
 // A secure custom scheme so the web build gets a secure context (microphone
 // access) and its absolute asset paths resolve like on a web server.
