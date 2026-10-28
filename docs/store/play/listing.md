@@ -11,6 +11,28 @@ screenshots.
 | Feature graphic (1024×500) | [`feature-graphic.png`](feature-graphic.png) |
 | Phone screenshots (1080×1920, upload in order) | [`phone/`](phone/) |
 
+## Translations
+
+The listing in the app's other 16 languages is in [`listing/`](listing/), one
+file per language. They use the app's own terms for each language (see
+`apps/app/src/i18n/`), and they are AI-drafted and await native review, like
+the app's translations. In Play Console, add each under **Store presence →
+Store listings → Manage translations** with this language:
+
+| File | Play Console language | File | Play Console language |
+|---|---|---|---|
+| [`ar.md`](listing/ar.md) | Arabic – ar | [`ja.md`](listing/ja.md) | Japanese – ja-JP |
+| [`bn.md`](listing/bn.md) | Bangla – bn-BD | [`ko.md`](listing/ko.md) | Korean – ko-KR |
+| [`de.md`](listing/de.md) | German – de-DE | [`ms.md`](listing/ms.md) | Malay – ms-MY |
+| [`es.md`](listing/es.md) | Spanish (Latin America) – es-419 | [`pt.md`](listing/pt.md) | Portuguese (Brazil) – pt-BR |
+| [`fr.md`](listing/fr.md) | French – fr-FR | [`ru.md`](listing/ru.md) | Russian – ru-RU |
+| [`hi.md`](listing/hi.md) | Hindi – hi-IN | [`tr.md`](listing/tr.md) | Turkish – tr-TR |
+| [`id.md`](listing/id.md) | Indonesian – id | [`ur.md`](listing/ur.md) | Urdu – ur |
+| [`vi.md`](listing/vi.md) | Vietnamese – vi | [`zh.md`](listing/zh.md) | Chinese (Simplified) – zh-CN |
+
+Play shows the English graphics (with their English captions) for every
+language unless localized ones are uploaded.
+
 ## App name (18/30)
 
 ```
