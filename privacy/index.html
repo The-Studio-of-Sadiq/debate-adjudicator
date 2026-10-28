@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privacy policy · Debate Adjudicator</title>
-<meta name="description" content="Debate Adjudicator has no accounts, analytics or servers: recordings, notes and ballots stay on your devices. What the app stores, what it shares and when.">
+<meta name="description" content="Debate Adjudicator has no accounts, ads or servers: recordings, notes and ballots stay on your devices. What the app stores, what it shares and when.">
 <link rel="canonical" href="https://the-studio-of-sadiq.github.io/debate-adjudicator/privacy/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
@@ -15,7 +15,7 @@
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Debate Adjudicator">
 <meta property="og:title" content="Privacy policy · Debate Adjudicator">
-<meta property="og:description" content="Debate Adjudicator has no accounts, analytics or servers: recordings, notes and ballots stay on your devices. What the app stores, what it shares and when.">
+<meta property="og:description" content="Debate Adjudicator has no accounts, ads or servers: recordings, notes and ballots stay on your devices. What the app stores, what it shares and when.">
 <meta property="og:url" content="https://the-studio-of-sadiq.github.io/debate-adjudicator/privacy/">
 <meta property="og:image" content="https://the-studio-of-sadiq.github.io/debate-adjudicator/img/social-preview.png">
 <meta property="og:image:width" content="1280">
@@ -23,7 +23,7 @@
 <meta property="og:image:alt" content="Debate Adjudicator: run the debate room from one phone.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Privacy policy · Debate Adjudicator">
-<meta name="twitter:description" content="Debate Adjudicator has no accounts, analytics or servers: recordings, notes and ballots stay on your devices. What the app stores, what it shares and when.">
+<meta name="twitter:description" content="Debate Adjudicator has no accounts, ads or servers: recordings, notes and ballots stay on your devices. What the app stores, what it shares and when.">
 <meta name="twitter:image" content="https://the-studio-of-sadiq.github.io/debate-adjudicator/img/social-preview.png">
 
 </head>
@@ -54,7 +54,8 @@ with your information, on Android and Windows.</p>
 <p><strong>In short:</strong> there are no accounts and we run no servers. We don&#39;t collect,
 receive, sell or share any of your data. Everything the app records stays on
 your devices, unless you choose a cloud transcription service, in which case
-audio goes from your device straight to that service.</p>
+audio goes from your device straight to that service. On Android, Google&#39;s
+QR code scanner sends Google technical diagnostics, described below.</p>
 <h2>What the app stores, and where</h2>
 <p>Everything below is stored <strong>only on the device you use</strong>, in the app&#39;s
 private storage:</p>
@@ -86,17 +87,29 @@ device</strong> and are never sent to other devices.</li>
 records only while a speech or point is being recorded, which the screen
 shows.</li>
 <li><strong>Camera:</strong> to scan the chair&#39;s QR code to join a round. Images are read on
-the device and not stored. On Android, scanning uses Google&#39;s code
-scanner from Google Play services, which works on the device.</li>
+the device and not stored. On Android, scanning uses Google&#39;s code scanner
+from Google Play services (see below). You can also join by typing the
+code instead of scanning it.</li>
 <li><strong>Notifications and foreground service:</strong> to keep the timer, bells and an
 ongoing recording running while the screen is off or another app is open.</li>
 <li><strong>Network access:</strong> for the local connections between devices in a room,
 and, only when you use them, for the downloads and cloud services below.</li>
 </ul>
 <h2>Services the app can contact</h2>
-<p>The app contacts nothing on the internet by default. It does so only for the
-features you choose:</p>
+<p>The app contacts the internet only for these features:</p>
 <ul>
+<li><strong>QR code scanning on Android.</strong> The scanner is Google&#39;s code scanner
+(part of Google ML Kit, provided by Google Play services). When it&#39;s used,
+Google collects technical information for diagnostics and usage analytics:
+device details (such as manufacturer, model and Android version), the app&#39;s
+package name and version, performance figures and error codes. Google
+sends it over HTTPS and says it doesn&#39;t pass it to third parties. Google
+doesn&#39;t say that camera images or scan results are sent, and the app sends
+neither. This is handled by Google under the
+<a href="https://policies.google.com/privacy">Google Privacy Policy</a>; details are in
+<a href="https://developers.google.com/ml-kit/android-data-disclosure">Google&#39;s ML Kit data disclosure</a>.
+We don&#39;t receive any of it. To avoid it, type the join code instead of
+scanning.</li>
 <li><strong>Offline transcription models.</strong> When you tap <strong>Download</strong> in
 Transcription settings, the app downloads the model from Hugging Face
 (huggingface.co). This sends a normal download request, which includes your
@@ -109,8 +122,9 @@ directly to that provider. The provider handles them under its own privacy
 policy and terms; read them before you enable it. Your key is stored only
 on your device and sent only to that provider.</li>
 </ul>
-<p>The app contains <strong>no advertising, analytics, tracking or crash-reporting</strong>
-code.</p>
+<p>Apart from Google&#39;s diagnostics for the QR code scanner, the app contains
+<strong>no advertising, analytics, tracking or crash-reporting</strong> code, ours or
+anyone else&#39;s.</p>
 <h2>Sharing reports</h2>
 <p>When you export a round&#39;s PDF report, the app hands it to the share sheet
 (Android) or a save dialog (Windows). It goes only where you choose to send
