@@ -1,0 +1,522 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Trailer</title>
+<style>
+  html, body { margin: 0; background: #000; overflow: hidden; }
+  canvas { width: 960px; height: 540px; display: block; }
+</style>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script>
+// A 30-second Google Play trailer, drawn frame by frame from the time t (s).
+// record.js loads this page in Electron, calls start(), and records the
+// canvas and the WebAudio mix with MediaRecorder.
+const W = 1920, H = 1080, DURATION = 30;
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const ROOT = '../../';
+
+// ── Easing and timing ──
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const outCubic = (x) => 1 - Math.pow(1 - x, 3);
+const outBack = (x) => { const c = 1.4; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const inOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+/** 0→1 over [a, a+fi], 1, then 1→0 over [b-fo, b]. */
+const window_ = (t, a, b, fi = 0.45, fo = 0.45) => Math.min(outCubic(prog(t, a, a + fi)), 1 - inOut(prog(t, b - fo, b)));
+
+// ── Assets ──
+const FONTS = [
+  ['Inter500', 'inter/500Medium/Inter_500Medium.ttf'],
+  ['Inter600', 'inter/600SemiBold/Inter_600SemiBold.ttf'],
+  ['Inter700', 'inter/700Bold/Inter_700Bold.ttf'],
+  ['Inter800', 'inter/800ExtraBold/Inter_800ExtraBold.ttf'],
+  ['Serif', 'instrument-serif/400Regular/InstrumentSerif_400Regular.ttf'],
+];
+const SHOTS = ['timer-poi', 'debater-poi', 'lobby-request', 'ballot', 'review', 'formats'];
+const img = {};
+async function loadAssets() {
+  await Promise.all(FONTS.map(async ([name, file]) => {
+    const f = new FontFace(name, `url(${ROOT}node_modules/@expo-google-fonts/${file})`);
+    document.fonts.add(await f.load());
+  }));
+  await Promise.all(SHOTS.map((n) => new Promise((ok, fail) => {
+    const i = new Image();
+    i.onload = () => ok((img[n] = i));
+    i.onerror = fail;
+    i.src = `${ROOT}docs/store/play/captures/${n}.png`;
+  })));
+}
+
+// ── Drawing helpers ──
+function text(str, x, y, { font = 'Inter500', size = 40, color = '#fff', align = 'left', alpha = 1, spacing = 0 } = {}) {
+  ctx.save();
+  ctx.globalAlpha *= alpha;
+  ctx.font = `${size}px ${font}`;
+  ctx.letterSpacing = `${spacing}px`;
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(str, x, y);
+  ctx.restore();
+}
+
+function rrect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+}
+
+/** The brand mark ("The House") on its 64-unit grid, with each piece offset. */
+const STROKE = 3.4;
+const CHAIR = new Path2D('M25 12h14v3a7 7 0 0 1-14 0z');
+function mark(x, y, scale, { gov = [0, 0], opp = [0, 0], chair = [0, 0], alpha = 1, color = '#fff' } = {}) {
+  ctx.save();
+  ctx.globalAlpha *= alpha;
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.translate(-8, -12);
+  ctx.fillStyle = color;
+  ctx.strokeStyle = color;
+  ctx.save(); ctx.translate(...gov); rrect(8, 12, 14, 40, 3); ctx.fill(); ctx.restore();
+  ctx.save(); ctx.translate(...opp); ctx.lineWidth = STROKE;
+  rrect(42 + STROKE / 2, 12 + STROKE / 2, 14 - STROKE, 40 - STROKE, 3 - STROKE / 4); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.translate(...chair); ctx.fill(CHAIR); ctx.restore();
+  ctx.restore();
+}
+
+/** Mark + "DEBATE" + "Adjudicator", with its top-left at (x, y); k = mark height / 40. */
+function lockup(x, y, k, alpha = 1, textAlpha = 1) {
+  mark(x, y, k, { alpha });
+  const tx = x + (48 + 14) * k;
+  text('DEBATE', tx + k, y + 9.5 * k, { font: 'Inter700', size: 8.5 * k, spacing: 0.32 * 8.5 * k, alpha: alpha * textAlpha });
+  text('Adjudicator', tx, y + 40 * k, { font: 'Serif', size: 38 * k, alpha: alpha * textAlpha });
+}
+const LOCKUP_W = (k) => (48 + 14) * k + 38 * k * 4.52;
+
+/**
+ * A phone showing a capture (1116×2040 px). (cx, cy) is its centre, h the
+ * screen height. `overlay` draws on top in capture pixels.
+ */
+function phone(name, cx, cy, h, { alpha = 1, rot = 0, scale = 1, overlay } = {}) {
+  if (alpha <= 0) return;
+  const im = img[name];
+  const w = (h * im.width) / im.height;
+  const bez = h * 0.022;
+  ctx.save();
+  ctx.globalAlpha *= alpha;
+  ctx.translate(cx, cy);
+  ctx.rotate(rot);
+  ctx.scale(scale, scale);
+  // Soft glow so the dark phone separates from the black background.
+  ctx.shadowColor = 'rgba(255,255,255,0.10)';
+  ctx.shadowBlur = 60;
+  rrect(-w / 2 - bez, -h / 2 - bez, w + 2 * bez, h + 2 * bez, h * 0.075);
+  ctx.fillStyle = '#121212';
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#3a3a3a';
+  ctx.stroke();
+  rrect(-w / 2, -h / 2, w, h, h * 0.058);
+  ctx.clip();
+  ctx.drawImage(im, -w / 2, -h / 2, w, h);
+  if (overlay) {
+    ctx.translate(-w / 2, -h / 2);
+    ctx.scale(w / im.width, h / im.height);
+    overlay();
+  }
+  ctx.restore();
+}
+
+/** Headline + subline on the left of the frame. */
+function caption(t, a, b, title, sub, { x = 150, y = 470 } = {}) {
+  const k = window_(t, a, b, 0.6, 0.4);
+  const k2 = window_(t, a + 0.25, b, 0.6, 0.4);
+  const lines = title.split('\n');
+  lines.forEach((l, i) => text(l, x, y + i * 112 + (1 - k) * 40, { font: 'Serif', size: 118, alpha: k }));
+  const sy = y + (lines.length - 1) * 112 + 92;
+  sub.split('\n').forEach((l, i) => text(l, x, sy + i * 54 + (1 - k2) * 30, { font: 'Inter500', size: 38, color: '#9a9a9a', alpha: k2 }));
+}
+
+/** A ring that expands from (x, y): a tap or a bell. */
+function ripple(x, y, p, r0, r1, width = 6) {
+  if (p <= 0 || p >= 1) return;
+  ctx.save();
+  ctx.globalAlpha *= 1 - p;
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  ctx.arc(x, y, r0 + (r1 - r0) * outCubic(p), 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ── The live clock drawn over the timer capture (capture pixels) ──
+// Card: x 51–1065, y 72–665, #2a2a2a; digits cap 259–477; phase line 551–602.
+function liveClock(secs, phase, flash = 0) {
+  const m = Math.floor(secs / 60), s = Math.floor(secs % 60);
+  ctx.fillStyle = '#2a2a2a';
+  ctx.fillRect(70, 230, 976, 400);
+  if (flash > 0) {
+    ctx.save();
+    ctx.globalAlpha = flash * 0.35;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.roundRect(51, 72, 1014, 593, 60); ctx.fill();
+    ctx.restore();
+  }
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.font = '300px Inter800';
+  ctx.letterSpacing = '0px';
+  ctx.fillText(`${m}:${String(s).padStart(2, '0')}`, 558, 477);
+  ctx.font = '54px Inter600';
+  const left = 7 * 60 - secs;
+  ctx.fillText(`${phase} · ${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')} left`, 558, 592);
+}
+// Hides the pending POI on the timer capture (before the POI is raised).
+function hidePoi() {
+  ctx.fillStyle = '#0f0f0f';
+  ctx.fillRect(90, 1550, 940, 490);
+}
+
+// ── Scenes ──
+// Each scene is drawn when t is inside it; they overlap a little for crossfades.
+const SCENES = [
+  // 0 – 3.6  Logo builds
+  [0, 3.6, (t) => {
+    const k = 3.2;
+    const x = (W - LOCKUP_W(k)) / 2, y = 540 - 20 * k;
+    const out = 1 - inOut(prog(t, 3.1, 3.6));
+    const pg = outCubic(prog(t, 0.15, 0.95));
+    const po = outCubic(prog(t, 0.35, 1.15));
+    const pc = outBack(prog(t, 0.9, 1.45));
+    const shift = (1 - outCubic(prog(t, 1.5, 2.2))) * (LOCKUP_W(k) - 48 * k) / 2;
+    mark(x + shift, y, k, {
+      gov: [-(1 - pg) * 120, 0], opp: [(1 - po) * 120, 0], chair: [0, -(1 - pc) * 40],
+      alpha: Math.min(prog(t, 0.15, 0.6), out),
+    });
+    const ta = outCubic(prog(t, 1.75, 2.5)) * out;
+    const tx = x + (48 + 14) * k;
+    text('DEBATE', tx + k, y + 9.5 * k, { font: 'Inter700', size: 8.5 * k, spacing: 0.32 * 8.5 * k, alpha: ta });
+    text('Adjudicator', tx + (1 - ta) * 30, y + 40 * k, { font: 'Serif', size: 38 * k, alpha: ta });
+    ripple(x + shift + 32 * k - 8 * k, y + 2 * k, prog(t, 1.35, 2.6), 10, 420, 3);
+  }],
+  // 3.6 – 7  Promise
+  [3.6, 7.0, (t) => {
+    const a = window_(t, 3.6, 7.0, 0.3, 0.4);
+    const words1 = ['Run', 'the', 'whole', 'debate', 'room'];
+    ctx.save();
+    ctx.font = '150px Serif';
+    let total = words1.reduce((s, w) => s + ctx.measureText(w + ' ').width, 0);
+    ctx.restore();
+    let x = (W - total) / 2;
+    words1.forEach((w, i) => {
+      const p = outCubic(prog(t, 3.75 + i * 0.13, 4.35 + i * 0.13));
+      text(w, x, 500 + (1 - p) * 60, { font: 'Serif', size: 150, alpha: p * a });
+      ctx.font = '150px Serif';
+      x += ctx.measureText(w + ' ').width;
+    });
+    const p2 = outCubic(prog(t, 4.6, 5.3));
+    text('from one phone.', W / 2, 660 + (1 - p2) * 60, { font: 'Serif', size: 150, align: 'center', alpha: p2 * a });
+    const p3 = outCubic(prog(t, 5.4, 6.0));
+    text('Offline  ·  No accounts  ·  Free', W / 2, 790, { font: 'Inter500', size: 40, color: '#9a9a9a', align: 'center', alpha: p3 * a, spacing: 2 });
+  }],
+  // 7 – 12  The clock (bell at 1:00)
+  [7.0, 12.2, (t) => {
+    const a = window_(t, 7.0, 12.2, 0.5, 0.45);
+    caption(t, 7.1, 12.2, 'A clock the whole\nroom can trust', 'Protected time, POIs open, wrap up\nand overtime. Bells ring on every phone.');
+    const secs = 56.6 + (t - 7.0) * 1.0; // 1:00 lands at t = 10.4
+    const bellT = 10.4;
+    const phase = secs >= 60 ? 'POIs open' : 'Protected time';
+    const flash = Math.max(0, 1 - (t - bellT) / 0.6) * (t >= bellT ? 1 : 0);
+    const enter = outCubic(prog(t, 7.0, 7.8));
+    const cx = 1400, cy = 560 + (1 - enter) * 120;
+    phone('timer-poi', cx, cy, 900, {
+      alpha: a, rot: (1 - enter) * 0.04,
+      overlay: () => { liveClock(secs, phase, flash); hidePoi(); },
+    });
+    // Bell rings out from the clock.
+    for (const d of [0, 0.18, 0.36]) ripple(cx, cy - 260, prog(t, bellT + d, bellT + d + 1.1), 60, 520, 4);
+  }],
+  // 12 – 17  Every phone in sync
+  [12.0, 17.2, (t) => {
+    const a = window_(t, 12.0, 17.2, 0.5, 0.45);
+    const title = outCubic(prog(t, 12.1, 12.8));
+    text('Every phone in sync', W / 2, 190 + (1 - title) * 30, { font: 'Serif', size: 112, align: 'center', alpha: title * a });
+    const sub = outCubic(prog(t, 12.4, 13.1));
+    text('Join with a QR code over local Wi-Fi or a hotspot', W / 2, 262, { font: 'Inter500', size: 38, color: '#9a9a9a', align: 'center', alpha: sub * a });
+    const items = [['lobby-request', 520, -0.05], ['timer-poi', 960, 0], ['debater-poi', 1400, 0.05]];
+    const secs = 61.6 + (t - 12.0);
+    items.forEach(([n, x, r], i) => {
+      const p = outCubic(prog(t, 12.4 + i * 0.22, 13.3 + i * 0.22));
+      const drift = (t - 12) * (i - 1) * 4;
+      phone(n, x + drift, 700 + (1 - p) * 500, 700, {
+        alpha: a * p, rot: r * (1 - p * 0.6),
+        overlay: n === 'timer-poi' ? () => { liveClock(secs, 'POIs open'); hidePoi(); } : n === 'debater-poi' ? () => debaterClock(secs) : undefined,
+      });
+    });
+  }],
+  // 17 – 21.6  POIs from the benches
+  [17.0, 21.8, (t) => {
+    const a = window_(t, 17.0, 21.8, 0.5, 0.45);
+    caption(t, 17.1, 21.8, 'POIs from\nthe benches', 'Debaters raise points from their phones.\nThe speaker accepts or declines.');
+    const enter = outCubic(prog(t, 17.0, 17.8));
+    // Debater taps "POI as LO" (capture px ~ 278, 1215 → screen).
+    const h = 820, w = (h * 1116) / 2040;
+    const dx = 1180, dy = 560 + (1 - enter) * 120;
+    const tapT = 18.4;
+    const pressed = t > tapT && t < tapT + 0.25;
+    phone('debater-poi', dx, dy, h, { alpha: a, scale: pressed ? 0.995 : 1, overlay: () => debaterClock(91.4 + (t - 17)) });
+    const tx = dx - w / 2 + (278 / 1116) * w, ty = dy - h / 2 + (1215 / 2040) * h;
+    ripple(tx, ty, prog(t, tapT, tapT + 0.7), 10, 120, 5);
+    if (t > tapT - 0.6 && t < tapT + 0.3) {
+      ctx.save();
+      ctx.globalAlpha = a * Math.min(prog(t, tapT - 0.6, tapT - 0.3), 1 - prog(t, tapT + 0.1, tapT + 0.3));
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.beginPath(); ctx.arc(tx, ty, 30, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    // The chair's phone slides in with the POI waiting.
+    const c = outCubic(prog(t, tapT + 0.35, tapT + 1.1));
+    phone('timer-poi', 1560 + (1 - c) * 400, 600, 820, {
+      alpha: a * c,
+      overlay: () => liveClock(91.4 + (t - 17), 'POIs open'),
+    });
+    // Accept pulses on the chair's phone (capture px ~ 245, 1765).
+    const cw = (820 * 1116) / 2040;
+    const ax = 1560 - cw / 2 + (245 / 1116) * cw, ay = 600 - 410 + (1765 / 2040) * 820;
+    ripple(ax, ay, prog(t, 20.0, 20.9), 20, 110, 4);
+  }],
+  // 21.6 – 25.8  Ballots and reports
+  [21.6, 25.9, (t) => {
+    const a = window_(t, 21.6, 25.9, 0.5, 0.45);
+    caption(t, 21.7, 25.9, 'Ballots that\nadd up', 'Ranks from speaker scores, timestamped\nflow notes and a PDF report.');
+    const p1 = outCubic(prog(t, 21.7, 22.5));
+    const p2 = outCubic(prog(t, 22.0, 22.8));
+    phone('review', 1540, 600 + (1 - p2) * 140, 800, { alpha: a * p2, rot: 0.04 });
+    phone('ballot', 1170, 560 + (1 - p1) * 140, 860, { alpha: a * p1, rot: -0.03 });
+  }],
+  // 25.8 – 27.9  Formats roll
+  [25.8, 28.0, (t) => {
+    const a = window_(t, 25.8, 28.0, 0.25, 0.35);
+    const names = ['British Parliamentary', 'UADC', 'World Schools', 'Australs', 'Canadian Parliamentary', 'American Parliamentary'];
+    const step = 0.22, start = 25.9;
+    const i = clamp(Math.floor((t - start) / step), 0, names.length - 1);
+    const done = t > start + names.length * step + 0.05;
+    if (!done) {
+      text(names[i], W / 2, 590, { font: 'Serif', size: 150, align: 'center', alpha: a });
+    } else {
+      const p = outBack(prog(t, start + names.length * step, start + names.length * step + 0.4));
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.translate(W / 2, 560);
+      ctx.scale(0.8 + 0.2 * p, 0.8 + 0.2 * p);
+      text('49 formats', 0, 50, { font: 'Serif', size: 190, align: 'center' });
+      ctx.restore();
+      text('Every bell editable', W / 2, 700, { font: 'Inter500', size: 40, color: '#9a9a9a', align: 'center', alpha: a * prog(t, 27.4, 27.7) });
+    }
+  }],
+  // 27.9 – 30  End card
+  [27.9, 30.0, (t) => {
+    const a = outCubic(prog(t, 27.9, 28.5));
+    const k = 2.6;
+    const x = (W - LOCKUP_W(k)) / 2;
+    lockup(x, 360 + (1 - a) * 30, k, a);
+    text('Free  ·  Offline  ·  Open source', W / 2, 650, { font: 'Inter500', size: 44, color: '#fff', align: 'center', alpha: outCubic(prog(t, 28.3, 28.9)), spacing: 2 });
+    text('Android  ·  Windows', W / 2, 720, { font: 'Inter500', size: 36, color: '#9a9a9a', align: 'center', alpha: outCubic(prog(t, 28.5, 29.1)), spacing: 2 });
+  }],
+];
+
+// Debater's light timer card, measured on debater-poi.png: card y 384–961,
+// digits cap 564–780, phase line 855–906, background #d9d9d9.
+function debaterClock(secs) {
+  const m = Math.floor(secs / 60), s = Math.floor(secs % 60);
+  ctx.fillStyle = DEBATER.bg;
+  ctx.fillRect(70, DEBATER.top, 976, DEBATER.bottom - DEBATER.top);
+  ctx.fillStyle = '#000';
+  ctx.textAlign = 'center';
+  ctx.letterSpacing = '0px';
+  ctx.font = '300px Inter800';
+  ctx.fillText(`${m}:${String(s).padStart(2, '0')}`, 558, DEBATER.digits);
+  ctx.font = '54px Inter600';
+  const left = 7 * 60 - secs;
+  ctx.fillText(`POIs open · ${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')} left`, 558, DEBATER.phase);
+}
+const DEBATER = { bg: '#d9d9d9', top: 540, bottom: 925, digits: 780, phase: 894 };
+
+function backdrop(t) {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+  // A slow, faint light that drifts across the frame.
+  const gx = W * (0.3 + 0.4 * Math.sin(t * 0.21)), gy = H * (0.4 + 0.2 * Math.cos(t * 0.17));
+  const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, 1100);
+  g.addColorStop(0, 'rgba(255,255,255,0.07)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function draw(t) {
+  ctx.save();
+  backdrop(t);
+  for (const [a, b, fn] of SCENES) if (t >= a && t < b) fn(t);
+  ctx.restore();
+  // Fade from and to black at the very ends.
+  const edge = Math.min(prog(t, 0, 0.3), 1 - prog(t, DURATION - 0.35, DURATION));
+  if (edge < 1) { ctx.fillStyle = `rgba(0,0,0,${1 - edge})`; ctx.fillRect(0, 0, W, H); }
+}
+
+// ── Sound: a synth bed, ticks and the app's own bell ──
+const BELLS = [1.3, 10.4, 18.5, 28.0];
+async function buildAudio(ac, out, bellBuffer, t0) {
+  const master = ac.createGain();
+  master.gain.value = 0.9;
+  master.connect(out);
+  // Reverb from a decaying noise impulse.
+  const ir = ac.createBuffer(2, ac.sampleRate * 2.5, ac.sampleRate);
+  for (let c = 0; c < 2; c++) {
+    const d = ir.getChannelData(c);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+  }
+  const verb = ac.createConvolver();
+  verb.buffer = ir;
+  const verbGain = ac.createGain();
+  verbGain.gain.value = 0.35;
+  verb.connect(verbGain).connect(master);
+
+  const BPM = 112, beat = 60 / BPM;
+  const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  // vi – IV – I – V in C, two bars each (A minor feel, lifting at the end).
+  const chords = [[57, 60, 64], [53, 57, 60], [48, 55, 60, 64], [55, 59, 62]];
+  const bars = Math.ceil(DURATION / (beat * 4));
+
+  // Pad
+  for (let b = 0; b < bars; b++) {
+    const ch = chords[Math.floor(b / 2) % 4];
+    const st = t0 + b * 4 * beat, len = 4 * beat;
+    if (b * 4 * beat > DURATION - 1) break;
+    for (const n of ch) {
+      for (const det of [-6, 6]) {
+        const o = ac.createOscillator();
+        o.type = 'sawtooth';
+        o.frequency.value = hz(n);
+        o.detune.value = det;
+        const f = ac.createBiquadFilter();
+        f.type = 'lowpass';
+        f.frequency.setValueAtTime(700, st);
+        f.frequency.linearRampToValueAtTime(b >= 3 ? 1600 : 900, st + len);
+        const g = ac.createGain();
+        const level = b < 2 ? 0.012 : 0.02;
+        g.gain.setValueAtTime(0, st);
+        g.gain.linearRampToValueAtTime(level, st + 0.25);
+        g.gain.setValueAtTime(level, st + len - 0.2);
+        g.gain.linearRampToValueAtTime(0, st + len + 0.1);
+        o.connect(f).connect(g);
+        g.connect(master); g.connect(verb);
+        o.start(st); o.stop(st + len + 0.2);
+      }
+    }
+    // Bass on beats 1 and 3 once the beat kicks in.
+    if (b >= 2) for (const q of [0, 2]) {
+      const o = ac.createOscillator();
+      o.type = 'triangle';
+      o.frequency.value = hz(ch[0] - 12);
+      const g = ac.createGain();
+      const s = st + q * beat;
+      g.gain.setValueAtTime(0.0001, s);
+      g.gain.exponentialRampToValueAtTime(0.16, s + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, s + beat * 1.8);
+      o.connect(g).connect(master);
+      o.start(s); o.stop(s + beat * 2);
+    }
+  }
+  // Plucked arpeggio from bar 2.
+  for (let i = 0; i * beat / 2 < DURATION - 1.5; i++) {
+    const s = t0 + i * beat / 2;
+    const bar = Math.floor(i / 8);
+    if (bar < 2) continue;
+    const ch = chords[Math.floor(bar / 2) % 4];
+    const n = ch[[0, 1, 2, 1, 2, ch.length - 1, 1, 2][i % 8]] + 12;
+    const o = ac.createOscillator();
+    o.type = 'triangle';
+    o.frequency.value = hz(n);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, s);
+    g.gain.exponentialRampToValueAtTime(0.05, s + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, s + 0.35);
+    o.connect(g); g.connect(master); g.connect(verb);
+    o.start(s); o.stop(s + 0.4);
+  }
+  // Clock ticks: filtered noise clicks on every beat, from the clock scene on.
+  const noise = ac.createBuffer(1, ac.sampleRate * 0.03, ac.sampleRate);
+  noise.getChannelData(0).forEach((_, i, d) => (d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 4)));
+  for (let s = 3.6; s < DURATION - 2.2; s += beat) {
+    const src = ac.createBufferSource();
+    src.buffer = noise;
+    const f = ac.createBiquadFilter();
+    f.type = 'highpass';
+    f.frequency.value = 5000;
+    const g = ac.createGain();
+    g.gain.value = 0.22;
+    src.connect(f).connect(g).connect(master);
+    src.start(t0 + s);
+  }
+  // Kick on each beat in the middle section.
+  for (let s = 7.0; s < 25.8; s += beat) {
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.frequency.setValueAtTime(120, t0 + s);
+    o.frequency.exponentialRampToValueAtTime(45, t0 + s + 0.12);
+    g.gain.setValueAtTime(0.45, t0 + s);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + s + 0.25);
+    o.connect(g).connect(master);
+    o.start(t0 + s); o.stop(t0 + s + 0.3);
+  }
+  // The app's bell.
+  for (const s of BELLS) {
+    const src = ac.createBufferSource();
+    src.buffer = bellBuffer;
+    const g = ac.createGain();
+    g.gain.value = 0.8;
+    src.connect(g); g.connect(master); g.connect(verb);
+    src.start(t0 + s);
+  }
+  // Fade the mix out over the last second.
+  master.gain.setValueAtTime(0.9, t0 + DURATION - 1.2);
+  master.gain.linearRampToValueAtTime(0, t0 + DURATION - 0.05);
+}
+
+// ── Playback / recording ──
+window.preview = (t) => draw(t);
+window.ready = loadAssets().then(() => { draw(0); return true; });
+window.start = async (bellBytes, mime) => {
+  await window.ready;
+  const ac = new AudioContext({ sampleRate: 48000 });
+  const dest = ac.createMediaStreamDestination();
+  const bell = await ac.decodeAudioData(bellBytes.buffer.slice(bellBytes.byteOffset, bellBytes.byteOffset + bellBytes.byteLength));
+  const stream = new MediaStream([...cv.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]);
+  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 16e6, audioBitsPerSecond: 192e3 });
+  const chunks = [];
+  rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+  const done = new Promise((ok) => (rec.onstop = ok));
+  draw(0);
+  await ac.resume();
+  console.log(`audio ${ac.state}, ${mime}`);
+  const t0 = ac.currentTime + 0.3;
+  await buildAudio(ac, dest, bell, t0);
+  // Start recording on the audio clock so picture and sound line up.
+  await new Promise((ok) => { const wait = () => (ac.currentTime >= t0 - 0.02 ? ok() : requestAnimationFrame(wait)); wait(); });
+  rec.start(1000);
+  console.log('recording');
+  let lastLog = 0;
+  const frame = () => {
+    const t = ac.currentTime - t0;
+    if (t - lastLog >= 5) console.log(`t = ${(lastLog = Math.floor(t))} s`);
+    draw(clamp(t, 0, DURATION));
+    if (t < DURATION + 0.1) requestAnimationFrame(frame);
+    else rec.stop();
+  };
+  frame();
+  await done;
+  return new Uint8Array(await new Blob(chunks, { type: mime }).arrayBuffer());
+};
+</script>
