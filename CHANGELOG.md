@@ -13,6 +13,10 @@ Notable changes, newest first. The project follows the phases in
   the layout: at once on Windows and in browsers, after a restart on Android
   (the app asks). Clocks, scores and score steppers stay left to right in
   Western digits, and the PDF report is mirrored too.
+- The Android package name is now `com.debate_adjudicator`, the name the
+  Google Play listing is registered under. Android sees it as a different app
+  from the 0.6.0 APK (`com.debate.adjudicator`): uninstall the APK and install
+  from Google Play. Rounds saved in the old app don't carry over.
 
 ## [0.6.0] – 2026-10-23: first public release
 
