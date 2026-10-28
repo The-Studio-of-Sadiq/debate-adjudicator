@@ -524,7 +524,7 @@ const formatPaths = formatPages();
     page({
       path: 'privacy/',
       title: 'Privacy policy',
-      description: `${NAME} has no accounts, analytics or servers: recordings, notes and ballots stay on your devices. What the app stores, what it shares and when.`,
+      description: `${NAME} has no accounts, ads or servers: recordings, notes and ballots stay on your devices. What the app stores, what it shares and when.`,
       body: `<section><div class="wrap"><article class="prose">${html}</article></div></section>`,
     }),
   );
