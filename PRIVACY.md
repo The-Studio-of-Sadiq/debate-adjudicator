@@ -10,7 +10,8 @@ with your information, on Android and Windows.
 **In short:** there are no accounts and we run no servers. We don't collect,
 receive, sell or share any of your data. Everything the app records stays on
 your devices, unless you choose a cloud transcription service, in which case
-audio goes from your device straight to that service.
+audio goes from your device straight to that service. On Android, Google's
+QR code scanner sends Google technical diagnostics, described below.
 
 ## What the app stores, and where
 
@@ -46,8 +47,9 @@ through the internet or through our servers (we have none). Within a room:
   records only while a speech or point is being recorded, which the screen
   shows.
 - **Camera:** to scan the chair's QR code to join a round. Images are read on
-  the device and not stored. On Android, scanning uses Google's code
-  scanner from Google Play services, which works on the device.
+  the device and not stored. On Android, scanning uses Google's code scanner
+  from Google Play services (see below). You can also join by typing the
+  code instead of scanning it.
 - **Notifications and foreground service:** to keep the timer, bells and an
   ongoing recording running while the screen is off or another app is open.
 - **Network access:** for the local connections between devices in a room,
@@ -55,9 +57,20 @@ through the internet or through our servers (we have none). Within a room:
 
 ## Services the app can contact
 
-The app contacts nothing on the internet by default. It does so only for the
-features you choose:
+The app contacts the internet only for these features:
 
+- **QR code scanning on Android.** The scanner is Google's code scanner
+  (part of Google ML Kit, provided by Google Play services). When it's used,
+  Google collects technical information for diagnostics and usage analytics:
+  device details (such as manufacturer, model and Android version), the app's
+  package name and version, performance figures and error codes. Google
+  sends it over HTTPS and says it doesn't pass it to third parties. Google
+  doesn't say that camera images or scan results are sent, and the app sends
+  neither. This is handled by Google under the
+  [Google Privacy Policy](https://policies.google.com/privacy); details are in
+  [Google's ML Kit data disclosure](https://developers.google.com/ml-kit/android-data-disclosure).
+  We don't receive any of it. To avoid it, type the join code instead of
+  scanning.
 - **Offline transcription models.** When you tap **Download** in
   Transcription settings, the app downloads the model from Hugging Face
   (huggingface.co). This sends a normal download request, which includes your
@@ -70,8 +83,9 @@ features you choose:
   policy and terms; read them before you enable it. Your key is stored only
   on your device and sent only to that provider.
 
-The app contains **no advertising, analytics, tracking or crash-reporting**
-code.
+Apart from Google's diagnostics for the QR code scanner, the app contains
+**no advertising, analytics, tracking or crash-reporting** code, ours or
+anyone else's.
 
 ## Sharing reports
 
