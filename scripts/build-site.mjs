@@ -90,6 +90,7 @@ ${p.body}
     <nav aria-label="Footer">
       <a href="${rel}docs/">Docs</a>
       <a href="${rel}formats/">Formats</a>
+      <a href="${rel}privacy/">Privacy</a>
       <a href="${REPO_URL}">Source code</a>
       <a href="${REPO_URL}/blob/main/CONTRIBUTING.md">Contribute</a>
       <a href="${REPO_URL}/blob/main/SECURITY.md">Security</a>
@@ -514,6 +515,21 @@ landing();
 const docPaths = docs();
 const formatPaths = formatPages();
 
+// The privacy policy (PRIVACY.md), linked from app stores, so it keeps a stable URL: /privacy/
+{
+  const md = readFileSync(at('PRIVACY.md'), 'utf8');
+  const html = marked.parse(md);
+  write(
+    'privacy/',
+    page({
+      path: 'privacy/',
+      title: 'Privacy policy',
+      description: `${NAME} has no accounts, analytics or servers: recordings, notes and ballots stay on your devices. What the app stores, what it shares and when.`,
+      body: `<section><div class="wrap"><article class="prose">${html}</article></div></section>`,
+    }),
+  );
+}
+
 write(
   '404.html',
   page({
@@ -525,7 +541,7 @@ write(
   }).replace(/(href|src)="\.\.\//g, `$1="${SITE_URL}/`),
 );
 
-const urls = ['', ...docPaths, ...formatPaths];
+const urls = ['', ...docPaths, ...formatPaths, 'privacy/'];
 write(
   'sitemap.xml',
   `<?xml version="1.0" encoding="UTF-8"?>

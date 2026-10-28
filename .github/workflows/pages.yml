@@ -11,6 +11,7 @@ on:
       - 'site/**'
       - 'docs/**'
       - 'scripts/build-site.mjs'
+      - 'PRIVACY.md'
       - 'packages/core/src/formats/**'
       - 'scripts/resolve-ts.mjs'
       - '.github/workflows/pages.yml'
