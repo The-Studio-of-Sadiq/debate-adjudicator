@@ -94,6 +94,37 @@ function socialPreview() {
   );
 }
 
+// ── Google Play feature graphic: 1024×500. Play may crop the edges and lay
+// its own buttons over the bottom, so everything sits in the middle. ──
+function featureGraphic() {
+  const W = 1024;
+  const H = 500;
+  const markH = 104;
+  const scale = markH / BOX.h;
+  const eyebrowSize = 22;
+  const nameSize = 100;
+  const gap = 38;
+  const eyebrowProbe = textPath(inter, 'DEBATE', 0, 0, eyebrowSize, 0.32);
+  const nameProbe = textPath(serif, 'Adjudicator', 0, 0, nameSize);
+  const lockW = BOX.w * scale + gap + Math.max(eyebrowProbe.width, nameProbe.width);
+  const x = (W - lockW) / 2;
+  const y = 138;
+  const tx = x + BOX.w * scale + gap;
+  const eyebrow = textPath(inter, 'DEBATE', tx + 3, y + 24, eyebrowSize, 0.32);
+  const name = textPath(serif, 'Adjudicator', tx, y + markH, nameSize);
+  const tagText = 'Timer, bells, POIs and ballots for the whole room. Offline.';
+  const tagProbe = textPath(interMedium, tagText, 0, 0, 30);
+  const tag = textPath(interMedium, tagText, (W - tagProbe.width) / 2, 336, 30);
+  return svgDoc(
+    W,
+    H,
+    `<rect width="${W}" height="${H}" fill="#000"/>
+    <g transform="translate(${x} ${y}) scale(${scale}) translate(${-BOX.x} ${-BOX.y})">${markShapes('#ffffff')}</g>
+    <path d="${eyebrow.d}" fill="#fff"/><path d="${name.d}" fill="#fff"/>
+    <path d="${tag.d}" fill="#9a9a9a"/>`,
+  );
+}
+
 // ── Icons ──
 const markOnly = (color, size, fraction) => {
   // Place the mark's bounding box so its larger side fills `fraction` of the canvas.
@@ -140,6 +171,11 @@ await png(square(48, '#000000', '#ffffff', 0.62, 10), at('apps/app/assets/favico
 
 console.log('Windows icon');
 await png(square(512, '#000000', '#ffffff', 0.56, 96), at('apps/desktop/icon.png'));
+
+console.log('Google Play listing');
+// Play rounds the corners itself, so the icon is a full-bleed square.
+await png(square(512, '#000000', '#ffffff', 0.56), at('docs/store/play/icon-512.png'));
+await png(featureGraphic(), at('docs/store/play/feature-graphic.png'));
 
 console.log('Social preview and website icons');
 await png(socialPreview(), at('docs/brand/social-preview.png'));
