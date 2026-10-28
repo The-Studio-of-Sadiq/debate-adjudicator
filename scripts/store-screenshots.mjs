@@ -1,7 +1,8 @@
-// Frames the raw app captures in docs/store/play/captures/ (1116×2040, a
-// 372×680 window at 3×) as captioned 1080×1920 Google Play phone screenshots
-// in docs/store/play/phone/.
-// Run after replacing a capture: npm run store:screenshots
+// Frames the raw app captures as captioned Google Play screenshots:
+//   captures/ (1116×2040, a 372×680 window at 3×)         → phone/ at 1080×1920
+//   captures-tablet/ (2560×1440, a 1280×720 window at 2×) → tablet-10/ at 2560×1440
+//                                                           and tablet-7/ at 1920×1080
+// (all under docs/store/play/). Run after replacing a capture: npm run store:screenshots
 import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,11 +19,11 @@ const font = (file) => {
 const serif = font('instrument-serif/400Regular/InstrumentSerif_400Regular.ttf');
 const interMedium = font('inter/500Medium/Inter_500Medium.ttf');
 
-/** Text centred on x = W/2, as an SVG path (laid out per character, like brand-assets.mjs). */
-function centred(f, text, baseline, size) {
+/** Text centred on x = frameW/2, as an SVG path (laid out per character, like brand-assets.mjs). */
+function centred(f, text, baseline, size, frameW = W) {
   const chars = [...text];
   const width = chars.reduce((w, ch) => w + f.getAdvanceWidth(ch, size), 0);
-  let cursor = (W - width) / 2;
+  let cursor = (frameW - width) / 2;
   const parts = [];
   // Serialised by hand: opentype's toPathData(2) emits NaN for some coordinates.
   const n = (v) => v.toFixed(2);
@@ -83,4 +84,51 @@ for (const [i, s] of SHOTS.entries()) {
   const file = at('docs/store/play/phone', `${i + 1}-${s.capture}.png`);
   await sharp(frame).composite([{ input: rounded, left: x, top: SHOT_Y }]).png().toFile(file);
   console.log(`  ${file.replace(root, '').replace(/\\/g, '/')}`);
+}
+
+// ── Tablets: the whole capture inside a tablet bezel, under the caption ──
+const TW = 2560;
+const TH = 1440;
+const SCREEN_W = 1792; // 16:9 in whole pixels: 1792×1008
+const SCREEN_H = (SCREEN_W * 9) / 16;
+const SCREEN_Y = 370;
+const BEZEL = 26;
+const TABLET_TITLES = { 'timer-poi': 'Run the room from one tablet' };
+
+mkdirSync(at('docs/store/play/tablet-10'), { recursive: true });
+mkdirSync(at('docs/store/play/tablet-7'), { recursive: true });
+for (const [i, s] of SHOTS.entries()) {
+  const bg = s.dark ? '#000000' : '#ffffff';
+  const fg = s.dark ? '#ffffff' : '#000000';
+  const muted = s.dark ? '#9a9a9a' : '#5c5c5c';
+  const body = s.dark ? '#161616' : '#ececec';
+  const edge = s.dark ? '#3a3a3a' : '#cfcfcf';
+
+  const r = 18;
+  const screen = await sharp(at('docs/store/play/captures-tablet', `${s.capture}.png`))
+    .resize({ width: SCREEN_W, height: SCREEN_H })
+    .composite([{
+      input: Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${SCREEN_W}" height="${SCREEN_H}"><rect width="${SCREEN_W}" height="${SCREEN_H}" rx="${r}" fill="#fff"/></svg>`),
+      blend: 'dest-in',
+    }])
+    .png()
+    .toBuffer();
+
+  const x = (TW - SCREEN_W) / 2;
+  const frame = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${TW}" height="${TH}">
+      <rect width="${TW}" height="${TH}" fill="${bg}"/>
+      <path d="${centred(serif, TABLET_TITLES[s.capture] || s.title, 200, 118, TW)}" fill="${fg}"/>
+      <path d="${centred(interMedium, s.sub, 290, 48, TW)}" fill="${muted}"/>
+      <rect x="${x - BEZEL}" y="${SCREEN_Y - BEZEL}" width="${SCREEN_W + 2 * BEZEL}" height="${SCREEN_H + 2 * BEZEL}"
+        rx="${r + BEZEL}" fill="${body}" stroke="${edge}" stroke-width="3"/>
+    </svg>`,
+  );
+  const name = `${i + 1}-${s.capture}.png`;
+  const big = await sharp(frame).composite([{ input: screen, left: x, top: SCREEN_Y }]).png().toBuffer();
+  for (const [dir, w, h] of [['tablet-10', TW, TH], ['tablet-7', 1920, 1080]]) {
+    const file = at('docs/store/play', dir, name);
+    await sharp(big).resize(w, h).png().toFile(file);
+    console.log(`  ${file.replace(root, '').replace(/\\/g, '/')}`);
+  }
 }
